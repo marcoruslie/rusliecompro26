@@ -106,14 +106,14 @@ export default function Navbar() {
                   {link.label}
                 </a>
               ))}
-              <div className="border-t border-white/10 pt-4 flex flex-col gap-3">
+              {/* <div className="border-t border-white/10 pt-4 flex flex-col gap-3">
                 <Link href="/calculator" onClick={() => setMenuOpen(false)} className="text-white/70 hover:text-white text-sm tracking-widest uppercase">
                   🧮 Calculator
                 </Link>
                 <Link href="/invoice" onClick={() => setMenuOpen(false)} className="text-white/70 hover:text-white text-sm tracking-widest uppercase">
                   🧾 Invoice
                 </Link>
-              </div>
+              </div> */}
               <a
                 href="#contact"
                 onClick={() => setMenuOpen(false)}
