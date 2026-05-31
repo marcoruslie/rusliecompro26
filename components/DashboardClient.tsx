@@ -75,7 +75,7 @@ export default function DashboardClient({
       <div className="admin-content max-w-6xl mx-auto">
         <div className="flex items-center justify-between mb-8 flex-wrap gap-4 admin-rise">
           <div>
-            <p className="admin-eyebrow">Ruslie Spring · Control Panel</p>
+            <p className="admin-eyebrow">Ruslie Spring Admin</p>
             <h1 className="admin-title text-3xl mt-1">Dashboard</h1>
           </div>
           <div className="flex items-center gap-3 flex-wrap">
@@ -165,7 +165,7 @@ export default function DashboardClient({
             <tbody>
               {filtered.length === 0 ? (
                 <tr>
-                  <td colSpan={5} className="!text-center py-10 text-slate-500 italic">
+                  <td colSpan={5} className="!text-center py-10 text-gray-400 italic">
                     Tidak ada transaksi.
                   </td>
                 </tr>
@@ -176,15 +176,15 @@ export default function DashboardClient({
                     onClick={() => router.push(`/admin/transactions/${t.id}`)}
                     className="cursor-pointer"
                   >
-                    <td className="font-mono text-slate-400">
+                    <td className="text-gray-500">
                       {t.created_at ? t.created_at.slice(0, 10) : t.invoice_date}
                     </td>
-                    <td className="font-mono font-medium text-cyan-200">{t.invoice_number}</td>
-                    <td className="text-slate-100">{t.customer?.name}</td>
-                    <td className="capitalize text-slate-400">
+                    <td className="font-medium text-gray-800">{t.invoice_number}</td>
+                    <td className="text-gray-700">{t.customer?.name}</td>
+                    <td className="capitalize text-gray-500">
                       {t.channel === "online" ? "Online Shop" : "Direct"}
                     </td>
-                    <td className="!text-right font-semibold text-cyan-300">{rupiah(t.total)}</td>
+                    <td className="!text-right font-semibold text-[#021d47]">{rupiah(t.total)}</td>
                   </tr>
                 ))
               )}

@@ -18,9 +18,11 @@ export default function WireSelect({
         const picked = wires.find((w) => w.wire_id === e.target.value) ?? null;
         onSelect(picked);
       }}
-      className="col-span-2 border border-gray-200 rounded-lg px-3 py-2 text-sm text-gray-700 focus:outline-none focus:border-blue-400 transition-colors"
+      className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm text-gray-700 bg-white focus:outline-none focus:border-blue-400 transition-colors"
     >
-      <option value="">— Pilih Wire —</option>
+      <option value="">
+        {wires.length === 0 ? "— Belum ada wire —" : "— Pilih Wire —"}
+      </option>
       {wires.map((w) => (
         <option key={w.wire_id} value={w.wire_id}>
           {w.name}

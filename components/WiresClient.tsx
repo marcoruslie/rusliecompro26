@@ -111,7 +111,7 @@ export default function WiresClient({
       <div className="admin-content max-w-4xl mx-auto">
         <div className="flex items-center justify-between mb-8 admin-rise">
           <div>
-            <p className="admin-eyebrow">Ruslie Spring · Control Panel</p>
+            <p className="admin-eyebrow">Ruslie Spring Admin</p>
             <h1 className="admin-title text-3xl mt-1">Wires</h1>
           </div>
           <Link href="/admin/dashboard" className="admin-btn-ghost">
@@ -129,10 +129,10 @@ export default function WiresClient({
               <span key={t.type_id} className="admin-chip">
                 {t.name}
                 <button onClick={() => { setEditingTypeId(t.type_id ?? null); setTypeName(t.name); }} title="Edit">
-                  <Pencil size={13} className="text-slate-400 hover:text-cyan-300" />
+                  <Pencil size={13} className="text-gray-400 hover:text-[#021d47]" />
                 </button>
                 <button onClick={() => t.type_id && removeType(t.type_id)} title="Hapus">
-                  <Trash2 size={13} className="text-slate-400 hover:text-rose-400" />
+                  <Trash2 size={13} className="text-red-400 hover:text-red-600" />
                 </button>
               </span>
             ))}
@@ -206,21 +206,21 @@ export default function WiresClient({
             <tbody>
               {wires.length === 0 ? (
                 <tr>
-                  <td colSpan={3} className="!text-center py-10 text-slate-500 italic">
+                  <td colSpan={3} className="!text-center py-10 text-gray-400 italic">
                     Belum ada wire.
                   </td>
                 </tr>
               ) : (
                 wires.map((w) => (
                   <tr key={w.wire_id}>
-                    <td className="font-medium text-slate-100">{w.name}</td>
-                    <td className="text-slate-400">{typeNameOf(w.type_id)}</td>
+                    <td className="font-medium text-gray-800">{w.name}</td>
+                    <td className="text-gray-600">{typeNameOf(w.type_id)}</td>
                     <td>
                       <div className="flex items-center gap-3 justify-end">
-                        <button onClick={() => startEditWire(w)} className="text-slate-500 hover:text-cyan-300 transition-colors" title="Edit">
+                        <button onClick={() => startEditWire(w)} className="text-gray-400 hover:text-[#021d47] transition-colors" title="Edit">
                           <Pencil size={15} />
                         </button>
-                        <button onClick={() => w.wire_id && removeWire(w.wire_id)} className="text-slate-500 hover:text-rose-400 transition-colors" title="Hapus">
+                        <button onClick={() => w.wire_id && removeWire(w.wire_id)} className="text-red-400 hover:text-red-600 transition-colors" title="Hapus">
                           <Trash2 size={15} />
                         </button>
                       </div>

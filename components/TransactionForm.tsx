@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import Link from "next/link";
-import { Home, FileText, Plus, Trash2, Printer, Save, Users, Cable } from "lucide-react";
+import { Home, FileText, Plus, Trash2, Printer, Save, Users, Cable, Link2, Check } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import { createTransaction, updateTransaction } from "@/lib/transactions";
 import { createCustomer } from "@/lib/customers";
@@ -95,6 +95,21 @@ export default function TransactionForm({
   const [newItem, setNewItem] = useState<InvoiceItem>({ wire_id: "", name: "", qty: 0, price: 0 });
   const [itemError, setItemError] = useState("");
   const [senderName, setSenderName] = useState(existing?.sender_name ?? "");
+  const [linkCopied, setLinkCopied] = useState(false);
+
+  async function handleCopyPublicLink() {
+    if (!existing?.id) return;
+    const url = `${window.location.origin}/invoice/${existing.id}`;
+    try {
+      await navigator.clipboard.writeText(url);
+    } catch {
+      // Clipboard API unavailable (e.g. non-HTTPS) — fall back to a prompt.
+      window.prompt("Salin link faktur publik:", url);
+      return;
+    }
+    setLinkCopied(true);
+    setTimeout(() => setLinkCopied(false), 2000);
+  }
 
   // fonts
   useEffect(() => {
@@ -313,10 +328,9 @@ export default function TransactionForm({
       <nav
         className="no-print fixed top-0 left-0 right-0 z-50 flex items-center justify-between px-6 lg:px-10 h-[68px]"
         style={{
-          background: "rgba(5,11,32,0.85)",
-          backdropFilter: "blur(16px) saturate(140%)",
-          borderBottom: "1px solid rgba(56,189,248,0.18)",
-          boxShadow: "0 1px 30px -10px rgba(56,189,248,0.5)",
+          background: "rgba(2,29,71,0.97)",
+          backdropFilter: "blur(14px)",
+          borderBottom: "1px solid rgba(255,255,255,0.07)",
           fontFamily: "'DM Sans', sans-serif",
         }}
       >
@@ -352,29 +366,19 @@ export default function TransactionForm({
         style={{ fontFamily: "'DM Sans', sans-serif" }}
       >
         {/* hero banner */}
-        <header className="admin-content no-print pt-[68px] pb-8 px-6 relative z-10">
+        <header
+          className="admin-content no-print pt-[68px] pb-8 px-6 relative z-10"
+          style={{ background: "linear-gradient(135deg, #021d47 0%, #0b2255 100%)" }}
+        >
           <div className="max-w-3xl mx-auto pt-8">
-            <p className="admin-eyebrow mb-2 flex items-center gap-2">
-              <span className="w-1.5 h-1.5 rounded-full bg-cyan-400 animate-pulse" />
-              Ruslie Spring · Tools
-            </p>
+            <p className="text-white/40 text-[0.7rem] tracking-[0.2em] uppercase mb-2">Ruslie Spring Tools</p>
             <h1
-              className="text-[clamp(1.7rem,4vw,2.4rem)] font-bold"
-              style={{ fontFamily: "'Playfair Display', serif", color: "#f4f8ff" }}
+              className="text-white text-[clamp(1.7rem,4vw,2.4rem)] font-bold"
+              style={{ fontFamily: "'Playfair Display', serif" }}
             >
-              {existing ? "Edit" : "New"}{" "}
-              <span
-                style={{
-                  background: "linear-gradient(135deg, #38bdf8, #22d3ee 50%, #818cf8)",
-                  WebkitBackgroundClip: "text",
-                  WebkitTextFillColor: "transparent",
-                  backgroundClip: "text",
-                }}
-              >
-                Transaction
-              </span>
+              {existing ? "Edit" : "New"} <span className="text-gray-300">Transaction</span>
             </h1>
-            <p className="text-slate-400 text-sm mt-1">Isi detail, simpan ke database, lalu cetak.</p>
+            <p className="text-white/40 text-sm mt-1">Isi detail, simpan ke database, lalu cetak.</p>
           </div>
         </header>
 
@@ -436,7 +440,7 @@ export default function TransactionForm({
                     />
                   </div>
                 </div>
-                <InvoiceQrSeal invoiceNumber={invoice.number} />
+                <InvoiceQrSeal invoiceNumber={invoice.number} transactionId={existing?.id} />
               </div>
             </div>
 
@@ -585,19 +589,44 @@ export default function TransactionForm({
               className="add-item-section no-print relative z-10 mb-6 rounded-xl p-5"
               style={{ background: "#f8fafc", border: "1.5px dashed rgba(2,29,71,0.14)" }}
             >
-              <p className="font-semibold text-[#021d47] text-sm mb-3 flex items-center gap-2">
-                <Plus size={14} /> Add Item
-              </p>
-              <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+              <div className="flex items-center justify-between mb-3">
+                <p className="font-semibold text-[#021d47] text-sm flex items-center gap-2">
+                  <Plus size={14} /> Add Item
+                </p>
+                <Link
+                  href="/admin/wires"
+                  className="text-[0.72rem] font-medium text-blue-600 hover:text-blue-800 flex items-center gap-1"
+                >
+                  <Cable size={12} /> Kelola Wire
+                </Link>
+              </div>
+
+              {/* Wire picker — its own prominent labeled row */}
+              <div className="mb-3">
+                <label className="block text-xs font-semibold text-gray-600 mb-1.5">
+                  Pilih Wire
+                </label>
                 <WireSelect
                   wires={wires}
                   value={selectedWireId}
                   onSelect={handleSelectWire}
                 />
+                {wires.length === 0 && (
+                  <p className="text-[0.72rem] text-gray-400 mt-1">
+                    Belum ada wire di database.{" "}
+                    <Link href="/admin/wires" className="text-blue-600 hover:underline">
+                      Tambah wire dulu
+                    </Link>
+                    .
+                  </p>
+                )}
+              </div>
+
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
                 <input
                   value={newItem.name}
                   onChange={(e) => { setNewItem((p) => ({ ...p, name: e.target.value })); setItemError(""); }}
-                  placeholder="Item name"
+                  placeholder="Nama item"
                   className="col-span-2 border border-gray-200 rounded-lg px-3 py-2 text-sm text-gray-700 focus:outline-none focus:border-blue-400 transition-colors"
                   onKeyDown={(e) => e.key === "Enter" && addItem()}
                 />
@@ -613,7 +642,7 @@ export default function TransactionForm({
                   value={newItem.price || ""}
                   onChange={(e) => setNewItem((p) => ({ ...p, price: Number(e.target.value) }))}
                   type="number"
-                  placeholder="Price (Rp)"
+                  placeholder="Harga (Rp)"
                   min={1}
                   className="border border-gray-200 rounded-lg px-3 py-2 text-sm text-gray-700 focus:outline-none focus:border-blue-400 transition-colors"
                   onKeyDown={(e) => e.key === "Enter" && addItem()}
@@ -797,6 +826,25 @@ export default function TransactionForm({
                 <Save size={16} />
                 {saving ? "Menyimpan…" : existing ? "Update" : "Simpan Transaksi"}
               </motion.button>
+              {existing?.id && (
+                <motion.button
+                  onClick={handleCopyPublicLink}
+                  whileHover={{ scale: 1.04, boxShadow: "0 8px 28px rgba(2,29,71,0.18)" }}
+                  whileTap={{ scale: 0.97 }}
+                  className="flex items-center gap-2 font-semibold px-7 py-3 rounded-xl text-sm tracking-wide transition-colors"
+                  style={{
+                    background: linkCopied ? "#16a34a" : "#fff",
+                    color: linkCopied ? "#fff" : "#021d47",
+                    border: `1.5px solid ${linkCopied ? "#16a34a" : "#021d47"}`,
+                    cursor: "pointer",
+                    fontFamily: "'DM Sans', sans-serif",
+                  }}
+                  title="Salin link faktur publik (dibuka dengan 4 digit terakhir no. HP)"
+                >
+                  {linkCopied ? <Check size={16} /> : <Link2 size={16} />}
+                  {linkCopied ? "Link Tersalin" : "Salin Link Publik"}
+                </motion.button>
+              )}
               <motion.button
                 onClick={() => window.print()}
                 whileHover={{ scale: 1.04, boxShadow: "0 8px 28px rgba(2,29,71,0.22)" }}
@@ -1333,7 +1381,7 @@ export default function TransactionForm({
         {/* ── PAGE FOOTER ─────────────────────────────────────────── */}
         <footer
           className="admin-content relative z-10 no-print text-white text-center py-5 text-[0.78rem]"
-          style={{ background: "rgba(2,6,19,0.6)", borderTop: "1px solid rgba(56,189,248,0.15)" }}
+          style={{ background: "#021d47" }}
         >
           <p className="text-white/45">
             © {new Date().getFullYear()}{" "}

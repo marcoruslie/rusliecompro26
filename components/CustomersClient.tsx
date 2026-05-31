@@ -79,7 +79,7 @@ export default function CustomersClient({
       <div className="admin-content max-w-4xl mx-auto">
         <div className="flex items-center justify-between mb-8 admin-rise">
           <div>
-            <p className="admin-eyebrow">Ruslie Spring · Control Panel</p>
+            <p className="admin-eyebrow">Ruslie Spring Admin</p>
             <h1 className="admin-title text-3xl mt-1">Customers</h1>
           </div>
           <Link href="/admin/dashboard" className="admin-btn-ghost">
@@ -146,28 +146,28 @@ export default function CustomersClient({
             <tbody>
               {customers.length === 0 ? (
                 <tr>
-                  <td colSpan={4} className="!text-center py-10 text-slate-500 italic">
+                  <td colSpan={4} className="!text-center py-10 text-gray-400 italic">
                     Belum ada customer.
                   </td>
                 </tr>
               ) : (
                 customers.map((c) => (
                   <tr key={c.id}>
-                    <td className="font-medium text-slate-100">{c.name}</td>
-                    <td className="text-slate-400">{c.city}</td>
-                    <td className="font-mono text-slate-400">{c.phone}</td>
+                    <td className="font-medium text-gray-800">{c.name}</td>
+                    <td className="text-gray-600">{c.city}</td>
+                    <td className="text-gray-600">{c.phone}</td>
                     <td>
                       <div className="flex items-center gap-3 justify-end">
                         <button
                           onClick={() => startEdit(c)}
-                          className="text-slate-500 hover:text-cyan-300 transition-colors"
+                          className="text-gray-400 hover:text-[#021d47] transition-colors"
                           title="Edit"
                         >
                           <Pencil size={15} />
                         </button>
                         <button
                           onClick={() => c.id && handleDelete(c.id)}
-                          className="text-slate-500 hover:text-rose-400 transition-colors"
+                          className="text-red-400 hover:text-red-600 transition-colors"
                           title="Hapus"
                         >
                           <Trash2 size={15} />

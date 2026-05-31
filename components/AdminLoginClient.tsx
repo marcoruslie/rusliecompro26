@@ -46,12 +46,8 @@ export default function AdminLoginClient() {
             <div className="admin-badge w-10 h-10 rounded-xl text-lg">R</div>
             <div>
               <h1 className="admin-title text-lg leading-none">Admin</h1>
-              <p className="admin-eyebrow mt-1.5">Ruslie Spring · Secure</p>
+              <p className="admin-eyebrow mt-1.5">Ruslie Spring</p>
             </div>
-            <span className="ml-auto flex items-center gap-1.5 text-[0.6rem] font-mono uppercase tracking-[0.2em] text-cyan-300/70">
-              <span className="w-1.5 h-1.5 rounded-full bg-cyan-400 animate-pulse" />
-              Online
-            </span>
           </div>
 
           <form onSubmit={handleSubmit} className="space-y-4">
@@ -82,13 +78,13 @@ export default function AdminLoginClient() {
             {error && <p className="admin-error">⚠ {error}</p>}
 
             <button type="submit" disabled={loading} className="admin-btn w-full mt-1">
-              {loading ? "Authenticating…" : "Authenticate"}
+              {loading ? "Signing in…" : "Sign In"}
             </button>
           </form>
         </div>
 
-        <p className="text-center mt-5 text-[0.6rem] font-mono uppercase tracking-[0.25em] text-slate-500">
-          Ruslie Spring Control Panel
+        <p className="text-center mt-5 text-[0.65rem] uppercase tracking-[0.2em] text-gray-400">
+          Ruslie Spring Admin
         </p>
       </div>
     </div>
