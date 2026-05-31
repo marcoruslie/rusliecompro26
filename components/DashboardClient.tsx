@@ -71,43 +71,21 @@ export default function DashboardClient({
   }, [transactions, search, from, to]);
 
   return (
-    <div
-      className="min-h-screen px-6 py-10"
-      style={{ background: "#f0f4f8", fontFamily: "'DM Sans', sans-serif" }}
-    >
-      <div className="max-w-6xl mx-auto">
-        <div className="flex items-center justify-between mb-8 flex-wrap gap-4">
+    <div className="admin-shell px-6 py-10">
+      <div className="admin-content max-w-6xl mx-auto">
+        <div className="flex items-center justify-between mb-8 flex-wrap gap-4 admin-rise">
           <div>
-            <p className="text-[0.7rem] tracking-widest uppercase text-gray-400">
-              Ruslie Spring Admin
-            </p>
-            <h1
-              className="text-2xl font-bold"
-              style={{ color: "#021d47", fontFamily: "'Playfair Display', serif" }}
-            >
-              Dashboard
-            </h1>
+            <p className="admin-eyebrow">Ruslie Spring · Control Panel</p>
+            <h1 className="admin-title text-3xl mt-1">Dashboard</h1>
           </div>
-          <div className="flex items-center gap-3">
-            <Link
-              href="/admin/transactions/new"
-              className="flex items-center gap-1.5 text-white text-sm font-semibold px-4 py-2 rounded-lg"
-              style={{ background: "#021d47" }}
-            >
+          <div className="flex items-center gap-3 flex-wrap">
+            <Link href="/admin/transactions/new" className="admin-btn">
               <Plus size={15} /> New Transaction
             </Link>
-            <Link
-              href="/admin/customers"
-              className="text-sm font-semibold px-4 py-2 rounded-lg border"
-              style={{ color: "#021d47", borderColor: "rgba(2,29,71,0.2)", background: "#fff" }}
-            >
+            <Link href="/admin/customers" className="admin-btn-ghost">
               Customers
             </Link>
-            <Link
-              href="/admin/wires"
-              className="text-sm font-semibold px-4 py-2 rounded-lg border"
-              style={{ color: "#021d47", borderColor: "rgba(2,29,71,0.2)", background: "#fff" }}
-            >
+            <Link href="/admin/wires" className="admin-btn-ghost">
               Wires
             </Link>
             <AdminSignOutButton />
@@ -117,83 +95,77 @@ export default function DashboardClient({
         {/* Stat cards */}
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
           {[
-            { label: "Revenue (Bulan Ini)", value: rupiah(stats.month) },
-            { label: "Revenue (Total)", value: rupiah(stats.all) },
+            { label: "Revenue · Bulan Ini", value: rupiah(stats.month), accent: true },
+            { label: "Revenue · Total", value: rupiah(stats.all) },
             { label: "Jumlah Transaksi", value: String(stats.count) },
             { label: "Online / Direct", value: `${rupiah(stats.online)} / ${rupiah(stats.direct)}` },
-          ].map((c) => (
+          ].map((c, i) => (
             <div
               key={c.label}
-              className="rounded-2xl bg-white p-5 shadow-sm"
-              style={{ border: "1px solid rgba(2,29,71,0.08)" }}
+              className="admin-panel admin-panel-glow admin-rise rounded-2xl p-5"
+              style={{ animationDelay: `${i * 0.06}s` }}
             >
-              <p className="text-[0.7rem] uppercase tracking-wider text-gray-400">{c.label}</p>
-              <p className="text-lg font-bold mt-1" style={{ color: "#021d47" }}>
-                {c.value}
-              </p>
+              <p className="admin-label mb-2">{c.label}</p>
+              <p className={`admin-stat-value ${c.accent ? "text-2xl" : "text-xl"}`}>{c.value}</p>
             </div>
           ))}
         </div>
 
         {/* Chart */}
-        <div
-          className="rounded-2xl bg-white p-6 shadow-sm mb-8"
-          style={{ border: "1px solid rgba(2,29,71,0.08)" }}
-        >
-          <p className="font-semibold text-[#021d47] text-sm mb-2">Revenue per Bulan</p>
+        <div className="admin-panel admin-panel-glow admin-rise rounded-2xl p-6 mb-8">
+          <p className="admin-panel-heading mb-2">Revenue per Bulan</p>
           <RevenueBarChart data={chartData} />
         </div>
 
         {/* Filters */}
         <div className="flex flex-wrap items-end gap-3 mb-4">
           <div className="flex-1 min-w-[200px]">
-            <label className="block text-xs text-gray-500 mb-1">Cari (nama / no. invoice)</label>
+            <label className="admin-label">Cari (nama / no. invoice)</label>
             <input
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              placeholder="Cari…"
-              className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-[#021d47]"
+              placeholder="Ketik nama atau nomor invoice…"
+              className="admin-input"
             />
           </div>
           <div>
-            <label className="block text-xs text-gray-500 mb-1">Dari</label>
+            <label className="admin-label">Dari</label>
             <input
               type="date"
               value={from}
               onChange={(e) => setFrom(e.target.value)}
-              className="border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-[#021d47]"
+              placeholder="Tanggal mulai"
+              className="admin-input"
             />
           </div>
           <div>
-            <label className="block text-xs text-gray-500 mb-1">Sampai</label>
+            <label className="admin-label">Sampai</label>
             <input
               type="date"
               value={to}
               onChange={(e) => setTo(e.target.value)}
-              className="border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-[#021d47]"
+              placeholder="Tanggal akhir"
+              className="admin-input"
             />
           </div>
         </div>
 
         {/* Transaction list */}
-        <div
-          className="rounded-2xl bg-white shadow-sm overflow-x-auto"
-          style={{ border: "1px solid rgba(2,29,71,0.08)" }}
-        >
-          <table className="w-full text-sm">
+        <div className="admin-panel rounded-2xl overflow-x-auto">
+          <table className="admin-table">
             <thead>
-              <tr style={{ background: "#021d47", color: "#fff" }}>
-                <th className="text-left p-3 font-semibold text-xs uppercase tracking-wider">Tanggal</th>
-                <th className="text-left p-3 font-semibold text-xs uppercase tracking-wider">No. Invoice</th>
-                <th className="text-left p-3 font-semibold text-xs uppercase tracking-wider">Customer</th>
-                <th className="text-left p-3 font-semibold text-xs uppercase tracking-wider">Kategori</th>
-                <th className="text-right p-3 font-semibold text-xs uppercase tracking-wider">Total</th>
+              <tr>
+                <th>Tanggal</th>
+                <th>No. Invoice</th>
+                <th>Customer</th>
+                <th>Kategori</th>
+                <th className="!text-right">Total</th>
               </tr>
             </thead>
             <tbody>
               {filtered.length === 0 ? (
                 <tr>
-                  <td colSpan={5} className="text-center py-10 text-gray-400 italic">
+                  <td colSpan={5} className="!text-center py-10 text-slate-500 italic">
                     Tidak ada transaksi.
                   </td>
                 </tr>
@@ -202,19 +174,17 @@ export default function DashboardClient({
                   <tr
                     key={t.id}
                     onClick={() => router.push(`/admin/transactions/${t.id}`)}
-                    className="border-b border-gray-100 hover:bg-blue-50/50 cursor-pointer"
+                    className="cursor-pointer"
                   >
-                    <td className="p-3 text-gray-600">
+                    <td className="font-mono text-slate-400">
                       {t.created_at ? t.created_at.slice(0, 10) : t.invoice_date}
                     </td>
-                    <td className="p-3 font-medium text-gray-800">{t.invoice_number}</td>
-                    <td className="p-3 text-gray-700">{t.customer?.name}</td>
-                    <td className="p-3 text-gray-600 capitalize">
+                    <td className="font-mono font-medium text-cyan-200">{t.invoice_number}</td>
+                    <td className="text-slate-100">{t.customer?.name}</td>
+                    <td className="capitalize text-slate-400">
                       {t.channel === "online" ? "Online Shop" : "Direct"}
                     </td>
-                    <td className="p-3 text-right font-semibold" style={{ color: "#021d47" }}>
-                      {rupiah(t.total)}
-                    </td>
+                    <td className="!text-right font-semibold text-cyan-300">{rupiah(t.total)}</td>
                   </tr>
                 ))
               )}

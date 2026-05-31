@@ -75,83 +75,57 @@ export default function CustomersClient({
   }
 
   return (
-    <div
-      className="min-h-screen px-6 py-10"
-      style={{ background: "#f0f4f8", fontFamily: "'DM Sans', sans-serif" }}
-    >
-      <div className="max-w-4xl mx-auto">
-        <div className="flex items-center justify-between mb-8">
+    <div className="admin-shell px-6 py-10">
+      <div className="admin-content max-w-4xl mx-auto">
+        <div className="flex items-center justify-between mb-8 admin-rise">
           <div>
-            <p className="text-[0.7rem] tracking-widest uppercase text-gray-400">
-              Ruslie Spring Admin
-            </p>
-            <h1
-              className="text-2xl font-bold"
-              style={{ color: "#021d47", fontFamily: "'Playfair Display', serif" }}
-            >
-              Customers
-            </h1>
+            <p className="admin-eyebrow">Ruslie Spring · Control Panel</p>
+            <h1 className="admin-title text-3xl mt-1">Customers</h1>
           </div>
-          <Link
-            href="/admin/dashboard"
-            className="text-sm font-semibold px-4 py-2 rounded-lg border"
-            style={{ color: "#021d47", borderColor: "rgba(2,29,71,0.2)", background: "#fff" }}
-          >
+          <Link href="/admin/dashboard" className="admin-btn-ghost">
             ← Dashboard
           </Link>
         </div>
 
         {/* Add / edit form */}
-        <div
-          className="rounded-2xl bg-white p-5 shadow-sm mb-6"
-          style={{ border: "1px solid rgba(2,29,71,0.08)" }}
-        >
-          <p className="font-semibold text-[#021d47] text-sm mb-3 flex items-center gap-2">
+        <div className="admin-panel admin-panel-glow admin-rise rounded-2xl p-5 mb-6">
+          <p className="admin-panel-heading mb-4 flex items-center gap-2">
             {editingId ? <Pencil size={14} /> : <Plus size={14} />}
             {editingId ? "Edit Customer" : "Tambah Customer"}
           </p>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
             <input
               value={draft.name}
               onChange={(e) => setDraft((d) => ({ ...d, name: e.target.value }))}
-              placeholder="Nama"
-              className="border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-[#021d47]"
+              placeholder="Nama lengkap customer"
+              className="admin-input"
             />
             <input
               value={draft.phone}
               onChange={(e) => setDraft((d) => ({ ...d, phone: e.target.value }))}
-              placeholder="No. Telp"
-              className="border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-[#021d47]"
+              placeholder="No. telp (mis. 0812…)"
+              className="admin-input"
             />
             <input
               value={draft.address}
               onChange={(e) => setDraft((d) => ({ ...d, address: e.target.value }))}
-              placeholder="Alamat"
-              className="border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-[#021d47] sm:col-span-2"
+              placeholder="Alamat lengkap"
+              className="admin-input sm:col-span-2"
             />
             <input
               value={draft.city}
               onChange={(e) => setDraft((d) => ({ ...d, city: e.target.value }))}
-              placeholder="Kota"
-              className="border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-[#021d47] sm:col-span-2"
+              placeholder="Kota / kode pos"
+              className="admin-input sm:col-span-2"
             />
           </div>
-          {error && <p className="text-red-500 text-xs mt-2">⚠ {error}</p>}
-          <div className="flex gap-2 mt-3">
-            <button
-              onClick={handleSave}
-              disabled={busy}
-              className="flex items-center gap-1.5 text-white text-sm font-semibold px-5 py-2 rounded-lg disabled:opacity-60"
-              style={{ background: "#021d47" }}
-            >
+          {error && <p className="admin-error mt-3">⚠ {error}</p>}
+          <div className="flex gap-2 mt-4">
+            <button onClick={handleSave} disabled={busy} className="admin-btn">
               <Save size={14} /> {busy ? "Menyimpan…" : "Simpan"}
             </button>
             {editingId && (
-              <button
-                onClick={resetForm}
-                className="flex items-center gap-1.5 text-gray-500 text-sm font-medium px-4 py-2 rounded-lg border"
-                style={{ borderColor: "rgba(2,29,71,0.12)" }}
-              >
+              <button onClick={resetForm} className="admin-btn-ghost">
                 <X size={14} /> Batal
               </button>
             )}
@@ -159,44 +133,41 @@ export default function CustomersClient({
         </div>
 
         {/* List */}
-        <div
-          className="rounded-2xl bg-white shadow-sm overflow-x-auto"
-          style={{ border: "1px solid rgba(2,29,71,0.08)" }}
-        >
-          <table className="w-full text-sm">
+        <div className="admin-panel admin-rise rounded-2xl overflow-x-auto">
+          <table className="admin-table">
             <thead>
-              <tr style={{ background: "#021d47", color: "#fff" }}>
-                <th className="text-left p-3 font-semibold text-xs uppercase tracking-wider">Nama</th>
-                <th className="text-left p-3 font-semibold text-xs uppercase tracking-wider">Kota</th>
-                <th className="text-left p-3 font-semibold text-xs uppercase tracking-wider">No. Telp</th>
-                <th className="p-3 w-24"></th>
+              <tr>
+                <th>Nama</th>
+                <th>Kota</th>
+                <th>No. Telp</th>
+                <th className="w-24"></th>
               </tr>
             </thead>
             <tbody>
               {customers.length === 0 ? (
                 <tr>
-                  <td colSpan={4} className="text-center py-10 text-gray-400 italic">
+                  <td colSpan={4} className="!text-center py-10 text-slate-500 italic">
                     Belum ada customer.
                   </td>
                 </tr>
               ) : (
                 customers.map((c) => (
-                  <tr key={c.id} className="border-b border-gray-100">
-                    <td className="p-3 font-medium text-gray-800">{c.name}</td>
-                    <td className="p-3 text-gray-600">{c.city}</td>
-                    <td className="p-3 text-gray-600">{c.phone}</td>
-                    <td className="p-3">
+                  <tr key={c.id}>
+                    <td className="font-medium text-slate-100">{c.name}</td>
+                    <td className="text-slate-400">{c.city}</td>
+                    <td className="font-mono text-slate-400">{c.phone}</td>
+                    <td>
                       <div className="flex items-center gap-3 justify-end">
                         <button
                           onClick={() => startEdit(c)}
-                          className="text-gray-400 hover:text-[#021d47]"
+                          className="text-slate-500 hover:text-cyan-300 transition-colors"
                           title="Edit"
                         >
                           <Pencil size={15} />
                         </button>
                         <button
                           onClick={() => c.id && handleDelete(c.id)}
-                          className="text-red-400 hover:text-red-600"
+                          className="text-slate-500 hover:text-rose-400 transition-colors"
                           title="Hapus"
                         >
                           <Trash2 size={15} />

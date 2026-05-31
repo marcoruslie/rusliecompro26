@@ -14,16 +14,7 @@ export default function AdminSignOutButton() {
   }
 
   return (
-    <button
-      onClick={handleSignOut}
-      className="text-sm font-semibold px-4 py-2 rounded-lg border transition-colors"
-      style={{
-        color: "#021d47",
-        borderColor: "rgba(2,29,71,0.2)",
-        background: "#fff",
-        cursor: "pointer",
-      }}
-    >
+    <button onClick={handleSignOut} className="admin-btn-ghost">
       Sign Out
     </button>
   );

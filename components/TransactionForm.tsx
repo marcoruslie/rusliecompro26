@@ -313,19 +313,15 @@ export default function TransactionForm({
       <nav
         className="no-print fixed top-0 left-0 right-0 z-50 flex items-center justify-between px-6 lg:px-10 h-[68px]"
         style={{
-          background: "rgba(2,29,71,0.97)",
-          backdropFilter: "blur(14px)",
-          borderBottom: "1px solid rgba(255,255,255,0.07)",
+          background: "rgba(5,11,32,0.85)",
+          backdropFilter: "blur(16px) saturate(140%)",
+          borderBottom: "1px solid rgba(56,189,248,0.18)",
+          boxShadow: "0 1px 30px -10px rgba(56,189,248,0.5)",
           fontFamily: "'DM Sans', sans-serif",
         }}
       >
         <Link href="/" className="flex items-center gap-2.5">
-          <div
-            className="w-8 h-8 rounded-full flex items-center justify-center font-bold text-base"
-            style={{ background: "#fff", color: "#021d47", fontFamily: "'Playfair Display', serif" }}
-          >
-            R
-          </div>
+          <div className="admin-badge w-8 h-8 rounded-lg text-base">R</div>
           <span
             className="text-white font-bold text-[1.15rem] tracking-wide"
             style={{ fontFamily: "'Playfair Display', serif" }}
@@ -352,28 +348,38 @@ export default function TransactionForm({
 
       {/* ── PAGE SHELL ───────────────────────────────────────────── */}
       <div
-        className="min-h-screen flex flex-col no-print-bg"
-        style={{ background: "#f0f4f8", fontFamily: "'DM Sans', sans-serif" }}
+        className="admin-shell flex flex-col no-print-bg"
+        style={{ fontFamily: "'DM Sans', sans-serif" }}
       >
         {/* hero banner */}
-        <header
-          className="no-print pt-[68px] pb-8 px-6"
-          style={{ background: "linear-gradient(135deg, #021d47 0%, #0b2255 100%)" }}
-        >
+        <header className="admin-content no-print pt-[68px] pb-8 px-6 relative z-10">
           <div className="max-w-3xl mx-auto pt-8">
-            <p className="text-white/40 text-[0.7rem] tracking-[0.2em] uppercase mb-2">Ruslie Spring Tools</p>
+            <p className="admin-eyebrow mb-2 flex items-center gap-2">
+              <span className="w-1.5 h-1.5 rounded-full bg-cyan-400 animate-pulse" />
+              Ruslie Spring · Tools
+            </p>
             <h1
-              className="text-white text-[clamp(1.7rem,4vw,2.4rem)] font-bold"
-              style={{ fontFamily: "'Playfair Display', serif" }}
+              className="text-[clamp(1.7rem,4vw,2.4rem)] font-bold"
+              style={{ fontFamily: "'Playfair Display', serif", color: "#f4f8ff" }}
             >
-              {existing ? "Edit" : "New"} <span className="text-gray-300">Transaction</span>
+              {existing ? "Edit" : "New"}{" "}
+              <span
+                style={{
+                  background: "linear-gradient(135deg, #38bdf8, #22d3ee 50%, #818cf8)",
+                  WebkitBackgroundClip: "text",
+                  WebkitTextFillColor: "transparent",
+                  backgroundClip: "text",
+                }}
+              >
+                Transaction
+              </span>
             </h1>
-            <p className="text-white/40 text-sm mt-1">Isi detail, simpan ke database, lalu cetak.</p>
+            <p className="text-slate-400 text-sm mt-1">Isi detail, simpan ke database, lalu cetak.</p>
           </div>
         </header>
 
         {/* ── INVOICE DOCUMENT ─────────────────────────────────── */}
-        <main className="flex-1 px-4 sm:px-6 py-8 pb-20">
+        <main className="admin-content relative z-10 flex-1 px-4 sm:px-6 py-8 pb-20">
           <motion.div
             initial={{ opacity: 0, y: 24 }}
             animate={{ opacity: 1, y: 0 }}
@@ -416,6 +422,7 @@ export default function TransactionForm({
                     <input
                       value={invoice.date}
                       onChange={(e) => setInvoice((p) => ({ ...p, date: e.target.value }))}
+                      placeholder="31 Mei 2026"
                       className="print-input border-b border-dashed border-gray-300 bg-transparent text-right text-sm text-gray-700 focus:outline-none focus:border-gray-500 w-40"
                     />
                   </div>
@@ -424,6 +431,7 @@ export default function TransactionForm({
                     <input
                       value={invoice.number}
                       onChange={(e) => setInvoice((p) => ({ ...p, number: e.target.value }))}
+                      placeholder="INV-260531-AB"
                       className="print-input border-b border-dashed border-gray-300 bg-transparent text-right text-sm font-semibold text-gray-700 focus:outline-none focus:border-gray-500 w-40"
                     />
                   </div>
@@ -1324,8 +1332,8 @@ export default function TransactionForm({
 
         {/* ── PAGE FOOTER ─────────────────────────────────────────── */}
         <footer
-          className="no-print text-white text-center py-5 text-[0.78rem]"
-          style={{ background: "#021d47" }}
+          className="admin-content relative z-10 no-print text-white text-center py-5 text-[0.78rem]"
+          style={{ background: "rgba(2,6,19,0.6)", borderTop: "1px solid rgba(56,189,248,0.15)" }}
         >
           <p className="text-white/45">
             © {new Date().getFullYear()}{" "}
