@@ -25,14 +25,24 @@ export default function InvoiceQrSeal({
   }, [transactionId, invoiceNumber]);
 
   return (
-    <div className="flex flex-col items-center gap-1.5">
+    <div className="flex flex-col items-center gap-1 max-w-[128px]">
       <QRCodeSVG value={value} size={72} level="M" />
-      <p className="text-[0.6rem] text-gray-500 text-center leading-tight max-w-[120px]">
+      <p
+        className="text-[0.58rem] font-bold uppercase tracking-[0.12em] text-center leading-tight"
+        style={{ color: "#021d47" }}
+      >
+        Tanda Tangan Digital
+      </p>
+      <p className="text-[0.55rem] text-gray-500 text-center leading-snug">
         {transactionId ? (
-          <>Scan untuk buka faktur</>
+          <>
+            Seluruh dokumen <span className="font-semibold">Ruslie Spring</span> telah
+            tergabung dalam satu jaringan terverifikasi. Pindai untuk memverifikasi keaslian.
+          </>
         ) : (
           <>
-            Faktur sah dari <span className="font-semibold">Ruslie Spring</span>
+            Dokumen <span className="font-semibold">Ruslie Spring</span> — satu jaringan
+            terverifikasi. Simpan faktur untuk mengaktifkan tanda tangan digital.
           </>
         )}
       </p>

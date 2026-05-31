@@ -176,6 +176,28 @@ export default function PublicInvoiceClient({ id }: { id: string }) {
           </div>
         </div>
 
+        {/* Verified badge */}
+        <div
+          className="relative z-10 mb-6 flex items-center gap-3 rounded-xl px-4 py-3"
+          style={{ background: "rgba(22,163,74,0.08)", border: "1px solid rgba(22,163,74,0.25)" }}
+        >
+          <div
+            className="flex items-center justify-center w-9 h-9 rounded-full shrink-0"
+            style={{ background: "#16a34a", color: "#fff" }}
+          >
+            <ShieldCheck size={18} />
+          </div>
+          <div className="leading-tight">
+            <p className="text-[0.8rem] font-bold" style={{ color: "#15803d" }}>
+              Dokumen Terverifikasi · Tanda Tangan Digital
+            </p>
+            <p className="text-[0.7rem] text-gray-600">
+              Faktur asli dari <span className="font-semibold">Ruslie Spring</span>, tergabung
+              dalam satu jaringan terverifikasi.
+            </p>
+          </div>
+        </div>
+
         {/* Bill to */}
         <div
           className="relative z-10 mb-8 rounded-xl p-5"
