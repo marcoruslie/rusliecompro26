@@ -1,16 +1,17 @@
 "use client";
 
 import Link from "next/link";
-import { Home, Users, Cable, FileText } from "lucide-react";
+import { Home, Users, Cable, FileText, ListChecks } from "lucide-react";
 import AdminSignOutButton from "@/components/AdminSignOutButton";
 
-export type AdminPage = "dashboard" | "customers" | "wires" | "transaction";
+export type AdminPage = "dashboard" | "customers" | "wires" | "transaction" | "queue";
 
 const LINKS = [
   { key: "dashboard", href: "/admin/dashboard", label: "Dashboard", Icon: Home },
   { key: "customers", href: "/admin/customers", label: "Customers", Icon: Users },
   { key: "wires", href: "/admin/wires", label: "Wires", Icon: Cable },
   { key: "transaction", href: "/admin/transactions/new", label: "Transaction", Icon: FileText },
+  { key: "queue", href: "/admin/queue", label: "Queue", Icon: ListChecks },
 ] as const;
 
 export default function AdminNav({ active }: { active: AdminPage }) {

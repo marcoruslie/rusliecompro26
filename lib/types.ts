@@ -1,5 +1,6 @@
 export type Channel = "online" | "direct";
 export type PaymentMethod = "cash" | "top";
+export type OrderStatus = "processing" | "completed";
 
 export interface Customer {
   id?: string;
@@ -45,4 +46,7 @@ export interface Transaction {
   subtotal: number;
   total: number;
   sender_name: string;
+  status?: OrderStatus;
+  image_drive_id?: string | null;
+  image_name?: string | null;
 }
