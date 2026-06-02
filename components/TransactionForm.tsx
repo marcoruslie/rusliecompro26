@@ -823,7 +823,7 @@ export default function TransactionForm({
                   fontFamily: "'DM Sans', sans-serif",
                 }}
               >
-                <Save size={16} />
+                {saving ? <span className="admin-btn-spinner" /> : <Save size={16} />}
                 {saving ? "Menyimpan…" : existing ? "Update" : "Simpan Transaksi"}
               </motion.button>
               {existing?.id && (

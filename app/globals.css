@@ -250,3 +250,69 @@ select.admin-input option { background: #ffffff; color: #1e293b; }
   to   { opacity: 1; transform: translateY(0); }
 }
 .admin-rise { animation: admin-rise 0.4s ease both; }
+
+/* ── Loading (route transitions) ── */
+.admin-loading {
+  position: fixed;
+  inset: 0;
+  z-index: 60;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 1.1rem;
+  background: #eff3f9;
+  animation: admin-fade 0.2s ease both;
+}
+@keyframes admin-fade { from { opacity: 0; } to { opacity: 1; } }
+
+.admin-loading-mark { position: relative; display: grid; place-items: center; }
+.admin-spinner {
+  width: 2.9rem;
+  height: 2.9rem;
+  border-radius: 50%;
+  border: 3px solid rgba(2, 29, 71, 0.14);
+  border-top-color: #021d47;
+  animation: admin-spin 0.7s linear infinite;
+}
+@keyframes admin-spin { to { transform: rotate(360deg); } }
+
+.admin-loading-r {
+  position: absolute;
+  font-family: var(--font-playfair);
+  font-weight: 700;
+  font-size: 1rem;
+  color: #021d47;
+}
+.admin-loading-text {
+  font-size: 0.74rem;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: #64748b;
+}
+
+/* Inline button spinner (for pending actions like sign-out / save) */
+.admin-btn-spinner {
+  width: 0.95rem;
+  height: 0.95rem;
+  border-radius: 50%;
+  border: 2px solid rgba(255, 255, 255, 0.45);
+  border-top-color: #ffffff;
+  animation: admin-spin 0.7s linear infinite;
+}
+.admin-btn-ghost .admin-btn-spinner {
+  border-color: rgba(2, 29, 71, 0.3);
+  border-top-color: #021d47;
+}
+
+/* Small navy spinner for icon buttons on light backgrounds (row delete, etc.) */
+.admin-spinner-xs {
+  display: inline-block;
+  width: 0.9rem;
+  height: 0.9rem;
+  border-radius: 50%;
+  border: 2px solid rgba(2, 29, 71, 0.2);
+  border-top-color: #021d47;
+  animation: admin-spin 0.7s linear infinite;
+  vertical-align: middle;
+}

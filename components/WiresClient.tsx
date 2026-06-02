@@ -24,6 +24,10 @@ export default function WiresClient({
   const [wires, setWires] = useState<Wire[]>(initialWires);
   const [types, setTypes] = useState<WireType[]>(initialTypes);
   const [error, setError] = useState("");
+  const [savingType, setSavingType] = useState(false);
+  const [savingWire, setSavingWire] = useState(false);
+  const [deletingTypeId, setDeletingTypeId] = useState<string | null>(null);
+  const [deletingWireId, setDeletingWireId] = useState<string | null>(null);
 
   // wire draft
   const [wireName, setWireName] = useState("");
@@ -44,6 +48,7 @@ export default function WiresClient({
   async function saveType() {
     setError("");
     if (!typeName.trim()) { setError("Nama tipe wajib diisi."); return; }
+    setSavingType(true);
     try {
       if (editingTypeId) {
         const u = await updateWireType(supabase, editingTypeId, typeName.trim());
@@ -56,16 +61,21 @@ export default function WiresClient({
       setEditingTypeId(null);
     } catch {
       setError("Gagal menyimpan tipe (mungkin nama duplikat).");
+    } finally {
+      setSavingType(false);
     }
   }
 
   async function removeType(id: string) {
     if (!confirm("Hapus tipe ini? Wire yang memakainya akan kehilangan tipe.")) return;
+    setDeletingTypeId(id);
     try {
       await deleteWireType(supabase, id);
       setTypes((prev) => prev.filter((t) => t.type_id !== id));
     } catch {
       setError("Gagal menghapus tipe.");
+    } finally {
+      setDeletingTypeId(null);
     }
   }
 
@@ -74,6 +84,7 @@ export default function WiresClient({
     setError("");
     if (!wireName.trim()) { setError("Nama wire wajib diisi."); return; }
     const payload = { name: wireName.trim(), type_id: wireTypeId || null };
+    setSavingWire(true);
     try {
       if (editingWireId) {
         const u = await updateWire(supabase, editingWireId, payload);
@@ -87,16 +98,21 @@ export default function WiresClient({
       setEditingWireId(null);
     } catch {
       setError("Gagal menyimpan wire.");
+    } finally {
+      setSavingWire(false);
     }
   }
 
   async function removeWire(id: string) {
     if (!confirm("Hapus wire ini?")) return;
+    setDeletingWireId(id);
     try {
       await deleteWire(supabase, id);
       setWires((prev) => prev.filter((w) => w.wire_id !== id));
     } catch {
       setError("Gagal menghapus wire.");
+    } finally {
+      setDeletingWireId(null);
     }
   }
 
@@ -131,8 +147,12 @@ export default function WiresClient({
                 <button onClick={() => { setEditingTypeId(t.type_id ?? null); setTypeName(t.name); }} title="Edit">
                   <Pencil size={13} className="text-gray-400 hover:text-[#021d47]" />
                 </button>
-                <button onClick={() => t.type_id && removeType(t.type_id)} title="Hapus">
-                  <Trash2 size={13} className="text-red-400 hover:text-red-600" />
+                <button onClick={() => t.type_id && removeType(t.type_id)} disabled={deletingTypeId === t.type_id} title="Hapus">
+                  {deletingTypeId === t.type_id ? (
+                    <span className="admin-spinner-xs" style={{ width: "0.8rem", height: "0.8rem" }} />
+                  ) : (
+                    <Trash2 size={13} className="text-red-400 hover:text-red-600" />
+                  )}
                 </button>
               </span>
             ))}
@@ -144,8 +164,9 @@ export default function WiresClient({
               placeholder="Nama tipe (mis. SUS304)"
               className="admin-input flex-1"
             />
-            <button onClick={saveType} className="admin-btn">
-              <Save size={14} /> {editingTypeId ? "Update" : "Tambah"}
+            <button onClick={saveType} disabled={savingType} className="admin-btn">
+              {savingType ? <span className="admin-btn-spinner" /> : <Save size={14} />}
+              {savingType ? "Menyimpan…" : editingTypeId ? "Update" : "Tambah"}
             </button>
             {editingTypeId && (
               <button onClick={() => { setEditingTypeId(null); setTypeName(""); }} className="admin-btn-ghost">
@@ -182,8 +203,9 @@ export default function WiresClient({
             </div>
           </div>
           <div className="flex gap-2 mt-4">
-            <button onClick={saveWire} className="admin-btn">
-              <Save size={14} /> {editingWireId ? "Update" : "Simpan"}
+            <button onClick={saveWire} disabled={savingWire} className="admin-btn">
+              {savingWire ? <span className="admin-btn-spinner" /> : <Save size={14} />}
+              {savingWire ? "Menyimpan…" : editingWireId ? "Update" : "Simpan"}
             </button>
             {editingWireId && (
               <button onClick={() => { setEditingWireId(null); setWireName(""); setWireTypeId(""); }} className="admin-btn-ghost">
@@ -220,8 +242,12 @@ export default function WiresClient({
                         <button onClick={() => startEditWire(w)} className="text-gray-400 hover:text-[#021d47] transition-colors" title="Edit">
                           <Pencil size={15} />
                         </button>
-                        <button onClick={() => w.wire_id && removeWire(w.wire_id)} className="text-red-400 hover:text-red-600 transition-colors" title="Hapus">
-                          <Trash2 size={15} />
+                        <button onClick={() => w.wire_id && removeWire(w.wire_id)} disabled={deletingWireId === w.wire_id} className="text-red-400 hover:text-red-600 transition-colors disabled:opacity-60" title="Hapus">
+                          {deletingWireId === w.wire_id ? (
+                            <span className="admin-spinner-xs" />
+                          ) : (
+                            <Trash2 size={15} />
+                          )}
                         </button>
                       </div>
                     </td>

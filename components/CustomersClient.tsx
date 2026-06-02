@@ -19,6 +19,7 @@ export default function CustomersClient({
   const [editingId, setEditingId] = useState<string | null>(null);
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
+  const [deletingId, setDeletingId] = useState<string | null>(null);
 
   function resetForm() {
     setDraft(EMPTY);
@@ -58,6 +59,7 @@ export default function CustomersClient({
 
   async function handleDelete(id: string) {
     if (!confirm("Hapus customer ini?")) return;
+    setDeletingId(id);
     const supabase = createClient();
     try {
       await deleteCustomer(supabase, id);
@@ -65,6 +67,8 @@ export default function CustomersClient({
       if (editingId === id) resetForm();
     } catch {
       setError("Gagal menghapus. Coba lagi.");
+    } finally {
+      setDeletingId(null);
     }
   }
 
@@ -122,7 +126,8 @@ export default function CustomersClient({
           {error && <p className="admin-error mt-3">⚠ {error}</p>}
           <div className="flex gap-2 mt-4">
             <button onClick={handleSave} disabled={busy} className="admin-btn">
-              <Save size={14} /> {busy ? "Menyimpan…" : "Simpan"}
+              {busy ? <span className="admin-btn-spinner" /> : <Save size={14} />}
+              {busy ? "Menyimpan…" : "Simpan"}
             </button>
             {editingId && (
               <button onClick={resetForm} className="admin-btn-ghost">
@@ -167,10 +172,15 @@ export default function CustomersClient({
                         </button>
                         <button
                           onClick={() => c.id && handleDelete(c.id)}
-                          className="text-red-400 hover:text-red-600 transition-colors"
+                          disabled={deletingId === c.id}
+                          className="text-red-400 hover:text-red-600 transition-colors disabled:opacity-60"
                           title="Hapus"
                         >
-                          <Trash2 size={15} />
+                          {deletingId === c.id ? (
+                            <span className="admin-spinner-xs" />
+                          ) : (
+                            <Trash2 size={15} />
+                          )}
                         </button>
                       </div>
                     </td>
