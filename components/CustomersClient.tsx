@@ -1,11 +1,11 @@
 "use client";
 
 import { useState } from "react";
-import Link from "next/link";
 import { Plus, Trash2, Save, X, Pencil } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import { createCustomer, updateCustomer, deleteCustomer } from "@/lib/customers";
 import type { Customer } from "@/lib/types";
+import AdminNav from "@/components/AdminNav";
 
 const EMPTY: Customer = { name: "", address: "", city: "", phone: "" };
 
@@ -79,16 +79,12 @@ export default function CustomersClient({
   }
 
   return (
-    <div className="admin-shell px-6 py-10">
+    <div className="admin-shell px-6 pb-10 pt-[92px]">
+      <AdminNav active="customers" />
       <div className="admin-content max-w-4xl mx-auto">
-        <div className="flex items-center justify-between mb-8 admin-rise">
-          <div>
-            <p className="admin-eyebrow">Ruslie Spring Admin</p>
-            <h1 className="admin-title text-3xl mt-1">Customers</h1>
-          </div>
-          <Link href="/admin/dashboard" className="admin-btn-ghost">
-            ← Dashboard
-          </Link>
+        <div className="mb-8 admin-rise">
+          <p className="admin-eyebrow">Ruslie Spring Admin</p>
+          <h1 className="admin-title text-3xl mt-1">Customers</h1>
         </div>
 
         {/* Add / edit form */}

@@ -131,7 +131,7 @@ export default function PublicInvoiceClient({ id }: { id: string }) {
       `}</style>
 
       <div
-        className="invoice-card bg-white max-w-3xl mx-auto rounded-2xl shadow-2xl p-8 sm:p-10 relative overflow-hidden"
+        className="invoice-card bg-white max-w-3xl mx-auto rounded-2xl shadow-2xl p-5 sm:p-10 relative overflow-hidden"
         style={{ border: "1px solid rgba(2,29,71,0.08)" }}
       >
         {/* Watermark */}
@@ -148,10 +148,10 @@ export default function PublicInvoiceClient({ id }: { id: string }) {
         </div>
 
         {/* Header */}
-        <div className="relative z-10 flex justify-between items-start mb-10 flex-wrap gap-6">
+        <div className="relative z-10 flex justify-between items-start mb-8 sm:mb-10 flex-wrap gap-4 sm:gap-6">
           <div>
             <h2
-              className="text-[2.5rem] font-extrabold tracking-tight"
+              className="text-3xl sm:text-[2.5rem] font-extrabold tracking-tight"
               style={{ color: "#021d47", fontFamily: "'Playfair Display', serif" }}
             >
               INVOICE
@@ -164,7 +164,7 @@ export default function PublicInvoiceClient({ id }: { id: string }) {
               +62 851 0481 5151
             </p>
           </div>
-          <div className="text-right text-sm leading-7 text-gray-600">
+          <div className="text-left sm:text-right text-sm leading-7 text-gray-600">
             <div>
               <span className="text-gray-400">Date:</span>{" "}
               <span className="text-gray-700">{invoice.invoice_date}</span>
@@ -210,8 +210,29 @@ export default function PublicInvoiceClient({ id }: { id: string }) {
           {c.phone && <p className="text-sm text-gray-700">No Telp: {c.phone}</p>}
         </div>
 
-        {/* Items */}
-        <div className="relative z-10 mb-6 overflow-x-auto">
+        {/* Items — stacked cards on phones */}
+        <div className="relative z-10 mb-6 space-y-2.5 sm:hidden no-print">
+          {invoice.items.length === 0 ? (
+            <p className="text-center py-8 text-gray-400 italic text-sm">Tidak ada item.</p>
+          ) : (
+            invoice.items.map((item, i) => (
+              <div key={i} className="rounded-xl border border-gray-200 p-3.5">
+                <div className="flex justify-between items-start gap-3">
+                  <p className="font-medium text-gray-800 text-sm leading-snug">{item.name}</p>
+                  <p className="font-semibold text-[#021d47] text-sm whitespace-nowrap">
+                    {rupiah(item.qty * item.price)}
+                  </p>
+                </div>
+                <p className="text-xs text-gray-500 mt-1">
+                  {item.qty} × {rupiah(item.price)}
+                </p>
+              </div>
+            ))
+          )}
+        </div>
+
+        {/* Items — table on larger screens & print */}
+        <div className="relative z-10 mb-6 overflow-x-auto hidden sm:block print:block">
           <table className="w-full border-collapse text-sm">
             <thead>
               <tr style={{ background: "#021d47", color: "#fff" }}>
@@ -248,7 +269,7 @@ export default function PublicInvoiceClient({ id }: { id: string }) {
 
         {/* Summary */}
         <div className="relative z-10 text-right text-sm text-gray-700">
-          <div className="inline-block min-w-[260px] text-left">
+          <div className="w-full sm:inline-block sm:w-auto sm:min-w-[260px] text-left">
             <div className="flex justify-between py-1.5">
               <span className="text-gray-500">Subtotal</span>
               <span className="font-medium text-gray-800">{rupiah(invoice.subtotal)}</span>

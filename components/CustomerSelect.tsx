@@ -12,7 +12,7 @@ export default function CustomerSelect({
   onSelect: (customer: Customer | null) => void;
 }) {
   return (
-    <div className="col-span-2">
+    <div className="col-span-2 no-print">
       <label className="block text-xs font-semibold text-gray-600 mb-1.5">
         Pilih Customer (opsional)
       </label>

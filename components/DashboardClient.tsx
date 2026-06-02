@@ -1,11 +1,9 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { Plus } from "lucide-react";
 import type { Transaction } from "@/lib/types";
-import AdminSignOutButton from "@/components/AdminSignOutButton";
+import AdminNav from "@/components/AdminNav";
 import RevenueBarChart, { BarDatum } from "@/components/RevenueBarChart";
 
 function rupiah(val: number): string {
@@ -71,25 +69,12 @@ export default function DashboardClient({
   }, [transactions, search, from, to]);
 
   return (
-    <div className="admin-shell px-6 py-10">
+    <div className="admin-shell px-6 pb-10 pt-[92px]">
+      <AdminNav active="dashboard" />
       <div className="admin-content max-w-6xl mx-auto">
-        <div className="flex items-center justify-between mb-8 flex-wrap gap-4 admin-rise">
-          <div>
-            <p className="admin-eyebrow">Ruslie Spring Admin</p>
-            <h1 className="admin-title text-3xl mt-1">Dashboard</h1>
-          </div>
-          <div className="flex items-center gap-3 flex-wrap">
-            <Link href="/admin/transactions/new" className="admin-btn">
-              <Plus size={15} /> New Transaction
-            </Link>
-            <Link href="/admin/customers" className="admin-btn-ghost">
-              Customers
-            </Link>
-            <Link href="/admin/wires" className="admin-btn-ghost">
-              Wires
-            </Link>
-            <AdminSignOutButton />
-          </div>
+        <div className="mb-8 admin-rise">
+          <p className="admin-eyebrow">Ruslie Spring Admin</p>
+          <h1 className="admin-title text-3xl mt-1">Dashboard</h1>
         </div>
 
         {/* Stat cards */}

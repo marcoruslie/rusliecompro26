@@ -4,7 +4,8 @@ import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import Link from "next/link";
-import { Home, FileText, Plus, Trash2, Printer, Save, Users, Cable, Link2, Check } from "lucide-react";
+import { Plus, Trash2, Printer, Save, Cable, Link2, Check } from "lucide-react";
+import AdminNav from "@/components/AdminNav";
 import { createClient } from "@/lib/supabase/client";
 import { createTransaction, updateTransaction } from "@/lib/transactions";
 import { createCustomer } from "@/lib/customers";
@@ -325,40 +326,7 @@ export default function TransactionForm({
       `}</style>
 
       {/* ── NAVBAR ──────────────────────────────────────────────── */}
-      <nav
-        className="no-print fixed top-0 left-0 right-0 z-50 flex items-center justify-between px-6 lg:px-10 h-[68px]"
-        style={{
-          background: "rgba(2,29,71,0.97)",
-          backdropFilter: "blur(14px)",
-          borderBottom: "1px solid rgba(255,255,255,0.07)",
-          fontFamily: "'DM Sans', sans-serif",
-        }}
-      >
-        <Link href="/" className="flex items-center gap-2.5">
-          <div className="admin-badge w-8 h-8 rounded-lg text-base">R</div>
-          <span
-            className="text-white font-bold text-[1.15rem] tracking-wide"
-            style={{ fontFamily: "'Playfair Display', serif" }}
-          >
-            
-          </span>
-        </Link>
-
-        <div className="flex items-center gap-5">
-          <Link href="/admin/dashboard" className="hidden sm:flex items-center gap-1.5 text-white/55 hover:text-white text-[0.78rem] tracking-widest uppercase transition-colors">
-            <Home size={12} /> Dashboard
-          </Link>
-          <Link href="/admin/customers" className="hidden sm:flex items-center gap-1.5 text-white/55 hover:text-white text-[0.78rem] tracking-widest uppercase transition-colors">
-            <Users size={12} /> Customers
-          </Link>
-          <Link href="/admin/wires" className="hidden sm:flex items-center gap-1.5 text-white/55 hover:text-white text-[0.78rem] tracking-widest uppercase transition-colors">
-            <Cable size={12} /> Wires
-          </Link>
-          <span className="text-white text-[0.78rem] tracking-widest uppercase flex items-center gap-1.5">
-            <FileText size={12} /> Transaction
-          </span>
-        </div>
-      </nav>
+      <AdminNav active="transaction" />
 
       {/* ── PAGE SHELL ───────────────────────────────────────────── */}
       <div

@@ -1,8 +1,8 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import Link from "next/link";
 import { Plus, Trash2, Save, X, Pencil } from "lucide-react";
+import AdminNav from "@/components/AdminNav";
 import { createClient } from "@/lib/supabase/client";
 import {
   createWire,
@@ -123,16 +123,12 @@ export default function WiresClient({
   }
 
   return (
-    <div className="admin-shell px-6 py-10">
+    <div className="admin-shell px-6 pb-10 pt-[92px]">
+      <AdminNav active="wires" />
       <div className="admin-content max-w-4xl mx-auto">
-        <div className="flex items-center justify-between mb-8 admin-rise">
-          <div>
-            <p className="admin-eyebrow">Ruslie Spring Admin</p>
-            <h1 className="admin-title text-3xl mt-1">Wires</h1>
-          </div>
-          <Link href="/admin/dashboard" className="admin-btn-ghost">
-            ← Dashboard
-          </Link>
+        <div className="mb-8 admin-rise">
+          <p className="admin-eyebrow">Ruslie Spring Admin</p>
+          <h1 className="admin-title text-3xl mt-1">Wires</h1>
         </div>
 
         {error && <p className="admin-error mb-4">⚠ {error}</p>}
