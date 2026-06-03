@@ -44,6 +44,18 @@ export default function WiresClient({
     return types.find((t) => t.type_id === id)?.name ?? "—";
   }
 
+  const sortedWires = useMemo(
+    () =>
+      [...wires].sort(
+        (a, b) =>
+          a.name.localeCompare(b.name) ||
+          typeNameOf(a.type_id).localeCompare(typeNameOf(b.type_id))
+      ),
+    // typeNameOf depends on `types`; recompute when either list changes
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [wires, types]
+  );
+
   /* ── Wire types ── */
   async function saveType() {
     setError("");
@@ -229,7 +241,7 @@ export default function WiresClient({
                   </td>
                 </tr>
               ) : (
-                wires.map((w) => (
+                sortedWires.map((w) => (
                   <tr key={w.wire_id}>
                     <td className="font-medium text-gray-800">{w.name}</td>
                     <td className="text-gray-600">{typeNameOf(w.type_id)}</td>

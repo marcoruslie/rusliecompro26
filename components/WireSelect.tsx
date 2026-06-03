@@ -1,16 +1,32 @@
 "use client";
 
-import type { Wire } from "@/lib/types";
+import type { Wire, WireType } from "@/lib/types";
 
 export default function WireSelect({
   wires,
+  types = [],
   value,
   onSelect,
 }: {
   wires: Wire[];
+  types?: WireType[];
   value: string | null | undefined;
   onSelect: (wire: Wire | null) => void;
 }) {
+  function typeNameOf(w: Wire): string {
+    return types.find((t) => t.type_id === w.type_id)?.name ?? "";
+  }
+
+  function labelOf(w: Wire): string {
+    const typeName = typeNameOf(w);
+    return typeName ? `${w.name} — ${typeName}` : w.name;
+  }
+
+  const sortedWires = [...wires].sort(
+    (a, b) =>
+      a.name.localeCompare(b.name) || typeNameOf(a).localeCompare(typeNameOf(b))
+  );
+
   return (
     <select
       value={value ?? ""}
@@ -23,9 +39,9 @@ export default function WireSelect({
       <option value="">
         {wires.length === 0 ? "— Belum ada wire —" : "— Pilih Wire —"}
       </option>
-      {wires.map((w) => (
+      {sortedWires.map((w) => (
         <option key={w.wire_id} value={w.wire_id}>
-          {w.name}
+          {labelOf(w)}
         </option>
       ))}
     </select>

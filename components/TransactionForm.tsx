@@ -9,7 +9,7 @@ import AdminNav from "@/components/AdminNav";
 import { createClient } from "@/lib/supabase/client";
 import { createTransaction, updateTransaction } from "@/lib/transactions";
 import { createCustomer } from "@/lib/customers";
-import type { Customer, Channel, Transaction, Wire } from "@/lib/types";
+import type { Customer, Channel, Transaction, Wire, WireType } from "@/lib/types";
 import CustomerSelect from "@/components/CustomerSelect";
 import WireSelect from "@/components/WireSelect";
 import InvoiceQrSeal from "@/components/InvoiceQrSeal";
@@ -65,15 +65,18 @@ function todayFormatted(): string {
 export default function TransactionForm({
   initialCustomers,
   initialWires,
+  initialWireTypes,
   existing,
 }: {
   initialCustomers: Customer[];
   initialWires: Wire[];
+  initialWireTypes?: WireType[];
   existing?: Transaction;
 }) {
   const router = useRouter();
   const [customers, setCustomers] = useState<Customer[]>(initialCustomers);
   const [wires] = useState<Wire[]>(initialWires);
+  const [wireTypes] = useState<WireType[]>(initialWireTypes ?? []);
   const [selectedCustomerId, setSelectedCustomerId] = useState<string | null>(
     existing?.customer_id ?? null
   );
@@ -139,7 +142,7 @@ export default function TransactionForm({
 
   function handleSelectWire(w: Wire | null) {
     setSelectedWireId(w?.wire_id ?? null);
-    setNewItem((p) => ({ ...p, wire_id: w?.wire_id ?? "", name: w ? w.name : p.name }));
+    setNewItem((p) => ({ ...p, wire_id: w?.wire_id ?? "" }));
     setItemError("");
   }
 
@@ -576,6 +579,7 @@ export default function TransactionForm({
                 </label>
                 <WireSelect
                   wires={wires}
+                  types={wireTypes}
                   value={selectedWireId}
                   onSelect={handleSelectWire}
                 />
