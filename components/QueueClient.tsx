@@ -1,9 +1,8 @@
 "use client";
 
-import { useState, useRef, useEffect, Fragment } from "react";
+import { useState, useEffect, Fragment } from "react";
 import { useSearchParams } from "next/navigation";
 import {
-  Upload,
   Eye,
   Trash2,
   CheckCircle2,
@@ -22,18 +21,22 @@ function formatRupiah(n: number) {
   return "Rp " + (n ?? 0).toLocaleString("id-ID");
 }
 
-// Pull a PDF out of a paste/drop's DataTransfer. iOS exposes the file through
-// `items` (kind "file") rather than `files`, so check both.
-function pdfFromDataTransfer(dt: DataTransfer | null | undefined): File | null {
+// Pull a PDF or image out of a paste/drop's DataTransfer. iOS won't expose a
+// copied PDF to the web at all, but it *does* expose images — so accepting
+// images is what makes paste work on iPhone. iOS uses `items` (kind "file")
+// rather than `files`, so check both.
+function attachmentFromDataTransfer(dt: DataTransfer | null | undefined): File | null {
   if (!dt) return null;
-  const isPdf = (f: File) =>
-    f.type === "application/pdf" || f.name.toLowerCase().endsWith(".pdf");
-  const fromFiles = Array.from(dt.files ?? []).find(isPdf);
+  const ok = (f: File) =>
+    f.type === "application/pdf" ||
+    f.type.startsWith("image/") ||
+    /\.(pdf|png|jpe?g|gif|webp|heic|heif|bmp)$/i.test(f.name);
+  const fromFiles = Array.from(dt.files ?? []).find(ok);
   if (fromFiles) return fromFiles;
   for (const item of Array.from(dt.items ?? [])) {
-    if (item.kind === "file" && (item.type === "application/pdf" || item.type === "")) {
+    if (item.kind === "file") {
       const f = item.getAsFile();
-      if (f && isPdf(f)) return f;
+      if (f && ok(f)) return f;
     }
   }
   return null;
@@ -54,7 +57,9 @@ export default function QueueClient({
   const [busyId, setBusyId] = useState<string | null>(null);
   const [error, setError] = useState("");
   const [selectedId, setSelectedId] = useState<string | null>(null);
-  const fileInputs = useRef<Record<string, HTMLInputElement | null>>({});
+  // Paste failures are shown inline next to the button that failed, keyed by
+  // order id, rather than in the page-level error banner.
+  const [pasteErr, setPasteErr] = useState<Record<string, string>>({});
 
   const justConnected = params.get("connected") === "1";
   const oauthError = params.get("error");
@@ -93,10 +98,22 @@ export default function QueueClient({
     }
   }
 
+  function clearPasteErr(id: string) {
+    setPasteErr((p) => {
+      if (!p[id]) return p;
+      const n = { ...p };
+      delete n[id];
+      return n;
+    });
+  }
+  function showPasteErr(id: string, msg: string) {
+    setPasteErr((p) => ({ ...p, [id]: msg }));
+  }
+
   async function handleUpload(o: Transaction, file: File) {
     if (!o.id) return;
     setBusyId(o.id);
-    setError("");
+    clearPasteErr(o.id);
     try {
       const body = new FormData();
       body.append("file", file);
@@ -114,7 +131,7 @@ export default function QueueClient({
         )
       );
     } catch {
-      setError("Gagal mengunggah PDF.");
+      showPasteErr(o.id, "Gagal mengunggah file.");
     } finally {
       setBusyId(null);
     }
@@ -139,40 +156,43 @@ export default function QueueClient({
     }
   }
 
-  // Per-row paste: read a PDF from the clipboard and upload it straight to this
-  // order, no row-selection needed. Where the clipboard has no PDF (Safari),
-  // the upload icon beside it stays as the reliable file-picker fallback.
+  // Per-row paste: read a PDF or image from the clipboard and upload it straight
+  // to this order. On iOS the async Clipboard API only ever yields images (never
+  // PDFs) — that's expected and still useful.
   async function pasteForOrder(o: Transaction) {
     if (!canManagePdf || !connected || !o.id) return;
-    setError("");
+    clearPasteErr(o.id);
     try {
       if (!navigator.clipboard?.read) throw new Error("unsupported");
       const items = await navigator.clipboard.read();
       for (const item of items) {
-        const type = item.types.find((t) => t === "application/pdf");
+        const type = item.types.find(
+          (t) => t === "application/pdf" || t.startsWith("image/")
+        );
         if (!type) continue;
         const blob = await item.getType(type);
-        const file = new File([blob], "clipboard.pdf", { type: "application/pdf" });
+        const ext = type === "application/pdf" ? "pdf" : type.split("/")[1] || "png";
+        const file = new File([blob], `clipboard.${ext}`, { type });
         handleUpload(o, file);
         return;
       }
-      setError("Tidak ada PDF di clipboard — pakai ikon unggah untuk memilih file.");
+      showPasteErr(o.id, "Tidak ada PDF/gambar di clipboard.");
     } catch {
-      setError("Tidak ada PDF di clipboard — pakai ikon unggah untuk memilih file.");
+      showPasteErr(o.id, "Tidak ada PDF/gambar di clipboard.");
     }
   }
 
-  // Paste a PDF straight from the clipboard onto the selected order. Copy a PDF
-  // file in the OS file manager (Ctrl+C), click a row to select it, then Ctrl+V.
+  // Desktop Ctrl+V: paste a PDF or image onto the selected order. Click a row to
+  // select it, then Ctrl+V.
   useEffect(() => {
     function onPaste(e: ClipboardEvent) {
       if (!canManagePdf || !selectedId || !connected) return;
-      const pdf = pdfFromDataTransfer(e.clipboardData);
-      if (!pdf) return;
+      const file = attachmentFromDataTransfer(e.clipboardData);
+      if (!file) return;
       const order = orders.find((o) => o.id === selectedId);
       if (!order) return;
       e.preventDefault();
-      handleUpload(order, pdf);
+      handleUpload(order, file);
     }
     window.addEventListener("paste", onPaste);
     return () => window.removeEventListener("paste", onPaste);
@@ -233,53 +253,57 @@ export default function QueueClient({
             <p className="text-sm text-gray-500 flex items-center gap-2">
               <ClipboardPaste size={15} className="shrink-0" />
               {!connected ? (
-                "Hubungkan Google Drive untuk mengunggah PDF."
+                "Hubungkan Google Drive untuk mengunggah PDF/gambar."
               ) : selectedOrder ? (
                 <>
                   Order{" "}
                   <span className="font-semibold text-[#021d47]">
                     {selectedOrder.invoice_number}
                   </span>{" "}
-                  dipilih — tempel (Ctrl+V) file PDF dari clipboard untuk mengunggah.
+                  dipilih — tempel (Ctrl+V) PDF/gambar dari clipboard untuk mengunggah.
                 </>
               ) : (
-                "Klik satu order untuk memilih, lalu tempel (Ctrl+V) file PDF dari clipboard."
+                "Klik satu order untuk memilih, lalu tempel (Ctrl+V) PDF/gambar dari clipboard."
               )}
             </p>
-            {/* Phones have no Ctrl+V. iOS won't expose a copied PDF to the async
-                Clipboard API, but a real paste event into an editable box does.
+            {/* Phones have no Ctrl+V. iOS won't expose a copied PDF to the web at
+                all, but it *does* expose images — paste an image into this box.
                 Select an order, tap this box, then tap the native Paste. */}
             {connected && (
-              <div
-                contentEditable
-                suppressContentEditableWarning
-                role="textbox"
-                aria-label="Tempel PDF di sini"
-                data-placeholder={
-                  selectedOrder
-                    ? `Ketuk di sini lalu Tempel PDF untuk ${selectedOrder.invoice_number}`
-                    : "Pilih satu order dulu, lalu ketuk & Tempel PDF di sini"
-                }
-                onPaste={(e) => {
-                  e.preventDefault();
-                  e.stopPropagation();
-                  e.currentTarget.textContent = "";
-                  if (!selectedOrder) {
-                    setError("Pilih satu order dulu sebelum menempel PDF.");
-                    return;
+              <>
+                <div
+                  contentEditable
+                  suppressContentEditableWarning
+                  role="textbox"
+                  aria-label="Tempel PDF atau gambar di sini"
+                  data-placeholder={
+                    selectedOrder
+                      ? `Ketuk di sini lalu Tempel PDF/gambar untuk ${selectedOrder.invoice_number}`
+                      : "Pilih satu order dulu, lalu ketuk & Tempel PDF/gambar di sini"
                   }
-                  const pdf = pdfFromDataTransfer(e.clipboardData);
-                  if (pdf) {
-                    setError("");
-                    handleUpload(selectedOrder, pdf);
-                  } else {
-                    setError(
-                      "Clipboard tidak berisi file PDF — di iOS, salin PDF dari app lain lalu coba lagi, atau pakai ikon unggah."
-                    );
-                  }
-                }}
-                className="paste-box mt-3 sm:hidden"
-              />
+                  onPaste={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    e.currentTarget.textContent = "";
+                    if (!selectedOrder?.id) return;
+                    const file = attachmentFromDataTransfer(e.clipboardData);
+                    if (file) {
+                      handleUpload(selectedOrder, file);
+                    } else {
+                      showPasteErr(
+                        selectedOrder.id,
+                        "Clipboard tidak berisi PDF/gambar. Di iPhone, PDF tidak bisa ditempel — salin gambar dokumennya."
+                      );
+                    }
+                  }}
+                  className="paste-box mt-3 sm:hidden"
+                />
+                {selectedOrder?.id && pasteErr[selectedOrder.id] && (
+                  <p className="text-xs text-red-500 mt-1.5 sm:hidden">
+                    {pasteErr[selectedOrder.id]}
+                  </p>
+                )}
+              </>
             )}
           </div>
         )}
@@ -331,43 +355,27 @@ export default function QueueClient({
                     </td>
                     <td>
                       <div className="flex items-center gap-3 justify-end">
-                        {/* Upload (editors only) */}
+                        {/* Paste PDF/image from clipboard (editors only) */}
                         {canManagePdf && (
-                          <>
-                            <input
-                              ref={(el) => {
-                                if (o.id) fileInputs.current[o.id] = el;
-                              }}
-                              type="file"
-                              accept="application/pdf"
-                              className="hidden"
-                              onChange={(e) => {
-                                const f = e.target.files?.[0];
-                                if (f) handleUpload(o, f);
-                                e.target.value = "";
-                              }}
-                            />
+                          <div className="flex items-center gap-2">
                             <button
                               onClick={() => pasteForOrder(o)}
                               disabled={!connected || busyId === o.id}
                               className="text-gray-400 hover:text-[#021d47] transition-colors disabled:opacity-40"
-                              title={connected ? "Tempel PDF dari clipboard" : "Hubungkan Google dulu"}
-                            >
-                              <ClipboardPaste size={17} />
-                            </button>
-                            <button
-                              onClick={() => o.id && fileInputs.current[o.id]?.click()}
-                              disabled={!connected || busyId === o.id}
-                              className="text-gray-400 hover:text-[#021d47] transition-colors disabled:opacity-40"
-                              title={connected ? "Upload PDF" : "Hubungkan Google dulu"}
+                              title={connected ? "Tempel PDF/gambar dari clipboard" : "Hubungkan Google dulu"}
                             >
                               {busyId === o.id ? (
                                 <span className="admin-spinner-xs" />
                               ) : (
-                                <Upload size={17} />
+                                <ClipboardPaste size={17} />
                               )}
                             </button>
-                          </>
+                            {o.id && pasteErr[o.id] && (
+                              <span className="text-xs text-red-500 whitespace-nowrap">
+                                {pasteErr[o.id]}
+                              </span>
+                            )}
+                          </div>
                         )}
                         {/* View PDF in a new tab */}
                         <a

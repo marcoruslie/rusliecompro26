@@ -33,8 +33,17 @@ export async function POST(
   const file = form.get("file");
   if (!(file instanceof File))
     return NextResponse.json({ error: "No file" }, { status: 400 });
-  if (file.type && file.type !== "application/pdf")
-    return NextResponse.json({ error: "Only PDF files allowed" }, { status: 400 });
+  // Accept PDFs and images (the latter is the only thing iOS lets a web page
+  // paste from the clipboard). An empty type can happen for clipboard files.
+  if (
+    file.type &&
+    file.type !== "application/pdf" &&
+    !file.type.startsWith("image/")
+  )
+    return NextResponse.json(
+      { error: "Only PDF or image files allowed" },
+      { status: 400 }
+    );
 
   try {
     const token = await getAccessToken(supabase);
