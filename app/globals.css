@@ -188,6 +188,25 @@ select.admin-input option { background: #ffffff; color: #1e293b; }
 .admin-btn-danger { background: #dc2626; color: #fff; }
 .admin-btn-danger:hover { background: #b91c1c; }
 
+/* ── Tap-to-paste box (mobile PDF paste) ── */
+.paste-box {
+  border: 1.5px dashed rgba(2, 29, 71, 0.3);
+  border-radius: 0.75rem;
+  background: rgba(2, 29, 71, 0.02);
+  padding: 0.85rem 1rem;
+  min-height: 3rem;
+  font-size: 0.875rem;
+  color: #021d47;
+  outline: none;
+  -webkit-user-select: text;
+  user-select: text;
+}
+.paste-box:focus { border-color: #021d47; background: rgba(2, 29, 71, 0.05); }
+.paste-box:empty::before {
+  content: attr(data-placeholder);
+  color: #9ca3af;
+}
+
 /* ── Brand badge (keeps a subtle glow) ── */
 .admin-badge {
   display: flex;

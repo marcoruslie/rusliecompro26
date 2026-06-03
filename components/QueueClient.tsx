@@ -22,6 +22,23 @@ function formatRupiah(n: number) {
   return "Rp " + (n ?? 0).toLocaleString("id-ID");
 }
 
+// Pull a PDF out of a paste/drop's DataTransfer. iOS exposes the file through
+// `items` (kind "file") rather than `files`, so check both.
+function pdfFromDataTransfer(dt: DataTransfer | null | undefined): File | null {
+  if (!dt) return null;
+  const isPdf = (f: File) =>
+    f.type === "application/pdf" || f.name.toLowerCase().endsWith(".pdf");
+  const fromFiles = Array.from(dt.files ?? []).find(isPdf);
+  if (fromFiles) return fromFiles;
+  for (const item of Array.from(dt.items ?? [])) {
+    if (item.kind === "file" && (item.type === "application/pdf" || item.type === "")) {
+      const f = item.getAsFile();
+      if (f && isPdf(f)) return f;
+    }
+  }
+  return null;
+}
+
 export default function QueueClient({
   initialOrders,
   connected,
@@ -122,15 +139,11 @@ export default function QueueClient({
     }
   }
 
-  // Phones have no Ctrl+V, so the paste flow needs a tappable button. Read the
-  // clipboard via the async Clipboard API and upload the first PDF we find.
-  async function pasteFromClipboard() {
-    if (!canManagePdf || !connected) return;
-    const order = orders.find((o) => o.id === selectedId);
-    if (!order) {
-      setError("Pilih satu order dulu sebelum menempel PDF.");
-      return;
-    }
+  // Per-row paste: read a PDF from the clipboard and upload it straight to this
+  // order, no row-selection needed. Where the clipboard has no PDF (Safari),
+  // the upload icon beside it stays as the reliable file-picker fallback.
+  async function pasteForOrder(o: Transaction) {
+    if (!canManagePdf || !connected || !o.id) return;
     setError("");
     try {
       if (!navigator.clipboard?.read) throw new Error("unsupported");
@@ -140,12 +153,12 @@ export default function QueueClient({
         if (!type) continue;
         const blob = await item.getType(type);
         const file = new File([blob], "clipboard.pdf", { type: "application/pdf" });
-        handleUpload(order, file);
+        handleUpload(o, file);
         return;
       }
-      setError("Tidak ada PDF di clipboard.");
+      setError("Tidak ada PDF di clipboard — pakai ikon unggah untuk memilih file.");
     } catch {
-      setError("Tidak ada PDF di clipboard.");
+      setError("Tidak ada PDF di clipboard — pakai ikon unggah untuk memilih file.");
     }
   }
 
@@ -154,11 +167,7 @@ export default function QueueClient({
   useEffect(() => {
     function onPaste(e: ClipboardEvent) {
       if (!canManagePdf || !selectedId || !connected) return;
-      const files = e.clipboardData?.files;
-      if (!files || files.length === 0) return;
-      const pdf = Array.from(files).find(
-        (f) => f.type === "application/pdf" || f.name.toLowerCase().endsWith(".pdf")
-      );
+      const pdf = pdfFromDataTransfer(e.clipboardData);
       if (!pdf) return;
       const order = orders.find((o) => o.id === selectedId);
       if (!order) return;
@@ -237,19 +246,41 @@ export default function QueueClient({
                 "Klik satu order untuk memilih, lalu tempel (Ctrl+V) file PDF dari clipboard."
               )}
             </p>
-            {/* Phones have no Ctrl+V — give them a tap target instead. */}
-            <button
-              onClick={pasteFromClipboard}
-              disabled={!connected || (!!selectedId && busyId === selectedId)}
-              className="admin-btn mt-3 sm:hidden disabled:opacity-40"
-            >
-              {!!selectedId && busyId === selectedId ? (
-                <span className="admin-spinner-xs" />
-              ) : (
-                <ClipboardPaste size={15} />
-              )}
-              Tempel PDF
-            </button>
+            {/* Phones have no Ctrl+V. iOS won't expose a copied PDF to the async
+                Clipboard API, but a real paste event into an editable box does.
+                Select an order, tap this box, then tap the native Paste. */}
+            {connected && (
+              <div
+                contentEditable
+                suppressContentEditableWarning
+                role="textbox"
+                aria-label="Tempel PDF di sini"
+                data-placeholder={
+                  selectedOrder
+                    ? `Ketuk di sini lalu Tempel PDF untuk ${selectedOrder.invoice_number}`
+                    : "Pilih satu order dulu, lalu ketuk & Tempel PDF di sini"
+                }
+                onPaste={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  e.currentTarget.textContent = "";
+                  if (!selectedOrder) {
+                    setError("Pilih satu order dulu sebelum menempel PDF.");
+                    return;
+                  }
+                  const pdf = pdfFromDataTransfer(e.clipboardData);
+                  if (pdf) {
+                    setError("");
+                    handleUpload(selectedOrder, pdf);
+                  } else {
+                    setError(
+                      "Clipboard tidak berisi file PDF — di iOS, salin PDF dari app lain lalu coba lagi, atau pakai ikon unggah."
+                    );
+                  }
+                }}
+                className="paste-box mt-3 sm:hidden"
+              />
+            )}
           </div>
         )}
 
@@ -316,6 +347,14 @@ export default function QueueClient({
                                 e.target.value = "";
                               }}
                             />
+                            <button
+                              onClick={() => pasteForOrder(o)}
+                              disabled={!connected || busyId === o.id}
+                              className="text-gray-400 hover:text-[#021d47] transition-colors disabled:opacity-40"
+                              title={connected ? "Tempel PDF dari clipboard" : "Hubungkan Google dulu"}
+                            >
+                              <ClipboardPaste size={17} />
+                            </button>
                             <button
                               onClick={() => o.id && fileInputs.current[o.id]?.click()}
                               disabled={!connected || busyId === o.id}
