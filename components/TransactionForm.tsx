@@ -41,16 +41,43 @@ function formatCurrency(val: number): string {
   return val.toLocaleString("id-ID", { minimumFractionDigits: 0 });
 }
 
-function getFormattedInvoiceNumber(): string {
+function invoiceDatePart(): string {
   const date = new Date();
   const yy = String(date.getFullYear()).slice(-2);
   const mm = String(date.getMonth() + 1).padStart(2, "0");
   const dd = String(date.getDate()).padStart(2, "0");
-  const datePart = yy + mm + dd;
-  const letters = Array.from({ length: 2 }, () =>
+  return yy + mm + dd;
+}
+
+function randomLetters(): string {
+  return Array.from({ length: 2 }, () =>
     String.fromCharCode(65 + Math.floor(Math.random() * 26))
   ).join("");
-  return `${datePart}-${letters}`;
+}
+
+// Indonesian company-form tokens that precede the actual business name.
+const COMPANY_PREFIXES = new Set(["PT", "CV", "UD", "PD", "TB"]);
+
+// Derive a 2-letter prefix from a customer name:
+//   "KOBEX EQUIPMENT" -> "KE"   (initials of first two words)
+//   "KOBEX"           -> "KO"   (first two letters of the only word)
+//   "PT. KOBEX"       -> "KO"   (company form stripped first)
+function getNamePrefix(name: string): string {
+  const words = name
+    .toUpperCase()
+    .replace(/[^A-Z\s]/g, " ") // drop dots/punctuation so "PT." -> "PT"
+    .trim()
+    .split(/\s+/)
+    .filter(Boolean);
+  while (words.length > 1 && COMPANY_PREFIXES.has(words[0])) words.shift();
+  if (words.length === 0) return "";
+  if (words.length === 1) return words[0].slice(0, 2);
+  return words[0][0] + words[1][0];
+}
+
+function buildInvoiceNumber(name: string): string {
+  const suffix = getNamePrefix(name) || randomLetters();
+  return `INV-${invoiceDatePart()}-${suffix}`;
 }
 
 function todayFormatted(): string {
@@ -125,11 +152,12 @@ export default function TransactionForm({
   }, []);
 
   // Auto-generate an invoice number only when creating a new transaction.
+  // The 2-letter suffix follows the customer name (falls back to random while blank).
   useEffect(() => {
     if (!existing) {
-      setInvoice((p) => ({ ...p, number: "INV-" + getFormattedInvoiceNumber() }));
+      setInvoice((p) => ({ ...p, number: buildInvoiceNumber(p.customer.name) }));
     }
-  }, [existing]);
+  }, [existing, invoice.customer.name]);
 
   /* ── Derived ── */
   const subtotal = invoice.items.reduce((acc, i) => acc + i.qty * i.price, 0);
