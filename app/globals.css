@@ -207,6 +207,50 @@ select.admin-input option { background: #ffffff; color: #1e293b; }
   color: #9ca3af;
 }
 
+/* ── Queue print layout: 4 files (A6) per A4 page ── */
+/* Kept off-screen on screen media so its images preload; revealed for print. */
+.queue-print {
+  position: absolute;
+  left: -10000px;
+  top: 0;
+}
+.print-page {
+  width: 210mm;
+  height: 297mm;
+  display: grid;
+  grid-template-columns: 105mm 105mm;
+  grid-template-rows: 99mm 99mm 99mm;
+}
+.print-cell {
+  width: 105mm;
+  height: 99mm;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
+  /* Whitespace around each file so neighbours and page edges don't touch. */
+  padding: 1mm;
+}
+.print-cell img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: top;
+  border: 1px solid #000;
+}
+
+@media print {
+  body { background: none !important; }
+  .queue-screen { display: none !important; }
+  .queue-print { position: static; left: 0; top: 0; background: none; }
+  .print-page,
+  .print-cell { background: none; }
+  .print-page { page-break-after: always; break-after: page; }
+  .print-page:last-child { page-break-after: auto; break-after: auto; }
+  @page { size: A4; margin: 0; }
+}
+
 /* ── Brand badge (keeps a subtle glow) ── */
 .admin-badge {
   display: flex;

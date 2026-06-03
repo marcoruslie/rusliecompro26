@@ -10,6 +10,7 @@ import {
   FileText,
   Link2,
   ClipboardPaste,
+  Printer,
 } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import { updateOrderStatus } from "@/lib/orders";
@@ -60,6 +61,9 @@ export default function QueueClient({
   // Paste failures are shown inline next to the button that failed, keyed by
   // order id, rather than in the page-level error banner.
   const [pasteErr, setPasteErr] = useState<Record<string, string>>({});
+  // Printing is built on demand: preload every file, render the off-screen grid,
+  // then call window.print() — so we don't eagerly fetch all files on page load.
+  const [printing, setPrinting] = useState(false);
 
   const justConnected = params.get("connected") === "1";
   const oauthError = params.get("error");
@@ -79,6 +83,39 @@ export default function QueueClient({
     processing: orders.filter((o) => (o.status ?? "processing") === "processing").length,
     completed: orders.filter((o) => o.status === "completed").length,
   };
+
+  // Print: files from the current tab, packed 6 per A4 page (2×3 grid).
+  // The last page is padded with blank cells so the 6-up layout stays intact.
+  const printable = visible.filter((o) => o.image_drive_id);
+  const printPages: (Transaction | null)[][] = [];
+  for (let i = 0; i < printable.length; i += 6) {
+    const slice = printable.slice(i, i + 6);
+    while (slice.length < 6) slice.push(null as unknown as Transaction);
+    printPages.push(slice);
+  }
+
+  // Mount the off-screen grid, preload every file (so cached images don't stall
+  // a DOM onLoad), then open the print dialog and tear the grid back down.
+  async function startPrint() {
+    if (printable.length === 0 || printing) return;
+    setPrinting(true);
+    try {
+      await Promise.all(
+        printable.map(
+          (o) =>
+            new Promise<void>((resolve) => {
+              const img = new Image();
+              img.onload = () => resolve();
+              img.onerror = () => resolve();
+              img.src = `/api/orders/${o.id}/image`;
+            })
+        )
+      );
+      window.print();
+    } finally {
+      setPrinting(false);
+    }
+  }
 
   async function toggleStatus(o: Transaction) {
     if (!o.id) return;
@@ -200,12 +237,28 @@ export default function QueueClient({
   }, [selectedId, connected, orders]);
 
   return (
-    <div className="admin-shell px-6 pb-10 pt-[92px]">
+    <>
+    <div className="admin-shell px-6 pb-10 pt-[92px] queue-screen">
       <AdminNav active="queue" role={role} />
       <div className="admin-content max-w-5xl mx-auto">
-        <div className="mb-8 admin-rise">
-          <p className="admin-eyebrow">Ruslie Spring Admin</p>
-          <h1 className="admin-title text-3xl mt-1">Queue</h1>
+        <div className="mb-8 admin-rise flex items-end justify-between gap-4">
+          <div>
+            <p className="admin-eyebrow">Ruslie Spring Admin</p>
+            <h1 className="admin-title text-3xl mt-1">Queue</h1>
+          </div>
+          <button
+            onClick={startPrint}
+            disabled={printable.length === 0 || printing}
+            className="admin-btn whitespace-nowrap disabled:opacity-40"
+            title={
+              printable.length
+                ? `Cetak ${printable.length} file (4 per halaman A4)`
+                : "Tidak ada file untuk dicetak"
+            }
+          >
+            {printing ? <span className="admin-spinner-xs" /> : <Printer size={15} />}
+            Print ({printable.length})
+          </button>
         </div>
 
         {/* Google connect banner */}
@@ -440,5 +493,28 @@ export default function QueueClient({
         </div>
       </div>
     </div>
+
+    {/* Print layout — built only while printing, off-screen until the print
+        dialog opens. Each A4 page holds a 2×2 grid of A6 cells (4 files). */}
+    {printing && (
+      <div className="queue-print" aria-hidden>
+        {printPages.map((page, pi) => (
+          <div className="print-page" key={pi}>
+            {page.map((o, ci) => (
+              <div className="print-cell" key={ci}>
+                {o?.image_drive_id && (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img
+                    src={`/api/orders/${o.id}/image`}
+                    alt={o.invoice_number ?? ""}
+                  />
+                )}
+              </div>
+            ))}
+          </div>
+        ))}
+      </div>
+    )}
+    </>
   );
 }
