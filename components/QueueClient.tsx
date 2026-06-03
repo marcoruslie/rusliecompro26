@@ -122,6 +122,33 @@ export default function QueueClient({
     }
   }
 
+  // Phones have no Ctrl+V, so the paste flow needs a tappable button. Read the
+  // clipboard via the async Clipboard API and upload the first PDF we find.
+  async function pasteFromClipboard() {
+    if (!canManagePdf || !connected) return;
+    const order = orders.find((o) => o.id === selectedId);
+    if (!order) {
+      setError("Pilih satu order dulu sebelum menempel PDF.");
+      return;
+    }
+    setError("");
+    try {
+      if (!navigator.clipboard?.read) throw new Error("unsupported");
+      const items = await navigator.clipboard.read();
+      for (const item of items) {
+        const type = item.types.find((t) => t === "application/pdf");
+        if (!type) continue;
+        const blob = await item.getType(type);
+        const file = new File([blob], "clipboard.pdf", { type: "application/pdf" });
+        handleUpload(order, file);
+        return;
+      }
+      setError("Tidak ada PDF di clipboard.");
+    } catch {
+      setError("Tidak ada PDF di clipboard.");
+    }
+  }
+
   // Paste a PDF straight from the clipboard onto the selected order. Copy a PDF
   // file in the OS file manager (Ctrl+C), click a row to select it, then Ctrl+V.
   useEffect(() => {
@@ -193,22 +220,37 @@ export default function QueueClient({
 
         {/* Clipboard paste hint (editors only) */}
         {canManagePdf && (
-          <p className="text-sm text-gray-500 mb-4 flex items-center gap-2">
-            <ClipboardPaste size={15} className="shrink-0" />
-            {!connected ? (
-              "Hubungkan Google Drive untuk mengunggah PDF."
-            ) : selectedOrder ? (
-              <>
-                Order{" "}
-                <span className="font-semibold text-[#021d47]">
-                  {selectedOrder.invoice_number}
-                </span>{" "}
-                dipilih — tempel (Ctrl+V) file PDF dari clipboard untuk mengunggah.
-              </>
-            ) : (
-              "Klik satu order untuk memilih, lalu tempel (Ctrl+V) file PDF dari clipboard."
-            )}
-          </p>
+          <div className="mb-4">
+            <p className="text-sm text-gray-500 flex items-center gap-2">
+              <ClipboardPaste size={15} className="shrink-0" />
+              {!connected ? (
+                "Hubungkan Google Drive untuk mengunggah PDF."
+              ) : selectedOrder ? (
+                <>
+                  Order{" "}
+                  <span className="font-semibold text-[#021d47]">
+                    {selectedOrder.invoice_number}
+                  </span>{" "}
+                  dipilih — tempel (Ctrl+V) file PDF dari clipboard untuk mengunggah.
+                </>
+              ) : (
+                "Klik satu order untuk memilih, lalu tempel (Ctrl+V) file PDF dari clipboard."
+              )}
+            </p>
+            {/* Phones have no Ctrl+V — give them a tap target instead. */}
+            <button
+              onClick={pasteFromClipboard}
+              disabled={!connected || (!!selectedId && busyId === selectedId)}
+              className="admin-btn mt-3 sm:hidden disabled:opacity-40"
+            >
+              {!!selectedId && busyId === selectedId ? (
+                <span className="admin-spinner-xs" />
+              ) : (
+                <ClipboardPaste size={15} />
+              )}
+              Tempel PDF
+            </button>
+          </div>
         )}
 
         {/* Table */}
