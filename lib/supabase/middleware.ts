@@ -1,5 +1,6 @@
 import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
+import { roleFromUser } from "@/lib/auth";
 
 export async function updateSession(request: NextRequest) {
   let supabaseResponse = NextResponse.next({ request });
@@ -33,6 +34,9 @@ export async function updateSession(request: NextRequest) {
   const { pathname } = request.nextUrl;
   const isLoginPage = pathname === "/admin";
   const isProtected = pathname.startsWith("/admin");
+  const role = roleFromUser(user);
+  // Viewers are confined to the Queue page; everywhere else under /admin is admin-only.
+  const isViewerAllowed = pathname === "/admin/queue" || pathname.startsWith("/admin/queue/");
 
   if (!user && isProtected && !isLoginPage) {
     const url = request.nextUrl.clone();
@@ -42,7 +46,13 @@ export async function updateSession(request: NextRequest) {
 
   if (user && isLoginPage) {
     const url = request.nextUrl.clone();
-    url.pathname = "/admin/dashboard";
+    url.pathname = role === "viewer" ? "/admin/queue" : "/admin/dashboard";
+    return NextResponse.redirect(url);
+  }
+
+  if (user && role === "viewer" && isProtected && !isLoginPage && !isViewerAllowed) {
+    const url = request.nextUrl.clone();
+    url.pathname = "/admin/queue";
     return NextResponse.redirect(url);
   }
 

@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { Home, Users, Cable, FileText, ListChecks } from "lucide-react";
 import AdminSignOutButton from "@/components/AdminSignOutButton";
+import type { AppRole } from "@/lib/auth";
 
 export type AdminPage = "dashboard" | "customers" | "wires" | "transaction" | "queue";
 
@@ -14,7 +15,16 @@ const LINKS = [
   { key: "queue", href: "/admin/queue", label: "Queue", Icon: ListChecks },
 ] as const;
 
-export default function AdminNav({ active }: { active: AdminPage }) {
+export default function AdminNav({
+  active,
+  role = "admin",
+}: {
+  active: AdminPage;
+  role?: AppRole;
+}) {
+  // Viewers can only reach the Queue, so don't surface links they can't open.
+  const links = role === "viewer" ? LINKS.filter((l) => l.key === "queue") : LINKS;
+  const homeHref = role === "viewer" ? "/admin/queue" : "/admin/dashboard";
   return (
     <nav
       className="no-print fixed top-0 left-0 right-0 z-50 flex items-center justify-between px-6 lg:px-10 h-[68px]"
@@ -25,12 +35,12 @@ export default function AdminNav({ active }: { active: AdminPage }) {
         fontFamily: "'DM Sans', sans-serif",
       }}
     >
-      <Link href="/admin/dashboard" className="flex items-center gap-2.5">
+      <Link href={homeHref} className="flex items-center gap-2.5">
         <div className="admin-badge w-8 h-8 rounded-lg text-base">R</div>
       </Link>
 
       <div className="flex items-center gap-5">
-        {LINKS.map(({ key, href, label, Icon }) =>
+        {links.map(({ key, href, label, Icon }) =>
           key === active ? (
             <span
               key={key}

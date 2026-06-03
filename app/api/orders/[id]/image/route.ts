@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
+import { roleFromUser } from "@/lib/auth";
 import { getTransaction } from "@/lib/transactions";
 import { setOrderImage, clearOrderImage } from "@/lib/orders";
 import {
@@ -22,8 +23,11 @@ export async function POST(
   { params }: { params: { id: string } }
 ) {
   const supabase = createClient();
-  if (!(await requireUser(supabase)))
+  const user = await requireUser(supabase);
+  if (!user)
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  if (roleFromUser(user) === "viewer")
+    return NextResponse.json({ error: "Forbidden" }, { status: 403 });
 
   const form = await req.formData();
   const file = form.get("file");
@@ -88,8 +92,11 @@ export async function DELETE(
   { params }: { params: { id: string } }
 ) {
   const supabase = createClient();
-  if (!(await requireUser(supabase)))
+  const user = await requireUser(supabase);
+  if (!user)
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  if (roleFromUser(user) === "viewer")
+    return NextResponse.json({ error: "Forbidden" }, { status: 403 });
 
   const txn = await getTransaction(supabase, params.id);
   try {

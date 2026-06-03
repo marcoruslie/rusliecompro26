@@ -225,6 +225,30 @@ select.admin-input option { background: #ffffff; color: #1e293b; }
 .admin-table tbody tr { transition: background 0.15s; }
 .admin-table tbody tr:hover { background: rgba(2, 29, 71, 0.04); }
 
+/* ── Queue list: larger, lighter, cleaner variant of the admin table ── */
+.queue-table { font-size: 0.95rem; }
+.queue-table thead th {
+  background: #f8fafc;
+  color: #475569;
+  font-size: 0.72rem;
+  letter-spacing: 0.07em;
+  padding: 0.95rem 1.25rem;
+  border-bottom: 1px solid #e8edf3;
+}
+.queue-table tbody td {
+  padding: 0.9rem 1.25rem;
+  font-size: 0.95rem;
+  border-bottom: none;
+}
+/* Keep each order glued to its own detail row; separate orders with one clean line. */
+.queue-table tbody tr.queue-detail td {
+  padding-top: 0;
+  padding-bottom: 1.15rem;
+  border-bottom: 1px solid #eef2f7;
+}
+.queue-table tbody tr:hover { background: transparent; }
+.queue-table tbody tr.queue-row:hover { background: rgba(2, 29, 71, 0.03); }
+
 /* ── Misc chips / values ── */
 .admin-chip {
   display: inline-flex;

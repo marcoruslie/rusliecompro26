@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect, Fragment } from "react";
 import { useSearchParams } from "next/navigation";
 import {
   Upload,
@@ -10,10 +10,12 @@ import {
   RotateCcw,
   FileText,
   Link2,
+  ClipboardPaste,
 } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import { updateOrderStatus } from "@/lib/orders";
 import type { Transaction, OrderStatus } from "@/lib/types";
+import type { AppRole } from "@/lib/auth";
 import AdminNav from "@/components/AdminNav";
 
 function formatRupiah(n: number) {
@@ -23,21 +25,34 @@ function formatRupiah(n: number) {
 export default function QueueClient({
   initialOrders,
   connected,
+  role = "admin",
 }: {
   initialOrders: Transaction[];
   connected: boolean;
+  role?: AppRole;
 }) {
   const params = useSearchParams();
   const [orders, setOrders] = useState<Transaction[]>(initialOrders);
   const [tab, setTab] = useState<OrderStatus>("processing");
   const [busyId, setBusyId] = useState<string | null>(null);
   const [error, setError] = useState("");
+  const [selectedId, setSelectedId] = useState<string | null>(null);
   const fileInputs = useRef<Record<string, HTMLInputElement | null>>({});
 
   const justConnected = params.get("connected") === "1";
   const oauthError = params.get("error");
 
+  // The Queue never shows monetary values for anyone — admin or viewer alike.
+  // (For viewers, amounts are also stripped server-side as defense in depth.)
+  const showAmounts = false;
+  const colCount = showAmounts ? 6 : 5;
+
+  // Viewers may open/preview PDFs but not upload, paste, or delete them.
+  // (The image API also rejects viewer POST/DELETE as defense in depth.)
+  const canManagePdf = role !== "viewer";
+
   const visible = orders.filter((o) => (o.status ?? "processing") === tab);
+  const selectedOrder = orders.find((o) => o.id === selectedId) ?? null;
   const counts = {
     processing: orders.filter((o) => (o.status ?? "processing") === "processing").length,
     completed: orders.filter((o) => o.status === "completed").length,
@@ -107,9 +122,30 @@ export default function QueueClient({
     }
   }
 
+  // Paste a PDF straight from the clipboard onto the selected order. Copy a PDF
+  // file in the OS file manager (Ctrl+C), click a row to select it, then Ctrl+V.
+  useEffect(() => {
+    function onPaste(e: ClipboardEvent) {
+      if (!canManagePdf || !selectedId || !connected) return;
+      const files = e.clipboardData?.files;
+      if (!files || files.length === 0) return;
+      const pdf = Array.from(files).find(
+        (f) => f.type === "application/pdf" || f.name.toLowerCase().endsWith(".pdf")
+      );
+      if (!pdf) return;
+      const order = orders.find((o) => o.id === selectedId);
+      if (!order) return;
+      e.preventDefault();
+      handleUpload(order, pdf);
+    }
+    window.addEventListener("paste", onPaste);
+    return () => window.removeEventListener("paste", onPaste);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedId, connected, orders]);
+
   return (
     <div className="admin-shell px-6 pb-10 pt-[92px]">
-      <AdminNav active="queue" />
+      <AdminNav active="queue" role={role} />
       <div className="admin-content max-w-5xl mx-auto">
         <div className="mb-8 admin-rise">
           <p className="admin-eyebrow">Ruslie Spring Admin</p>
@@ -155,14 +191,34 @@ export default function QueueClient({
           ))}
         </div>
 
+        {/* Clipboard paste hint (editors only) */}
+        {canManagePdf && (
+          <p className="text-sm text-gray-500 mb-4 flex items-center gap-2">
+            <ClipboardPaste size={15} className="shrink-0" />
+            {!connected ? (
+              "Hubungkan Google Drive untuk mengunggah PDF."
+            ) : selectedOrder ? (
+              <>
+                Order{" "}
+                <span className="font-semibold text-[#021d47]">
+                  {selectedOrder.invoice_number}
+                </span>{" "}
+                dipilih — tempel (Ctrl+V) file PDF dari clipboard untuk mengunggah.
+              </>
+            ) : (
+              "Klik satu order untuk memilih, lalu tempel (Ctrl+V) file PDF dari clipboard."
+            )}
+          </p>
+        )}
+
         {/* Table */}
         <div className="admin-panel admin-rise rounded-2xl overflow-x-auto">
-          <table className="admin-table">
+          <table className="admin-table queue-table">
             <thead>
               <tr>
                 <th>Invoice</th>
                 <th>Customer</th>
-                <th>Total</th>
+                {showAmounts && <th>Total</th>}
                 <th>Tanggal</th>
                 <th>PDF</th>
                 <th className="w-56"></th>
@@ -171,54 +227,67 @@ export default function QueueClient({
             <tbody>
               {visible.length === 0 ? (
                 <tr>
-                  <td colSpan={6} className="!text-center py-10 text-gray-400 italic">
+                  <td colSpan={colCount} className="!text-center py-10 text-gray-400 italic">
                     Tidak ada order {tab === "processing" ? "diproses" : "selesai"}.
                   </td>
                 </tr>
               ) : (
                 visible.map((o) => (
-                  <tr key={o.id}>
-                    <td className="font-medium text-gray-800">{o.invoice_number}</td>
-                    <td className="text-gray-600">{o.customer?.name}</td>
-                    <td className="text-gray-600">{formatRupiah(o.total)}</td>
-                    <td className="text-gray-600">{o.invoice_date}</td>
+                  <Fragment key={o.id}>
+                  <tr
+                    onClick={canManagePdf ? () => setSelectedId(o.id ?? null) : undefined}
+                    className={canManagePdf ? "queue-row cursor-pointer" : "queue-row"}
+                    style={
+                      canManagePdf && selectedId === o.id
+                        ? { background: "rgba(2,29,71,0.05)", boxShadow: "inset 3px 0 0 #021d47" }
+                        : undefined
+                    }
+                  >
+                    <td className="font-semibold text-[#021d47]">{o.invoice_number}</td>
+                    <td className="text-gray-700">{o.customer?.name}</td>
+                    {showAmounts && <td className="text-gray-700">{formatRupiah(o.total)}</td>}
+                    <td className="text-gray-500">{o.invoice_date}</td>
                     <td>
                       {o.image_drive_id ? (
-                        <span className="inline-flex items-center gap-1 text-green-600 text-xs">
+                        <span className="inline-flex items-center gap-1.5 text-green-700 bg-green-50 border border-green-100 px-2.5 py-1 rounded-full text-xs font-medium">
                           <FileText size={13} /> Ada
                         </span>
                       ) : (
-                        <span className="text-gray-400 text-xs">—</span>
+                        <span className="text-gray-300 text-sm">—</span>
                       )}
                     </td>
                     <td>
                       <div className="flex items-center gap-3 justify-end">
-                        {/* Upload */}
-                        <input
-                          ref={(el) => {
-                            if (o.id) fileInputs.current[o.id] = el;
-                          }}
-                          type="file"
-                          accept="application/pdf"
-                          className="hidden"
-                          onChange={(e) => {
-                            const f = e.target.files?.[0];
-                            if (f) handleUpload(o, f);
-                            e.target.value = "";
-                          }}
-                        />
-                        <button
-                          onClick={() => o.id && fileInputs.current[o.id]?.click()}
-                          disabled={!connected || busyId === o.id}
-                          className="text-gray-400 hover:text-[#021d47] transition-colors disabled:opacity-40"
-                          title={connected ? "Upload PDF" : "Hubungkan Google dulu"}
-                        >
-                          {busyId === o.id ? (
-                            <span className="admin-spinner-xs" />
-                          ) : (
-                            <Upload size={15} />
-                          )}
-                        </button>
+                        {/* Upload (editors only) */}
+                        {canManagePdf && (
+                          <>
+                            <input
+                              ref={(el) => {
+                                if (o.id) fileInputs.current[o.id] = el;
+                              }}
+                              type="file"
+                              accept="application/pdf"
+                              className="hidden"
+                              onChange={(e) => {
+                                const f = e.target.files?.[0];
+                                if (f) handleUpload(o, f);
+                                e.target.value = "";
+                              }}
+                            />
+                            <button
+                              onClick={() => o.id && fileInputs.current[o.id]?.click()}
+                              disabled={!connected || busyId === o.id}
+                              className="text-gray-400 hover:text-[#021d47] transition-colors disabled:opacity-40"
+                              title={connected ? "Upload PDF" : "Hubungkan Google dulu"}
+                            >
+                              {busyId === o.id ? (
+                                <span className="admin-spinner-xs" />
+                              ) : (
+                                <Upload size={17} />
+                              )}
+                            </button>
+                          </>
+                        )}
                         {/* View PDF in a new tab */}
                         <a
                           href={o.image_drive_id ? `/api/orders/${o.id}/image` : undefined}
@@ -226,44 +295,94 @@ export default function QueueClient({
                           rel="noopener noreferrer"
                           className={
                             o.image_drive_id
-                              ? "text-gray-400 hover:text-[#021d47] transition-colors"
-                              : "text-gray-300 pointer-events-none"
+                              ? "admin-btn-ghost !py-1 text-sm whitespace-nowrap"
+                              : "admin-btn-ghost !py-1 text-sm whitespace-nowrap opacity-40 pointer-events-none"
                           }
                           title="Lihat PDF"
                         >
-                          <Eye size={15} />
+                          <Eye size={16} /> Lihat PDF
                         </a>
-                        {/* Remove image */}
-                        {o.image_drive_id && (
+                        {/* Remove image (editors only) */}
+                        {o.image_drive_id && canManagePdf && (
                           <button
                             onClick={() => handleRemoveImage(o)}
                             disabled={busyId === o.id}
                             className="text-red-400 hover:text-red-600 transition-colors disabled:opacity-60"
                             title="Hapus PDF"
                           >
-                            <Trash2 size={15} />
+                            <Trash2 size={17} />
                           </button>
                         )}
                         {/* Status toggle */}
                         <button
                           onClick={() => toggleStatus(o)}
                           disabled={busyId === o.id}
-                          className="admin-btn-ghost !py-1 !px-2 text-xs"
+                          className="admin-btn-ghost !py-1.5 !px-3 text-sm"
                           title={o.status === "completed" ? "Kembalikan ke proses" : "Tandai selesai"}
                         >
                           {o.status === "completed" ? (
                             <>
-                              <RotateCcw size={13} /> Proses
+                              <RotateCcw size={15} /> Proses
                             </>
                           ) : (
                             <>
-                              <CheckCircle2 size={13} /> Selesai
+                              <CheckCircle2 size={15} /> Selesai
                             </>
                           )}
                         </button>
                       </div>
                     </td>
                   </tr>
+                  {/* Item details */}
+                  <tr
+                    onClick={canManagePdf ? () => setSelectedId(o.id ?? null) : undefined}
+                    className={canManagePdf ? "queue-detail cursor-pointer" : "queue-detail"}
+                    style={
+                      canManagePdf && selectedId === o.id
+                        ? { background: "rgba(2,29,71,0.05)", boxShadow: "inset 3px 0 0 #021d47" }
+                        : undefined
+                    }
+                  >
+                    <td colSpan={colCount}>
+                      <div className="rounded-xl border border-slate-100 bg-slate-50/60 divide-y divide-slate-100">
+                        {o.items && o.items.length > 0 ? (
+                          o.items.map((it, i) => (
+                            <div
+                              key={i}
+                              className="flex items-center justify-between gap-4 px-4 py-2.5 text-sm"
+                            >
+                              <span className="flex items-center gap-3 text-gray-700">
+                                <span className="inline-flex items-center justify-center w-6 h-6 rounded-full bg-white border border-slate-200 text-xs font-semibold text-slate-500 shrink-0">
+                                  {i + 1}
+                                </span>
+                                {it.name}
+                              </span>
+                              <span className="text-gray-500 whitespace-nowrap">
+                                {showAmounts ? (
+                                  <>
+                                    {it.qty} × {formatRupiah(it.price)} ={" "}
+                                    <span className="font-semibold text-[#021d47]">
+                                      {formatRupiah(it.qty * it.price)}
+                                    </span>
+                                  </>
+                                ) : (
+                                  <span className="inline-flex items-center gap-1.5">
+                                    <span className="text-gray-400">Qty</span>
+                                    <span className="font-semibold text-[#021d47]">{it.qty}</span>
+                                  </span>
+                                )}
+                              </span>
+                            </div>
+                          ))
+                        ) : (
+                          <div className="px-4 py-2.5 text-sm text-gray-400 italic">
+                            Tidak ada item.
+                          </div>
+                        )}
+                      </div>
+                    </td>
+                  </tr>
+                  </Fragment>
                 ))
               )}
             </tbody>
