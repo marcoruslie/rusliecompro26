@@ -138,7 +138,7 @@ export default function QueueClient({
   }
 
   async function handleRemoveImage(o: Transaction) {
-    if (!o.id || !confirm("Hapus PDF order ini?")) return;
+    if (!o.id || !confirm("Hapus file order ini?")) return;
     setBusyId(o.id);
     setError("");
     try {
@@ -150,7 +150,7 @@ export default function QueueClient({
         )
       );
     } catch {
-      setError("Gagal menghapus PDF.");
+      setError("Gagal menghapus file.");
     } finally {
       setBusyId(null);
     }
@@ -176,9 +176,9 @@ export default function QueueClient({
         handleUpload(o, file);
         return;
       }
-      showPasteErr(o.id, "Tidak ada PDF/gambar di clipboard.");
+      showPasteErr(o.id, "Tidak ada file di clipboard.");
     } catch {
-      showPasteErr(o.id, "Tidak ada PDF/gambar di clipboard.");
+      showPasteErr(o.id, "Tidak ada file di clipboard.");
     }
   }
 
@@ -216,7 +216,7 @@ export default function QueueClient({
                 <Link2 size={14} /> Hubungkan Google Drive
               </p>
               <p className="text-sm text-gray-500 mt-1">
-                Sambungkan akun Google untuk mengunggah & melihat PDF order.
+                Sambungkan akun Google untuk mengunggah & melihat file order.
               </p>
             </div>
             <a href="/api/google/connect" className="admin-btn whitespace-nowrap">
@@ -253,58 +253,19 @@ export default function QueueClient({
             <p className="text-sm text-gray-500 flex items-center gap-2">
               <ClipboardPaste size={15} className="shrink-0" />
               {!connected ? (
-                "Hubungkan Google Drive untuk mengunggah PDF/gambar."
+                "Hubungkan Google Drive untuk mengunggah file."
               ) : selectedOrder ? (
                 <>
                   Order{" "}
                   <span className="font-semibold text-[#021d47]">
                     {selectedOrder.invoice_number}
                   </span>{" "}
-                  dipilih — tempel (Ctrl+V) PDF/gambar dari clipboard untuk mengunggah.
+                  dipilih — tempel (Ctrl+V) file dari clipboard untuk mengunggah.
                 </>
               ) : (
-                "Klik satu order untuk memilih, lalu tempel (Ctrl+V) PDF/gambar dari clipboard."
+                "Klik satu order untuk memilih, lalu tempel (Ctrl+V) file dari clipboard."
               )}
             </p>
-            {/* Phones have no Ctrl+V. iOS won't expose a copied PDF to the web at
-                all, but it *does* expose images — paste an image into this box.
-                Select an order, tap this box, then tap the native Paste. */}
-            {connected && (
-              <>
-                <div
-                  contentEditable
-                  suppressContentEditableWarning
-                  role="textbox"
-                  aria-label="Tempel PDF atau gambar di sini"
-                  data-placeholder={
-                    selectedOrder
-                      ? `Ketuk di sini lalu Tempel PDF/gambar untuk ${selectedOrder.invoice_number}`
-                      : "Pilih satu order dulu, lalu ketuk & Tempel PDF/gambar di sini"
-                  }
-                  onPaste={(e) => {
-                    e.preventDefault();
-                    e.stopPropagation();
-                    e.currentTarget.textContent = "";
-                    if (!selectedOrder?.id) return;
-                    const file = attachmentFromDataTransfer(e.clipboardData);
-                    if (file) {
-                      handleUpload(selectedOrder, file);
-                    } else {
-                      showPasteErr(
-                        selectedOrder.id,
-                        "Clipboard tidak berisi PDF/gambar. Di iPhone, PDF tidak bisa ditempel — salin gambar dokumennya."
-                      );
-                    }
-                  }}
-                  className="paste-box mt-3 sm:hidden"
-                />
-                {selectedOrder?.id && pasteErr[selectedOrder.id] && (
-                  <p className="text-xs text-red-500 mt-1.5 sm:hidden">
-                    {pasteErr[selectedOrder.id]}
-                  </p>
-                )}
-              </>
-            )}
           </div>
         )}
 
@@ -317,7 +278,7 @@ export default function QueueClient({
                 <th>Customer</th>
                 {showAmounts && <th>Total</th>}
                 <th>Tanggal</th>
-                <th>PDF</th>
+                <th>File</th>
                 <th className="w-56"></th>
               </tr>
             </thead>
@@ -362,7 +323,7 @@ export default function QueueClient({
                               onClick={() => pasteForOrder(o)}
                               disabled={!connected || busyId === o.id}
                               className="text-gray-400 hover:text-[#021d47] transition-colors disabled:opacity-40"
-                              title={connected ? "Tempel PDF/gambar dari clipboard" : "Hubungkan Google dulu"}
+                              title={connected ? "Tempel file dari clipboard" : "Hubungkan Google dulu"}
                             >
                               {busyId === o.id ? (
                                 <span className="admin-spinner-xs" />
@@ -387,9 +348,9 @@ export default function QueueClient({
                               ? "admin-btn-ghost !py-1 text-sm whitespace-nowrap"
                               : "admin-btn-ghost !py-1 text-sm whitespace-nowrap opacity-40 pointer-events-none"
                           }
-                          title="Lihat PDF"
+                          title="Lihat file"
                         >
-                          <Eye size={16} /> Lihat PDF
+                          <Eye size={16} /> Lihat File
                         </a>
                         {/* Remove image (editors only) */}
                         {o.image_drive_id && canManagePdf && (
@@ -397,7 +358,7 @@ export default function QueueClient({
                             onClick={() => handleRemoveImage(o)}
                             disabled={busyId === o.id}
                             className="text-red-400 hover:text-red-600 transition-colors disabled:opacity-60"
-                            title="Hapus PDF"
+                            title="Hapus file"
                           >
                             <Trash2 size={17} />
                           </button>
