@@ -1,16 +1,4 @@
 {
   "/_not-found/page": "app/_not-found/page.js",
-  "/api/google/callback/route": "app/api/google/callback/route.js",
-  "/page": "app/page.js",
-  "/api/orders/[id]/image/route": "app/api/orders/[id]/image/route.js",
-  "/admin/queue/page": "app/admin/queue/page.js",
-  "/admin/page": "app/admin/page.js",
-  "/admin/customers/page": "app/admin/customers/page.js",
-  "/admin/dashboard/page": "app/admin/dashboard/page.js",
-  "/admin/wires/page": "app/admin/wires/page.js",
-  "/api/google/connect/route": "app/api/google/connect/route.js",
-  "/admin/transactions/new/page": "app/admin/transactions/new/page.js",
-  "/admin/transactions/[id]/page": "app/admin/transactions/[id]/page.js",
-  "/calculator/page": "app/calculator/page.js",
-  "/invoice/[id]/page": "app/invoice/[id]/page.js"
+  "/page": "app/page.js"
 }

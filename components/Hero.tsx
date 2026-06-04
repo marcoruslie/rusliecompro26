@@ -1,176 +1,192 @@
 "use client";
 
 import { useRef } from "react";
-import { motion, useScroll, useTransform } from "framer-motion";
-import SpringSVG from "./SpringSVG";
+import {
+  motion,
+  useScroll,
+  useTransform,
+  useReducedMotion,
+} from "framer-motion";
+import HeroSpring from "./HeroSpring";
+import { BlueprintGrid, MagneticButton, Counter, SpecTag } from "./hud";
+
+const HEADLINE = ["Engineering", "Every", "Coil."];
+
+const STATS = [
+  { to: 20, suffix: "+", label: "Years Forging Steel" },
+  { to: 50, suffix: "K+", label: "Springs / Day" },
+  { to: 80, suffix: "+", label: "Industries Served" },
+];
+
+const FLOAT_SPECS = [
+  { text: "Ø 0.1 – 50 mm", className: "top-[22%] left-[2%]" },
+  { text: "± 0.01 mm", className: "top-[58%] left-[6%]" },
+  { text: "OD ≤ 500 mm", className: "bottom-[16%] right-[6%]" },
+];
 
 export default function Hero() {
   const ref = useRef<HTMLElement>(null);
+  const reduce = useReducedMotion();
   const { scrollYProgress } = useScroll({
     target: ref,
     offset: ["start start", "end start"],
   });
-  const y = useTransform(scrollYProgress, [0, 1], ["0%", "35%"]);
-  const opacity = useTransform(scrollYProgress, [0, 0.8], [1, 0]);
+  const contentY = useTransform(scrollYProgress, [0, 1], ["0%", "26%"]);
+  const contentOpacity = useTransform(scrollYProgress, [0, 0.85], [1, 0]);
+  const springY = useTransform(scrollYProgress, [0, 1], [0, 130]);
 
   return (
     <section
       ref={ref}
-      className="relative min-h-screen flex items-center overflow-hidden"
-      style={{
-        background:
-          "linear-gradient(135deg, #021d47 0%, #031d4a 50%, #08142a 100%)",
-      }}
+      className="relative min-h-screen flex items-center overflow-hidden bg-graphite"
     >
-      {/* ── Background image with overlay ── */}
+      {/* Atmospheric photo, heavily graded into graphite */}
       <div className="absolute inset-0 z-0">
         <img
-          src="/banner/banner2.jpg" // ← replace with your actual image path
+          src="/banner/banner2.jpg"
           alt="Ruslie Spring manufacturing facility"
-          className="w-full h-full object-cover object-center"
-          style={{ opacity: 1 }}
+          className="w-full h-full object-cover object-center opacity-[0.16]"
+          style={{ filter: "grayscale(1) contrast(1.1)" }}
         />
         <div
           className="absolute inset-0"
           style={{
             background:
-              "linear-gradient(135deg, rgba(2,29,71,0.92) 0%, rgba(3,29,74,0.80) 50%, rgba(8,20,42,0.88) 100%)",
+              "linear-gradient(115deg, #0a0e14 0%, rgba(10,14,20,0.86) 42%, rgba(17,22,31,0.78) 100%)",
           }}
         />
       </div>
 
-      {/* Dot grid */}
-      <div
-        className="absolute inset-0 z-[1]"
-        style={{
-          backgroundImage:
-            "radial-gradient(circle, rgba(255,255,255,0.06) 1px, transparent 1px)",
-          backgroundSize: "38px 38px",
-        }}
-      />
+      <BlueprintGrid />
 
-      {/* Diagonal light streak */}
-      <div
-        className="absolute top-[10%] right-[18%] w-[2px] h-[50%] z-[1]"
+      {/* Cyan ambient glow */}
+      <motion.div
+        animate={
+          reduce ? undefined : { opacity: [0.16, 0.32, 0.16], scale: [1, 1.12, 1] }
+        }
+        transition={{ duration: 9, repeat: Infinity, ease: "easeInOut" }}
+        className="absolute right-[4%] top-[12%] w-[520px] h-[520px] rounded-full z-[1] pointer-events-none"
         style={{
           background:
-            "linear-gradient(to bottom, transparent, rgba(255,255,255,0.1), transparent)",
-          transform: "rotate(18deg)",
+            "radial-gradient(circle, rgba(34,211,238,0.16) 0%, transparent 68%)",
         }}
       />
 
-      {/* Radial glow orb */}
-      <motion.div
-        animate={{ scale: [1, 1.18, 1], opacity: [0.18, 0.32, 0.18] }}
-        transition={{ duration: 8, repeat: Infinity, ease: "easeInOut" }}
-        className="absolute right-[6%] top-[18%] w-[460px] h-[460px] rounded-full z-[1]"
-        style={{
-          background:
-            "radial-gradient(circle, rgba(192,200,216,0.14) 0%, transparent 70%)",
-        }}
-      />
+      {/* Floating spec annotations */}
+      {FLOAT_SPECS.map((s, i) => (
+        <motion.div
+          key={s.text}
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 1 + i * 0.2, duration: 0.8 }}
+          className={`absolute z-[2] hidden lg:block ${s.className}`}
+        >
+          <SpecTag>{s.text}</SpecTag>
+        </motion.div>
+      ))}
 
       <motion.div
-        style={{ y, opacity }}
-        className="relative z-10 w-full max-w-7xl mx-auto px-6 lg:px-10 flex items-center justify-between gap-10 pt-[72px]"
+        style={{ y: contentY, opacity: contentOpacity }}
+        className="relative z-10 w-full max-w-7xl mx-auto px-6 lg:px-10 flex items-center justify-between gap-10 pt-[68px]"
       >
         {/* Left content */}
-        <div className="max-w-[620px]">
-          {/* Badge */}
+        <div className="max-w-[640px]">
           <motion.div
-            initial={{ opacity: 0, x: -30 }}
+            initial={{ opacity: 0, x: -24 }}
             animate={{ opacity: 1, x: 0 }}
-            transition={{ duration: 0.7, delay: 0.2 }}
-            className="inline-flex items-center gap-2.5 bg-white/7 border border-white/15 rounded-full px-5 py-2 mb-7"
+            transition={{ duration: 0.7, delay: 0.15 }}
+            className="mb-7"
           >
-            <span className="w-2 h-2 rounded-full bg-silver-DEFAULT inline-block" />
-            <span className="font-body text-[0.72rem] text-white/65 tracking-[0.18em] uppercase">
-              Precision Manufacturing
-            </span>
+            <SpecTag active>Precision Spring Manufacturing · ID</SpecTag>
           </motion.div>
 
-          {/* Headline */}
-          <motion.h1
-            initial={{ opacity: 0, y: 30 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.9, delay: 0.35 }}
-            className="font-display text-[clamp(3rem,5.5vw,5rem)] font-bold text-white leading-[1.06] mb-5"
-          >
-            Engineering
-            <br />
-            <span className="text-silver-light">Every Coil.</span>
-            <br />
-            <span className="text-[0.6em] text-white/40 italic font-normal">
-              Precision Born. 
-              <span className="block">Industry Proven.</span>
-            </span>
-          </motion.h1>
+          {/* Kinetic split-text headline */}
+          <h1 className="font-tech font-bold text-[clamp(3rem,6vw,5.4rem)] leading-[0.98] tracking-tight text-hud-silver mb-6">
+            {HEADLINE.map((word, i) => (
+              <span key={word} className="inline-block overflow-hidden align-bottom mr-[0.28em]">
+                <motion.span
+                  initial={{ y: "110%" }}
+                  animate={{ y: 0 }}
+                  transition={{
+                    duration: 0.85,
+                    delay: 0.3 + i * 0.12,
+                    ease: [0.22, 1, 0.36, 1],
+                  }}
+                  className={`inline-block ${
+                    i === 2 ? "text-cyan hud-glow-cyan" : ""
+                  }`}
+                >
+                  {word}
+                </motion.span>
+              </span>
+            ))}
+          </h1>
 
-          {/* Sub */}
           <motion.p
-            initial={{ opacity: 0, y: 20 }}
+            initial={{ opacity: 0, y: 18 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.8, delay: 0.55 }}
-            className="font-body text-[1.05rem] text-white/50 leading-[1.85] max-w-[480px] mb-10"
+            transition={{ duration: 0.8, delay: 0.7 }}
+            className="font-body text-[1.05rem] text-hud-silver/55 leading-[1.8] max-w-[470px] mb-9"
           >
-            Strengthening Industry with Indonesian-Made Precision Springs.
+            Strengthening industry with Indonesian-made precision springs —
+            engineered to international tolerances, forged and tested under one
+            roof.
           </motion.p>
 
-          {/* CTAs */}
           <motion.div
-            initial={{ opacity: 0, y: 20 }}
+            initial={{ opacity: 0, y: 18 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.7, delay: 0.7 }}
-            className="flex gap-4 flex-wrap"
+            transition={{ duration: 0.7, delay: 0.85 }}
+            className="flex gap-4 flex-wrap mb-12"
           >
-            <motion.a
-              href="#products"
-              whileHover={{
-                scale: 1.04,
-                boxShadow: "0 0 28px rgba(192,200,216,0.35)",
-              }}
-              whileTap={{ scale: 0.97 }}
-              className="bg-white text-[#021d47] px-8 py-3.5 rounded font-body font-bold text-[0.88rem] tracking-[0.08em] uppercase no-underline"
-            >
-              Explore Products
-            </motion.a>
-            <motion.a
-              href="#gallery"
-              whileHover={{ backgroundColor: "rgba(255,255,255,0.1)" }}
-              className="border border-white/25 text-white px-8 py-3.5 rounded font-body font-medium text-[0.88rem] tracking-[0.08em] uppercase no-underline transition-colors"
-            >
-              View Gallery
-            </motion.a>
+            <MagneticButton href="#products">Explore Products</MagneticButton>
+            <MagneticButton href="#process" variant="ghost">
+              See the Process
+            </MagneticButton>
+          </motion.div>
+
+          {/* Trust counters */}
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ duration: 0.8, delay: 1 }}
+            className="flex gap-8 sm:gap-12"
+          >
+            {STATS.map((s) => (
+              <div key={s.label}>
+                <div className="font-tech text-[2rem] font-bold text-hud-silver leading-none">
+                  <Counter to={s.to} suffix={s.suffix} />
+                </div>
+                <div className="font-mono text-[0.62rem] tracking-[0.16em] uppercase text-hud-mute mt-2">
+                  {s.label}
+                </div>
+              </div>
+            ))}
           </motion.div>
         </div>
 
-        {/* Spring illustration */}
+        {/* Spring illustration — parallax on scroll */}
         <motion.div
-          initial={{ opacity: 0, x: 50 }}
+          initial={{ opacity: 0, x: 40 }}
           animate={{ opacity: 1, x: 0 }}
           transition={{ duration: 1, delay: 0.4 }}
-          className="hidden lg:block w-[155px] h-[390px] flex-shrink-0"
+          style={{ y: springY }}
+          className="hidden lg:block w-[210px] h-[440px] flex-shrink-0"
         >
-          <SpringSVG color="rgba(255,255,255,0.7)" className="w-full h-full" />
+          <HeroSpring className="w-full h-full" coils={8} progress={scrollYProgress} />
         </motion.div>
       </motion.div>
 
       {/* Scroll indicator */}
       <motion.div
-        animate={{ y: [0, 10, 0] }}
+        animate={reduce ? undefined : { y: [0, 9, 0] }}
         transition={{ duration: 2.2, repeat: Infinity }}
         className="absolute bottom-7 left-1/2 -translate-x-1/2 flex flex-col items-center gap-2 z-20"
       >
-        <span className="font-body text-[0.67rem] text-white/30 tracking-[0.15em] uppercase">
+        <span className="font-mono text-[0.6rem] text-hud-mute tracking-[0.3em] uppercase">
           Scroll
         </span>
-        <div
-          className="w-px h-9"
-          style={{
-            background:
-              "linear-gradient(to bottom, rgba(255,255,255,0.6), transparent)",
-          }}
-        />
+        <div className="w-px h-9 bg-gradient-to-b from-cyan/70 to-transparent" />
       </motion.div>
     </section>
   );
