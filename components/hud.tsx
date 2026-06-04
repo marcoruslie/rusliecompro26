@@ -23,6 +23,7 @@ import {
   useTransform,
   useMotionTemplate,
   animate,
+  type MotionProps,
 } from "framer-motion";
 
 /* ── Blueprint grid texture ───────────────────────────────── */
@@ -268,18 +269,28 @@ export function Counter({
   );
 }
 
+/* ── Per-item scroll-entrance override ────────────────────── */
+export type CardEntrance = {
+  origin?: string; // transform-origin while the entrance plays
+  initial: MotionProps["initial"];
+  animate: MotionProps["animate"];
+  transition: MotionProps["transition"];
+};
+
 /* ── Card with cursor 3D tilt + follow-spotlight + reveal ──── */
 export function TiltSpotlightCard({
   index = 0,
   parallax = 0,
   cardClassName = "",
   wrapperClassName = "",
+  entrance,
   children,
 }: {
   index?: number;
   parallax?: number;
   cardClassName?: string;
   wrapperClassName?: string;
+  entrance?: CardEntrance;
   children: ReactNode;
 }) {
   const ref = useRef<HTMLDivElement>(null);
@@ -318,6 +329,24 @@ export function TiltSpotlightCard({
     my.set(0.5);
   }
 
+  const initialProp: MotionProps["initial"] = reduce
+    ? { opacity: 0 }
+    : entrance
+      ? entrance.initial
+      : { opacity: 0, y: 30, scale: 0.97 };
+  const animateProp: MotionProps["animate"] = inView
+    ? reduce
+      ? { opacity: 1 }
+      : entrance
+        ? entrance.animate
+        : { opacity: 1, y: 0, scale: 1 }
+    : undefined;
+  const transitionProp: MotionProps["transition"] = reduce
+    ? { duration: 0.5, delay: index * 0.07 }
+    : entrance
+      ? { ...entrance.transition, delay: index * 0.07 }
+      : { type: "spring", stiffness: 90, damping: 18, delay: index * 0.07 };
+
   return (
     <motion.div
       className={wrapperClassName}
@@ -327,10 +356,15 @@ export function TiltSpotlightCard({
         ref={ref}
         onMouseMove={onMove}
         onMouseLeave={onLeave}
-        initial={reduce ? { opacity: 0 } : { opacity: 0, y: 30, scale: 0.97 }}
-        animate={inView ? { opacity: 1, y: 0, scale: 1 } : undefined}
-        transition={{ type: "spring", stiffness: 90, damping: 18, delay: index * 0.07 }}
-        style={{ rotateX, rotateY, transformStyle: "preserve-3d" }}
+        initial={initialProp}
+        animate={animateProp}
+        transition={transitionProp}
+        style={{
+          rotateX,
+          rotateY,
+          transformStyle: "preserve-3d",
+          transformOrigin: entrance?.origin ?? "center",
+        }}
         className={`group relative h-full overflow-hidden transition-colors duration-300 hover:border-cyan/40 ${cardClassName}`}
       >
         <motion.div

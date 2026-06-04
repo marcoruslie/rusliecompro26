@@ -10,6 +10,7 @@ import {
   useSpring,
   useTransform,
   useMotionTemplate,
+  type MotionProps,
 } from "framer-motion";
 
 const PARALLAX = [30, 56, 22, 44];
@@ -23,7 +24,62 @@ import {
   ArrowUpRight,
   type LucideIcon,
 } from "lucide-react";
-import { SectionIndex, CornerBrackets } from "./hud";
+import { SectionIndex, CornerBrackets, type CardEntrance } from "./hud";
+
+/* Each product enters with a motion that imitates how that spring
+   actually behaves mechanically — no two scroll reveals are alike. */
+type VariantKey =
+  | "compress"
+  | "extend"
+  | "torsion"
+  | "unspool"
+  | "zigzag"
+  | "charge";
+
+const VARIANTS: Record<VariantKey, CardEntrance> = {
+  // Compression: squashes down, then springs back up to rest.
+  compress: {
+    origin: "bottom center",
+    initial: { opacity: 0, scaleY: 1.65, y: -46 },
+    animate: { opacity: [0, 1, 1, 1], scaleY: [1.65, 0.7, 1.08, 1], y: [-46, 6, 0, 0] },
+    transition: { duration: 0.95, ease: [0.22, 1, 0.36, 1] },
+  },
+  // Extension: pulls out of a compressed coil, stretching to length.
+  extend: {
+    origin: "top center",
+    initial: { opacity: 0, scaleY: 0.25, y: 34 },
+    animate: { opacity: [0, 1, 1, 1], scaleY: [0.25, 1.18, 0.95, 1], y: [34, -6, 0, 0] },
+    transition: { duration: 1.0, ease: [0.22, 1, 0.36, 1] },
+  },
+  // Torsion: winds in with a rotational twist before settling.
+  torsion: {
+    origin: "center",
+    initial: { opacity: 0, rotate: -140, scale: 0.5 },
+    animate: { opacity: [0, 1, 1], rotate: [-140, 16, 0], scale: [0.5, 1.07, 1] },
+    transition: { duration: 0.95, ease: [0.22, 1, 0.36, 1] },
+  },
+  // Wire form: unspools left-to-right, un-skewing as it draws in.
+  unspool: {
+    origin: "left center",
+    initial: { opacity: 0, clipPath: "inset(0 100% 0 0)", skewX: -12, x: -26 },
+    animate: { opacity: 1, clipPath: "inset(0 0% 0 0)", skewX: 0, x: 0 },
+    transition: { duration: 0.9, ease: [0.22, 1, 0.36, 1] },
+  },
+  // Zigzag: oscillates sideways like a flexing seat spring.
+  zigzag: {
+    origin: "center",
+    initial: { opacity: 0, x: -58, rotate: -5 },
+    animate: { opacity: [0, 1, 1, 1, 1], x: [-58, 36, -22, 10, 0], rotate: [-5, 4, -3, 1, 0] },
+    transition: { duration: 1.05, ease: "easeOut" },
+  },
+  // Battery: rises into contact (paired with a charge sweep overlay).
+  charge: {
+    origin: "bottom center",
+    initial: { opacity: 0, scaleY: 0.55, y: 28 },
+    animate: { opacity: [0, 1, 1], scaleY: [0.55, 1.05, 1], y: [28, 0, 0] },
+    transition: { duration: 0.85, ease: [0.22, 1, 0.36, 1] },
+  },
+};
 
 type Product = {
   name: string;
@@ -31,6 +87,7 @@ type Product = {
   icon: LucideIcon;
   tag: string;
   span: string;
+  variant: VariantKey;
 };
 
 const PRODUCTS: Product[] = [
@@ -40,6 +97,7 @@ const PRODUCTS: Product[] = [
     icon: ArrowDownUp,
     tag: "Push",
     span: "lg:col-span-2",
+    variant: "compress",
   },
   {
     name: "Extension Springs",
@@ -47,6 +105,7 @@ const PRODUCTS: Product[] = [
     icon: MoveVertical,
     tag: "Pull",
     span: "",
+    variant: "extend",
   },
   {
     name: "Torsion Springs",
@@ -54,6 +113,7 @@ const PRODUCTS: Product[] = [
     icon: RotateCw,
     tag: "Torque",
     span: "",
+    variant: "torsion",
   },
   {
     name: "Wire Forms",
@@ -61,6 +121,7 @@ const PRODUCTS: Product[] = [
     icon: Spline,
     tag: "Custom",
     span: "",
+    variant: "unspool",
   },
   {
     name: "Zigzag Springs",
@@ -68,6 +129,7 @@ const PRODUCTS: Product[] = [
     icon: Activity,
     tag: "Seating",
     span: "",
+    variant: "zigzag",
   },
   {
     name: "Battery Springs",
@@ -75,6 +137,7 @@ const PRODUCTS: Product[] = [
     icon: BatteryCharging,
     tag: "Contact",
     span: "lg:col-span-2",
+    variant: "charge",
   },
 ];
 
@@ -83,8 +146,8 @@ function ProductCard({ p, index }: { p: Product; index: number }) {
   const reduce = useReducedMotion();
   const inView = useInView(ref, { once: true, margin: "-12% 0px" });
   const Icon = p.icon;
+  const entrance = VARIANTS[p.variant];
 
-  // Pointer position (0..1) drives 3D tilt + the spotlight.
   // Continuous scroll-linked parallax drift (column-varied speed).
   const { scrollYProgress } = useScroll({
     target: ref,
@@ -93,6 +156,7 @@ function ProductCard({ p, index }: { p: Product; index: number }) {
   const mag = PARALLAX[index % PARALLAX.length];
   const py = useTransform(scrollYProgress, [0, 1], [mag, -mag]);
 
+  // Pointer position (0..1) drives 3D tilt + the spotlight.
   const mx = useMotionValue(0.5);
   const my = useMotionValue(0.5);
   const rotateX = useSpring(useTransform(my, [0, 1], [7, -7]), {
@@ -118,6 +182,18 @@ function ProductCard({ p, index }: { p: Product; index: number }) {
     my.set(0.5);
   }
 
+  const initialProp: MotionProps["initial"] = reduce
+    ? { opacity: 0 }
+    : entrance.initial;
+  const animateProp: MotionProps["animate"] = inView
+    ? reduce
+      ? { opacity: 1 }
+      : entrance.animate
+    : undefined;
+  const transitionProp: MotionProps["transition"] = reduce
+    ? { duration: 0.5, delay: index * 0.07 }
+    : { ...entrance.transition, delay: index * 0.07 };
+
   return (
     <motion.div
       className={p.span}
@@ -127,10 +203,15 @@ function ProductCard({ p, index }: { p: Product; index: number }) {
         ref={ref}
         onMouseMove={onMove}
         onMouseLeave={onLeave}
-        initial={reduce ? { opacity: 0 } : { opacity: 0, y: 36, scale: 0.97 }}
-        animate={inView ? { opacity: 1, y: 0, scale: 1 } : undefined}
-        transition={{ type: "spring", stiffness: 90, damping: 18, delay: index * 0.07 }}
-        style={{ rotateX, rotateY, transformStyle: "preserve-3d" }}
+        initial={initialProp}
+        animate={animateProp}
+        transition={transitionProp}
+        style={{
+          rotateX,
+          rotateY,
+          transformStyle: "preserve-3d",
+          transformOrigin: entrance.origin ?? "center",
+        }}
         className="group relative h-full min-h-[200px] rounded-xl border border-white/[0.08] bg-steel-700/30 p-7 overflow-hidden transition-colors duration-300 hover:border-cyan/40"
       >
         {/* faint blueprint texture, brightens on hover */}
@@ -141,6 +222,20 @@ function ProductCard({ p, index }: { p: Product; index: number }) {
           style={{ background: spotlight }}
           className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none"
         />
+        {/* charge sweep — only the battery spring "powers up" on reveal */}
+        {p.variant === "charge" && !reduce && (
+          <motion.div
+            aria-hidden
+            initial={{ y: "100%", opacity: 0 }}
+            animate={inView ? { y: "-120%", opacity: [0, 0.9, 0] } : undefined}
+            transition={{ duration: 1.1, delay: index * 0.07 + 0.2, ease: "easeOut" }}
+            className="absolute inset-x-0 bottom-0 h-2/3 pointer-events-none"
+            style={{
+              background:
+                "linear-gradient(0deg, transparent, rgba(34,211,238,0.22), transparent)",
+            }}
+          />
+        )}
         <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none">
           <CornerBrackets />
         </div>

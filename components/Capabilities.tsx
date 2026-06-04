@@ -2,15 +2,69 @@
 
 import { useRef } from "react";
 import { motion, useInView, useScroll, useTransform } from "framer-motion";
-import { SectionIndex, TiltSpotlightCard } from "./hud";
+import { SectionIndex, TiltSpotlightCard, type CardEntrance } from "./hud";
 
 const PARALLAX = [30, 54, 20, 44];
 
-const CAPS = [
-  { label: "Wire Diameter", value: "0.1 – 50", unit: "mm" },
-  { label: "Spring OD", value: "1 – 500", unit: "mm" },
-  { label: "Free Length", value: "≤ 1500", unit: "mm" },
-  { label: "Tolerance", value: "± 0.01", unit: "mm" },
+// Each spec card animates in a way that mirrors what it measures.
+const CAPS: {
+  label: string;
+  value: string;
+  unit: string;
+  entrance: CardEntrance;
+}[] = [
+  {
+    label: "Wire Diameter",
+    value: "0.1 – 50",
+    unit: "mm",
+    // Caliper close: clamps shut horizontally from the left.
+    entrance: {
+      origin: "left center",
+      initial: { opacity: 0, scaleX: 0.12, x: -46 },
+      animate: { opacity: [0, 1, 1], scaleX: [0.12, 1.06, 1], x: [-46, 4, 0] },
+      transition: { duration: 0.85, ease: [0.22, 1, 0.36, 1] },
+    },
+  },
+  {
+    label: "Spring OD",
+    value: "1 – 500",
+    unit: "mm",
+    // Aperture: irises open from the center with a slight twist.
+    entrance: {
+      origin: "center",
+      initial: { opacity: 0, scale: 0.32, rotate: -10 },
+      animate: { opacity: [0, 1, 1], scale: [0.32, 1.07, 1], rotate: [-10, 3, 0] },
+      transition: { duration: 0.9, ease: [0.22, 1, 0.36, 1] },
+    },
+  },
+  {
+    label: "Free Length",
+    value: "≤ 1500",
+    unit: "mm",
+    // Elongate: extends upward like a measured length.
+    entrance: {
+      origin: "bottom center",
+      initial: { opacity: 0, scaleY: 0.06, y: 32 },
+      animate: { opacity: [0, 1, 1], scaleY: [0.06, 1.05, 1], y: [32, -4, 0] },
+      transition: { duration: 0.95, ease: [0.22, 1, 0.36, 1] },
+    },
+  },
+  {
+    label: "Tolerance",
+    value: "± 0.01",
+    unit: "mm",
+    // Precision snap: overshoots then jitters into an exact lock.
+    entrance: {
+      origin: "center",
+      initial: { opacity: 0, scale: 1.32 },
+      animate: {
+        opacity: [0, 1, 1, 1, 1],
+        scale: [1.32, 0.97, 1.01, 0.997, 1],
+        x: [0, -3, 3, -1, 0],
+      },
+      transition: { duration: 0.7, ease: [0.5, 0, 0.2, 1] },
+    },
+  },
 ];
 
 const INDUSTRIES = [
@@ -63,6 +117,7 @@ export default function Capabilities() {
               key={c.label}
               index={i}
               parallax={PARALLAX[i % PARALLAX.length]}
+              entrance={c.entrance}
               cardClassName="rounded-xl border border-white/[0.08] bg-carbon px-6 py-7"
             >
               <div className="font-mono text-[0.66rem] tracking-[0.18em] uppercase text-hud-mute mb-4 group-hover:text-cyan/70 transition-colors">
