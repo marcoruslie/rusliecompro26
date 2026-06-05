@@ -25,6 +25,7 @@ import {
   type LucideIcon,
 } from "lucide-react";
 import { SectionIndex, CornerBrackets, type CardEntrance } from "./hud";
+import { useLanguage } from "@/components/LanguageProvider";
 
 /* Each product enters with a motion that imitates how that spring
    actually behaves mechanically — no two scroll reveals are alike. */
@@ -81,72 +82,30 @@ const VARIANTS: Record<VariantKey, CardEntrance> = {
   },
 };
 
-type Product = {
-  name: string;
-  desc: string;
-  icon: LucideIcon;
-  tag: string;
-  span: string;
-  variant: VariantKey;
-};
-
-const PRODUCTS: Product[] = [
-  {
-    name: "Compression Springs",
-    desc: "High-load bearing springs for industrial machinery and automotive systems.",
-    icon: ArrowDownUp,
-    tag: "Push",
-    span: "lg:col-span-2",
-    variant: "compress",
-  },
-  {
-    name: "Extension Springs",
-    desc: "Precision-engineered for consistent tension in heavy-duty applications.",
-    icon: MoveVertical,
-    tag: "Pull",
-    span: "",
-    variant: "extend",
-  },
-  {
-    name: "Torsion Springs",
-    desc: "Custom torque solutions for machinery and manufacturing.",
-    icon: RotateCw,
-    tag: "Torque",
-    span: "",
-    variant: "torsion",
-  },
-  {
-    name: "Wire Forms",
-    desc: "Complex custom wire shapes engineered to exact client specifications.",
-    icon: Spline,
-    tag: "Custom",
-    span: "",
-    variant: "unspool",
-  },
-  {
-    name: "Zigzag Springs",
-    desc: "Durable zigzag springs for furniture seating — long-lasting support and elasticity.",
-    icon: Activity,
-    tag: "Seating",
-    span: "",
-    variant: "zigzag",
-  },
-  {
-    name: "Battery Springs",
-    desc: "Reliable electrical contact for battery compartments and electronic assemblies.",
-    icon: BatteryCharging,
-    tag: "Contact",
-    span: "lg:col-span-2",
-    variant: "charge",
-  },
+const PRODUCT_META: { icon: LucideIcon; span: string; variant: VariantKey }[] = [
+  { icon: ArrowDownUp, span: "lg:col-span-2", variant: "compress" },
+  { icon: MoveVertical, span: "", variant: "extend" },
+  { icon: RotateCw, span: "", variant: "torsion" },
+  { icon: Spline, span: "", variant: "unspool" },
+  { icon: Activity, span: "", variant: "zigzag" },
+  { icon: BatteryCharging, span: "lg:col-span-2", variant: "charge" },
 ];
 
-function ProductCard({ p, index }: { p: Product; index: number }) {
+function ProductCard({
+  meta,
+  text,
+  index,
+}: {
+  meta: (typeof PRODUCT_META)[number];
+  text: { name: string; desc: string; tag: string };
+  index: number;
+}) {
   const ref = useRef<HTMLDivElement>(null);
   const reduce = useReducedMotion();
   const inView = useInView(ref, { once: true, margin: "-12% 0px" });
-  const Icon = p.icon;
-  const entrance = VARIANTS[p.variant];
+  const Icon = meta.icon;
+  const entrance = VARIANTS[meta.variant];
+  const { tr } = useLanguage();
 
   // Continuous scroll-linked parallax drift (column-varied speed).
   const { scrollYProgress } = useScroll({
@@ -196,7 +155,7 @@ function ProductCard({ p, index }: { p: Product; index: number }) {
 
   return (
     <motion.div
-      className={p.span}
+      className={meta.span}
       style={{ perspective: 1000, y: reduce ? 0 : py }}
     >
       <motion.div
@@ -223,7 +182,7 @@ function ProductCard({ p, index }: { p: Product; index: number }) {
           className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none"
         />
         {/* charge sweep — only the battery spring "powers up" on reveal */}
-        {p.variant === "charge" && !reduce && (
+        {meta.variant === "charge" && !reduce && (
           <motion.div
             aria-hidden
             initial={{ y: "100%", opacity: 0 }}
@@ -245,21 +204,21 @@ function ProductCard({ p, index }: { p: Product; index: number }) {
             <Icon size={22} className="text-cyan" />
           </div>
           <span className="font-mono text-[0.66rem] text-hud-mute tracking-[0.16em] border border-white/10 rounded px-2 py-1 group-hover:text-cyan group-hover:border-cyan/30 transition-colors">
-            {p.tag}
+            {text.tag}
           </span>
         </div>
 
         <h3 className="relative font-tech text-[1.1rem] font-semibold text-hud-silver mb-2.5">
-          {p.name}
+          {text.name}
         </h3>
         <p className="relative font-body text-[0.86rem] text-hud-silver/50 leading-[1.7] max-w-[42ch]">
-          {p.desc}
+          {text.desc}
         </p>
 
         <div className="relative mt-5 flex items-center justify-between">
           <div className="h-0.5 w-8 bg-cyan/50 rounded-full transition-all duration-300 group-hover:w-16" />
           <span className="flex items-center gap-1 font-mono text-[0.62rem] tracking-[0.16em] uppercase text-cyan opacity-0 translate-x-2 group-hover:opacity-100 group-hover:translate-x-0 transition-all duration-300">
-            Detail
+            {tr.products.detail}
             <ArrowUpRight size={13} />
           </span>
         </div>
@@ -281,6 +240,7 @@ export default function Products() {
     offset: ["start end", "end start"],
   });
   const headerY = useTransform(scrollYProgress, [0, 1], [60, -60]);
+  const { tr } = useLanguage();
 
   return (
     <section
@@ -295,16 +255,21 @@ export default function Products() {
             animate={inView ? { opacity: 1, y: 0 } : {}}
             transition={{ duration: 0.6 }}
           >
-            <SectionIndex index="03" label="What We Make" className="mb-6" />
+            <SectionIndex index="03" label={tr.products.index} className="mb-6" />
             <h2 className="font-tech font-bold text-[clamp(2rem,4vw,3rem)] text-hud-silver">
-              The <span className="text-cyan hud-glow-cyan">Spring Catalog</span>
+              {tr.products.titlePrefix}{" "}<span className="text-cyan hud-glow-cyan">{tr.products.titleAccent}</span>
             </h2>
           </motion.div>
         </motion.div>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-          {PRODUCTS.map((p, i) => (
-            <ProductCard key={p.name} p={p} index={i} />
+          {PRODUCT_META.map((meta, i) => (
+            <ProductCard
+              key={i}
+              meta={meta}
+              text={tr.products.items[i]}
+              index={i}
+            />
           ))}
         </div>
       </div>
