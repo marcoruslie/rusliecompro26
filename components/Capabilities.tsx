@@ -3,18 +3,17 @@
 import { useRef } from "react";
 import { motion, useInView, useScroll, useTransform } from "framer-motion";
 import { SectionIndex, TiltSpotlightCard, type CardEntrance } from "./hud";
+import { useLanguage } from "@/components/LanguageProvider";
 
 const PARALLAX = [30, 54, 20, 44];
 
 // Each spec card animates in a way that mirrors what it measures.
 const CAPS: {
-  label: string;
   value: string;
   unit: string;
   entrance: CardEntrance;
 }[] = [
   {
-    label: "Wire Diameter",
     value: "0.1 – 50",
     unit: "mm",
     // Caliper close: clamps shut horizontally from the left.
@@ -26,7 +25,6 @@ const CAPS: {
     },
   },
   {
-    label: "Spring OD",
     value: "1 – 500",
     unit: "mm",
     // Aperture: irises open from the center with a slight twist.
@@ -38,7 +36,6 @@ const CAPS: {
     },
   },
   {
-    label: "Free Length",
     value: "≤ 1500",
     unit: "mm",
     // Elongate: extends upward like a measured length.
@@ -50,7 +47,6 @@ const CAPS: {
     },
   },
   {
-    label: "Tolerance",
     value: "± 0.01",
     unit: "mm",
     // Precision snap: overshoots then jitters into an exact lock.
@@ -67,19 +63,6 @@ const CAPS: {
   },
 ];
 
-const INDUSTRIES = [
-  "Automotive",
-  "Aerospace",
-  "Medical Devices",
-  "Electronics",
-  "Defense",
-  "Oil & Gas",
-  "Marine",
-  "Construction",
-  "Agriculture",
-  "Railway",
-];
-
 export default function Capabilities() {
   const ref = useRef<HTMLElement>(null);
   const inView = useInView(ref, { once: true, margin: "-80px" });
@@ -88,6 +71,7 @@ export default function Capabilities() {
     offset: ["start end", "end start"],
   });
   const headerY = useTransform(scrollYProgress, [0, 1], [60, -60]);
+  const { tr } = useLanguage();
 
   return (
     <section
@@ -102,10 +86,10 @@ export default function Capabilities() {
             animate={inView ? { opacity: 1, y: 0 } : {}}
             transition={{ duration: 0.6 }}
           >
-            <SectionIndex index="04" label="Technical Specs" className="mb-6" />
+            <SectionIndex index="04" label={tr.capabilities.index} className="mb-6" />
             <h2 className="font-tech font-bold text-[clamp(2rem,3.6vw,3rem)] text-hud-silver">
-              Manufacturing{" "}
-              <span className="text-cyan hud-glow-cyan">Capabilities</span>
+              {tr.capabilities.titlePrefix}{" "}
+              <span className="text-cyan hud-glow-cyan">{tr.capabilities.titleAccent}</span>
             </h2>
           </motion.div>
         </motion.div>
@@ -114,14 +98,14 @@ export default function Capabilities() {
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-16">
           {CAPS.map((c, i) => (
             <TiltSpotlightCard
-              key={c.label}
+              key={i}
               index={i}
               parallax={PARALLAX[i % PARALLAX.length]}
               entrance={c.entrance}
               cardClassName="rounded-xl border border-white/[0.08] bg-carbon px-6 py-7"
             >
               <div className="font-mono text-[0.66rem] tracking-[0.18em] uppercase text-hud-mute mb-4 group-hover:text-cyan/70 transition-colors">
-                {c.label}
+                {tr.capabilities.caps[i]}
               </div>
               <div className="flex items-baseline gap-1.5">
                 <span className="font-tech text-[1.9rem] font-bold text-hud-silver leading-none">
@@ -150,10 +134,10 @@ export default function Capabilities() {
           transition={{ duration: 0.6, delay: 0.4 }}
         >
           <p className="font-mono text-[0.66rem] text-hud-mute tracking-[0.2em] uppercase mb-5">
-            Industries We Serve
+            {tr.capabilities.industriesHeading}
           </p>
           <div className="flex flex-wrap gap-2.5">
-            {INDUSTRIES.map((ind, i) => (
+            {tr.capabilities.industries.map((ind, i) => (
               <motion.span
                 key={ind}
                 initial={{ opacity: 0, scale: 0.9 }}
