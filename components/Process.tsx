@@ -11,52 +11,22 @@ import {
 } from "framer-motion";
 import dynamic from "next/dynamic";
 import { BlueprintGrid, SectionIndex } from "./hud";
+import { useLanguage } from "@/components/LanguageProvider";
 
 // 3D spring is client-only (WebGL) and code-split out of the main bundle.
 const SpringScene = dynamic(() => import("./SpringScene"), { ssr: false });
 
 const STEPS = [
-  {
-    n: "01",
-    key: "wire",
-    title: "Raw Wire Selection",
-    text: "High-tensile carbon and stainless wire is gauged and fed into the line — the starting point of every spring we make.",
-    spec: "Ø 0.1 – 50 mm",
-    compress: 0,
-    coils: 8,
-  },
-  {
-    n: "02",
-    key: "coil",
-    title: "CNC Precision Coiling",
-    text: "Computer-controlled coilers form each spring to an exact pitch, diameter, and free length — repeatable to the micron.",
-    spec: "OD 1 – 500 mm",
-    compress: 0.16,
-    coils: 9,
-  },
-  {
-    n: "03",
-    key: "heat",
-    title: "Stress-Relief & Heat-Treat",
-    text: "Coils are tempered to lock in elasticity and resist permanent set, giving the spring its long working life under load.",
-    spec: "Tempered · set-resistant",
-    compress: 0.42,
-    coils: 9,
-  },
-  {
-    n: "04",
-    key: "qc",
-    title: "Load-Test & Quality Control",
-    text: "Every batch is load-tested and dimensionally inspected before it ships — proof the tolerance holds in the real world.",
-    spec: "± 0.01 mm verified",
-    compress: 0.24,
-    coils: 8,
-  },
+  { n: "01", key: "wire", spec: "Ø 0.1 – 50 mm", compress: 0, coils: 8 },
+  { n: "02", key: "coil", spec: "OD 1 – 500 mm", compress: 0.16, coils: 9 },
+  { n: "03", key: "heat", spec: "Tempered · set-resistant", compress: 0.42, coils: 9 },
+  { n: "04", key: "qc", spec: "± 0.01 mm verified", compress: 0.24, coils: 8 },
 ];
 
 export default function Process() {
   const ref = useRef<HTMLElement>(null);
   const [active, setActive] = useState(0);
+  const { tr } = useLanguage();
   const { scrollYProgress } = useScroll({
     target: ref,
     offset: ["start start", "end end"],
@@ -102,9 +72,9 @@ export default function Process() {
         <div className="relative z-10 flex-1 max-w-7xl w-full mx-auto px-6 lg:px-10 grid grid-cols-1 lg:grid-cols-2 items-center gap-10">
           {/* Left — morphing copy */}
           <div className="pt-24 lg:pt-0">
-            <SectionIndex index="02" label="How It's Made" className="mb-8" />
+            <SectionIndex index="02" label={tr.process.index} className="mb-8" />
             <div className="font-mono text-[0.72rem] tracking-[0.2em] text-cyan/70 mb-4">
-              STEP {step.n} / {String(STEPS.length).padStart(2, "0")}
+              {tr.process.stepWord} {step.n} / {String(STEPS.length).padStart(2, "0")}
             </div>
 
             <div className="relative min-h-[230px]">
@@ -117,10 +87,10 @@ export default function Process() {
                   transition={{ duration: 0.45, ease: [0.22, 1, 0.36, 1] }}
                 >
                   <h3 className="font-tech font-bold text-[clamp(1.8rem,3.4vw,2.9rem)] leading-[1.05] text-hud-silver mb-5">
-                    {step.title}
+                    {tr.process.steps[active].title}
                   </h3>
                   <p className="font-body text-[1.02rem] text-hud-silver/55 leading-[1.85] max-w-[460px] mb-6">
-                    {step.text}
+                    {tr.process.steps[active].text}
                   </p>
                   <span className="inline-flex items-center gap-2 font-mono text-[0.74rem] tracking-[0.12em] uppercase text-cyan border border-cyan/35 bg-cyan/5 rounded px-3 py-1.5">
                     <span className="w-1.5 h-1.5 rounded-full bg-cyan" />
@@ -162,7 +132,7 @@ export default function Process() {
                       : "bg-white/15"
                   }`}
                 />
-                <span className="hidden sm:inline">{s.title.split(" ")[0]}</span>
+                <span className="hidden sm:inline">{tr.process.steps[i].title.split(" ")[0]}</span>
                 <span className="sm:hidden">{s.n}</span>
               </div>
             ))}
