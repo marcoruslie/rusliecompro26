@@ -9,13 +9,12 @@ import {
 } from "framer-motion";
 import HeroSpring from "./HeroSpring";
 import { BlueprintGrid, MagneticButton, Counter, SpecTag } from "./hud";
+import { useLanguage } from "@/components/LanguageProvider";
 
-const HEADLINE = ["Engineering", "Every", "Coil."];
-
-const STATS = [
-  { to: 20, suffix: "+", label: "Years Forging Steel" },
-  { to: 50, suffix: "K+", label: "Springs / Day" },
-  { to: 80, suffix: "+", label: "Industries Served" },
+const STAT_VALUES = [
+  { to: 20, suffix: "+" },
+  { to: 50, suffix: "K+" },
+  { to: 80, suffix: "+" },
 ];
 
 const FLOAT_SPECS = [
@@ -27,6 +26,7 @@ const FLOAT_SPECS = [
 export default function Hero() {
   const ref = useRef<HTMLElement>(null);
   const reduce = useReducedMotion();
+  const { tr } = useLanguage();
   const { scrollYProgress } = useScroll({
     target: ref,
     offset: ["start start", "end start"],
@@ -97,12 +97,12 @@ export default function Hero() {
             transition={{ duration: 0.7, delay: 0.15 }}
             className="mb-7"
           >
-            <SpecTag active>Precision Spring Manufacturing · ID</SpecTag>
+            <SpecTag active>{tr.hero.badge}</SpecTag>
           </motion.div>
 
           {/* Kinetic split-text headline */}
           <h1 className="font-tech font-bold text-[clamp(3rem,6vw,5.4rem)] leading-[0.98] tracking-tight text-hud-silver mb-6">
-            {HEADLINE.map((word, i) => (
+            {tr.hero.headline.map((word, i) => (
               <span key={word} className="inline-block overflow-hidden align-bottom mr-[0.28em]">
                 <motion.span
                   initial={{ y: "110%" }}
@@ -128,9 +128,7 @@ export default function Hero() {
             transition={{ duration: 0.8, delay: 0.7 }}
             className="font-body text-[1.05rem] text-hud-silver/55 leading-[1.8] max-w-[470px] mb-9"
           >
-            Strengthening industry with Indonesian-made precision springs —
-            engineered to international tolerances, forged and tested under one
-            roof.
+            {tr.hero.tagline}
           </motion.p>
 
           <motion.div
@@ -139,9 +137,9 @@ export default function Hero() {
             transition={{ duration: 0.7, delay: 0.85 }}
             className="flex gap-4 flex-wrap mb-12"
           >
-            <MagneticButton href="#products">Explore Products</MagneticButton>
+            <MagneticButton href="#products">{tr.hero.exploreProducts}</MagneticButton>
             <MagneticButton href="#process" variant="ghost">
-              See the Process
+              {tr.hero.seeProcess}
             </MagneticButton>
           </motion.div>
 
@@ -152,13 +150,13 @@ export default function Hero() {
             transition={{ duration: 0.8, delay: 1 }}
             className="flex gap-8 sm:gap-12"
           >
-            {STATS.map((s) => (
-              <div key={s.label}>
+            {STAT_VALUES.map((s, i) => (
+              <div key={i}>
                 <div className="font-tech text-[2rem] font-bold text-hud-silver leading-none">
                   <Counter to={s.to} suffix={s.suffix} />
                 </div>
                 <div className="font-mono text-[0.62rem] tracking-[0.16em] uppercase text-hud-mute mt-2">
-                  {s.label}
+                  {tr.hero.stats[i]}
                 </div>
               </div>
             ))}
@@ -184,7 +182,7 @@ export default function Hero() {
         className="absolute bottom-7 left-1/2 -translate-x-1/2 flex flex-col items-center gap-2 z-20"
       >
         <span className="font-mono text-[0.6rem] text-hud-mute tracking-[0.3em] uppercase">
-          Scroll
+          {tr.hero.scroll}
         </span>
         <div className="w-px h-9 bg-gradient-to-b from-cyan/70 to-transparent" />
       </motion.div>
