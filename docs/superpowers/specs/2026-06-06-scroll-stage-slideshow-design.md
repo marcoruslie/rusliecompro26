@@ -71,7 +71,8 @@ identical — only the driver changes.**
 - **Process:** keeps its existing 4-step (`STEP_META`) logic, now fed by local
   progress instead of document `scrollYProgress`.
 - **Products / Gallery / Capabilities:** staggered card reveals across the timeline.
-- **Contact + Footer:** combined into one final slide.
+- **Contact:** its own slide (form/details reveal across the timeline).
+- **Footer:** its own final slide.
 
 ### 4. Navbar wiring
 
