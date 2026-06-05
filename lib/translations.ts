@@ -179,41 +179,41 @@ export type Dict = typeof en;
 
 const id: Dict = {
   nav: {
-    links: ["Tentang", "Proses", "Produk", "Kapabilitas", "Galeri", "Kontak"],
+    links: ["Tentang", "Proses", "Produk", "Kemampuan", "Galeri", "Kontak"],
     getQuote: "Minta Penawaran",
   },
   hero: {
-    badge: "Manufaktur Pegas Presisi · ID",
-    headline: ["Merekayasa", "Setiap", "Lilitan."],
+    badge: "Pembuatan Pegas Presisi · ID",
+    headline: ["Membuat", "Setiap", "Lilitan."],
     paragraph:
-      "Memperkuat industri dengan pegas presisi buatan Indonesia — direkayasa sesuai toleransi internasional, dibentuk dan diuji dalam satu atap.",
-    ctaProducts: "Jelajahi Produk",
+      "Memperkuat industri dengan pegas presisi buatan Indonesia — dibuat sesuai standar toleransi internasional, dibentuk dan diuji langsung di tempat kami.",
+    ctaProducts: "Lihat Produk",
     ctaProcess: "Lihat Prosesnya",
     stats: ["Tahun Menempa Baja", "Pegas / Hari", "Industri Dilayani"],
     scroll: "Gulir",
   },
   about: {
     label: "Siapa Kami",
-    heading: ["Dua Dekade", "Keahlian Membuat Pegas"],
-    p1: "Ruslie Spring tumbuh dari bengkel lokal kecil menjadi produsen pegas Indonesia yang tepercaya. Kini kami mendukung industri dalam negeri dengan pegas presisi yang direkayasa sesuai standar internasional.",
-    p2: "Kami melayani aplikasi di mana kegagalan bukan pilihan — otomotif, elektronik, pertahanan, dan rekayasa berat — menjaga toleransi paling ketat tanpa kompromi.",
-    stats: ["Tahun Keunggulan", "Pegas Harian", "Perusahaan Dilayani"],
+    heading: ["Dua Dekade", "Ahli Membuat Pegas"],
+    p1: "Ruslie Spring berawal dari bengkel kecil dan kini menjadi produsen pegas Indonesia yang tepercaya. Kami mendukung industri dalam negeri dengan pegas presisi berstandar internasional.",
+    p2: "Kami melayani bidang yang tidak menoleransi kegagalan — otomotif, elektronik, pertahanan, hingga industri berat — dengan menjaga toleransi paling ketat tanpa kompromi.",
+    stats: ["Tahun Pengalaman", "Pegas per Hari", "Perusahaan Dilayani"],
     features: [
       {
-        title: "Keunggulan Manufaktur Indonesia",
-        text: "Manufaktur pegas presisi tinggi yang dengan bangga dibuat di Indonesia, menghadirkan kualitas standar global tanpa bergantung pada impor.",
+        title: "Kualitas Buatan Indonesia",
+        text: "Pegas presisi tinggi yang dibuat dengan bangga di Indonesia, menghadirkan kualitas kelas dunia tanpa bergantung pada impor.",
       },
       {
-        title: "Dengan Bangga Buatan Indonesia",
-        text: "Pegas kelas dunia yang diproduksi secara lokal untuk mendukung industri nasional dan mengurangi ketergantungan pada komponen impor.",
+        title: "Bangga Buatan Indonesia",
+        text: "Pegas kelas dunia yang diproduksi di dalam negeri untuk mendukung industri nasional dan mengurangi ketergantungan pada komponen impor.",
       },
       {
-        title: "Solusi Industri Kustom",
-        text: "Pegas yang direkayasa khusus sesuai kebutuhan otomotif, mesin, dan manufaktur di seluruh industri Indonesia.",
+        title: "Solusi Khusus untuk Industri",
+        text: "Pegas hasil kustomisasi sesuai kebutuhan otomotif, mesin, dan manufaktur di berbagai industri Indonesia.",
       },
       {
-        title: "Kualitas Domestik Tepercaya",
-        text: "Setiap pegas diperiksa dan diuji beban untuk menjamin performa yang konsisten — bukti bahwa produk lokal memenuhi standar kelas dunia.",
+        title: "Kualitas Lokal yang Tepercaya",
+        text: "Setiap pegas diperiksa dan diuji beban demi performa yang konsisten — bukti bahwa produk lokal mampu memenuhi standar kelas dunia.",
       },
     ],
   },
@@ -222,24 +222,24 @@ const id: Dict = {
     step: "LANGKAH",
     steps: [
       {
-        title: "Pemilihan Kawat Mentah",
-        text: "Kawat karbon dan stainless berkekuatan tarik tinggi diukur dan dimasukkan ke lini produksi — titik awal dari setiap pegas yang kami buat.",
+        title: "Pemilihan Bahan Kawat",
+        text: "Kawat baja karbon dan stainless berkekuatan tarik tinggi diukur lalu masuk ke lini produksi — titik awal dari setiap pegas yang kami buat.",
         spec: "Ø 0.1 – 50 mm",
       },
       {
-        title: "Penggulungan Presisi CNC",
-        text: "Mesin penggulung terkontrol komputer membentuk setiap pegas pada pitch, diameter, dan panjang bebas yang tepat — berulang hingga mikron.",
+        title: "CNC Coiling Presisi",
+        text: "Mesin coiling berbasis komputer membentuk setiap pegas dengan pitch, diameter, dan panjang yang presisi — konsisten hingga ukuran mikron.",
         spec: "OD 1 – 500 mm",
       },
       {
-        title: "Pelepasan Tegangan & Perlakuan Panas",
-        text: "Lilitan ditempa untuk mengunci elastisitas dan menahan deformasi permanen, memberi pegas umur kerja panjang di bawah beban.",
-        spec: "Ditempa · tahan set",
+        title: "Stress-Relief & Heat Treatment",
+        text: "Lilitan melewati heat treatment untuk mengunci elastisitas dan mencegah perubahan bentuk permanen, sehingga pegas awet saat menahan beban.",
+        spec: "Heat-treated · tahan deformasi",
       },
       {
-        title: "Uji Beban & Kontrol Kualitas",
-        text: "Setiap batch diuji beban dan diperiksa dimensinya sebelum dikirim — bukti bahwa toleransi bertahan di dunia nyata.",
-        spec: "± 0.01 mm terverifikasi",
+        title: "Load Test & Quality Control",
+        text: "Setiap batch di-load test dan diperiksa ukurannya sebelum dikirim — memastikan toleransi tetap akurat saat dipakai.",
+        spec: "± 0.01 mm teruji",
       },
     ],
   },
@@ -250,39 +250,39 @@ const id: Dict = {
     items: [
       {
         name: "Pegas Tekan",
-        desc: "Pegas penahan beban tinggi untuk mesin industri dan sistem otomotif.",
+        desc: "Pegas penahan beban berat untuk mesin industri dan sistem otomotif.",
         tag: "Tekan",
       },
       {
         name: "Pegas Tarik",
-        desc: "Direkayasa presisi untuk tegangan konsisten pada aplikasi tugas berat.",
+        desc: "Dibuat presisi untuk tegangan yang stabil pada penggunaan berat.",
         tag: "Tarik",
       },
       {
         name: "Pegas Puntir",
-        desc: "Solusi torsi kustom untuk mesin dan manufaktur.",
+        desc: "Solusi torsi khusus untuk mesin dan industri.",
         tag: "Torsi",
       },
       {
-        name: "Bentuk Kawat",
-        desc: "Bentuk kawat kustom kompleks yang direkayasa sesuai spesifikasi klien.",
-        tag: "Kustom",
+        name: "Wire Forming",
+        desc: "Bentuk kawat hasil kustomisasi sesuai spesifikasi pelanggan.",
+        tag: "Custom",
       },
       {
         name: "Pegas Zigzag",
-        desc: "Pegas zigzag tahan lama untuk dudukan furnitur — dukungan dan elastisitas yang awet.",
+        desc: "Pegas zigzag tahan lama untuk dudukan furnitur — empuk dan awet.",
         tag: "Dudukan",
       },
       {
         name: "Pegas Baterai",
-        desc: "Kontak listrik andal untuk kompartemen baterai dan rakitan elektronik.",
+        desc: "Kontak listrik yang andal untuk wadah baterai dan komponen elektronik.",
         tag: "Kontak",
       },
     ],
   },
   capabilities: {
     label: "Spesifikasi Teknis",
-    heading: ["Kapabilitas", "Manufaktur"],
+    heading: ["Kemampuan", "Produksi"],
     caps: ["Diameter Kawat", "OD Pegas", "Panjang Bebas", "Toleransi"],
     industriesTitle: "Industri yang Kami Layani",
     industries: [
@@ -295,14 +295,14 @@ const id: Dict = {
       "Maritim",
       "Konstruksi",
       "Pertanian",
-      "Perkeretaapian",
+      "Kereta Api",
     ],
   },
   gallery: {
     label: "Hasil Kerja Kami",
     heading: ["Galeri", "Pegas"],
     description:
-      "Pameran visual pegas yang telah kami rekayasa di berbagai industri dan aplikasi.",
+      "Kumpulan foto pegas yang telah kami buat untuk berbagai industri dan kebutuhan.",
     behindProcess: "Di Balik Proses",
     productionVideos: "Video Produksi",
     productionProcess: "Proses Produksi",
@@ -316,10 +316,10 @@ const id: Dict = {
       { label: "Pegas Tekan Mini — Elektronik", tag: "Tekan" },
       { label: "Pegas Tekan Baja", tag: "Tekan" },
       { label: "Pegas Tekan Ujung Rata", tag: "Tekan" },
-      { label: "Pembentukan Kawat Stainless Steel", tag: "Bentuk Kawat" },
-      { label: "Pegas Bentuk Kawat", tag: "Bentuk Kawat" },
+      { label: "Wire Forming Stainless Steel", tag: "Wire Forming" },
+      { label: "Pegas Wire Forming", tag: "Wire Forming" },
       { label: "Pegas Puntir Stainless Steel", tag: "Tekan" },
-      { label: "Klem Selang Intercooler", tag: "Bentuk Kawat" },
+      { label: "Klem Selang Intercooler", tag: "Wire Forming" },
       { label: "Pegas Tekan Stainless Steel", tag: "Tekan" },
       { label: "Kawat Bulat Produksi — Penggulungan Pegas", tag: "Produksi" },
     ],
@@ -327,9 +327,9 @@ const id: Dict = {
   },
   contact: {
     label: "Hubungi Kami",
-    heading: ["Siap Merekayasa", "Pegas Berikutnya Anda?"],
+    heading: ["Siap Membuat", "Pegas Anda Berikutnya?"],
     paragraph:
-      "Kirimkan gambar, spesifikasi, atau ide Anda. Insinyur kami merespons dalam 24 jam dengan penawaran terperinci dan konsultasi teknis.",
+      "Kirimkan gambar, spesifikasi, atau ide Anda. Tim teknik kami akan membalas dalam 24 jam dengan penawaran lengkap dan konsultasi teknis.",
     placeholders: {
       name: "Nama Anda",
       company: "Perusahaan / Industri",
@@ -341,7 +341,7 @@ const id: Dict = {
     sentText: "Tim kami akan menghubungi Anda kembali dalam 24 jam.",
   },
   footer: {
-    rights: "Semua hak dilindungi.",
+    rights: "Seluruh hak cipta dilindungi.",
     tagline: "Presisi · Keandalan · Inovasi",
   },
 };
