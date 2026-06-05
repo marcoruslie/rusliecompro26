@@ -7,19 +7,22 @@ import Gallery from "@/components/Gallery";
 import Capabilities from "@/components/Capabilities";
 import Contact from "@/components/Contact";
 import Footer from "@/components/Footer";
+import { LanguageProvider } from "@/lib/i18n";
 
 export default function Home() {
   return (
-    <main className="hud-root">
-      <Navbar />
-      <Hero />
-      <About />
-      <Process />
-      <Products />
-      <Capabilities />
-      <Gallery />
-      <Contact />
-      <Footer />
-    </main>
+    <LanguageProvider>
+      <main className="hud-root">
+        <Navbar />
+        <Hero />
+        <About />
+        <Process />
+        <Products />
+        <Capabilities />
+        <Gallery />
+        <Contact />
+        <Footer />
+      </main>
+    </LanguageProvider>
   );
 }

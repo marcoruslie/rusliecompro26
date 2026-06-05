@@ -4,6 +4,7 @@ import { useRef, useState } from "react";
 import { motion, useInView, useReducedMotion } from "framer-motion";
 import { MapPin, Phone, Mail, Send } from "lucide-react";
 import { SectionIndex } from "./hud";
+import { useLanguage } from "@/lib/i18n";
 
 const CONTACT_INFO = [
   { icon: MapPin, text: "Jl. Sikatan 45, Manukan Wetan, Tandes" },
@@ -12,6 +13,7 @@ const CONTACT_INFO = [
 ];
 
 export default function Contact() {
+  const { t } = useLanguage();
   const ref = useRef<HTMLElement>(null);
   const inView = useInView(ref, { once: true, margin: "-80px" });
   const reduce = useReducedMotion();
@@ -49,21 +51,24 @@ export default function Contact() {
           transition={{ duration: 0.8 }}
         >
           <div className="flex justify-center mb-5">
-            <SectionIndex index="06" label="Get In Touch" />
+            <SectionIndex index="06" label={t.contact.label} />
           </div>
           <h2 className="font-tech font-bold text-[clamp(2rem,4.5vw,3.4rem)] text-hud-silver leading-[1.08] mb-5">
-            Ready to Engineer
+            {t.contact.heading[0]}
             <br />
-            <span className="text-cyan hud-glow-cyan">Your Next Spring?</span>
+            <span className="text-cyan hud-glow-cyan">{t.contact.heading[1]}</span>
           </h2>
           <p className="font-body text-[1rem] text-hud-silver/50 leading-[1.85] max-w-[500px] mx-auto mb-12">
-            Send us your drawings, specs, or ideas. Our engineers respond within
-            24 hours with a detailed quote and technical consultation.
+            {t.contact.paragraph}
           </p>
 
           {!sent ? (
             <div className="flex flex-col gap-3.5 max-w-[480px] mx-auto mb-10">
-              {["Your Name", "Company / Industry", "Email Address"].map((ph) => (
+              {[
+                t.contact.placeholders.name,
+                t.contact.placeholders.company,
+                t.contact.placeholders.email,
+              ].map((ph) => (
                 <input
                   key={ph}
                   placeholder={ph}
@@ -71,7 +76,7 @@ export default function Contact() {
                 />
               ))}
               <textarea
-                placeholder="Describe your spring requirements..."
+                placeholder={t.contact.placeholders.message}
                 rows={4}
                 className="w-full bg-carbon border border-white/12 rounded-lg px-5 py-3.5 font-body text-[0.92rem] text-hud-silver placeholder:text-hud-mute focus:border-cyan/60 focus:shadow-cyan-glow outline-none resize-none transition-all duration-200"
               />
@@ -82,7 +87,7 @@ export default function Contact() {
                 className="bg-cyan text-graphite rounded-lg py-4 px-8 font-mono font-medium text-[0.82rem] tracking-[0.16em] uppercase cursor-pointer flex items-center justify-center gap-2 hover:shadow-cyan-glow transition-shadow duration-300"
               >
                 <Send size={16} />
-                Request a Quote
+                {t.contact.button}
               </motion.button>
             </div>
           ) : (
@@ -95,10 +100,10 @@ export default function Contact() {
                 <Send size={20} className="text-cyan" />
               </div>
               <div className="font-tech text-hud-silver text-xl font-semibold mb-2">
-                Message Sent
+                {t.contact.sentTitle}
               </div>
               <div className="font-body text-hud-silver/50 text-sm">
-                Our team will get back to you within 24 hours.
+                {t.contact.sentText}
               </div>
             </motion.div>
           )}

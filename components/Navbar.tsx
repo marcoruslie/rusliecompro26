@@ -4,17 +4,24 @@ import { useState, useEffect } from "react";
 import { motion, AnimatePresence, useScroll, useSpring } from "framer-motion";
 import { Menu, X } from "lucide-react";
 import Link from "next/link";
+import { useLanguage } from "@/lib/i18n";
+import LanguageSwitcher from "./LanguageSwitcher";
 
-const NAV_LINKS = [
-  { label: "About", href: "#about", n: "01" },
-  { label: "Process", href: "#process", n: "02" },
-  { label: "Products", href: "#products", n: "03" },
-  { label: "Capabilities", href: "#capabilities", n: "04" },
-  { label: "Gallery", href: "#gallery", n: "05" },
-  { label: "Contact", href: "#contact", n: "06" },
+const NAV_META = [
+  { href: "#about", n: "01" },
+  { href: "#process", n: "02" },
+  { href: "#products", n: "03" },
+  { href: "#capabilities", n: "04" },
+  { href: "#gallery", n: "05" },
+  { href: "#contact", n: "06" },
 ];
 
 export default function Navbar() {
+  const { t } = useLanguage();
+  const navLinks = NAV_META.map((meta, i) => ({
+    ...meta,
+    label: t.nav.links[i],
+  }));
   const [scrolled, setScrolled] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
   const { scrollYProgress } = useScroll();
@@ -53,9 +60,9 @@ export default function Navbar() {
 
           {/* Desktop nav */}
           <div className="hidden md:flex items-center gap-7">
-            {NAV_LINKS.map((link) => (
+            {navLinks.map((link) => (
               <a
-                key={link.label}
+                key={link.href}
                 href={link.href}
                 className="group relative font-mono text-[0.74rem] tracking-[0.18em] uppercase text-hud-silver/55 hover:text-cyan transition-colors duration-200"
               >
@@ -66,21 +73,25 @@ export default function Navbar() {
                 <span className="absolute -bottom-1.5 left-0 h-px w-0 bg-cyan transition-all duration-300 group-hover:w-full" />
               </a>
             ))}
+            <LanguageSwitcher />
             <a
               href="#contact"
               className="relative font-mono text-[0.74rem] font-medium tracking-[0.16em] uppercase text-graphite bg-cyan px-4 py-2 rounded hover:shadow-cyan-glow transition-shadow duration-300"
             >
-              Get Quote
+              {t.nav.getQuote}
             </a>
           </div>
 
-          <button
-            className="md:hidden text-hud-silver p-1"
-            onClick={() => setMenuOpen(!menuOpen)}
-            aria-label="Toggle menu"
-          >
-            {menuOpen ? <X size={24} /> : <Menu size={24} />}
-          </button>
+          <div className="md:hidden flex items-center gap-4">
+            <LanguageSwitcher />
+            <button
+              className="text-hud-silver p-1"
+              onClick={() => setMenuOpen(!menuOpen)}
+              aria-label="Toggle menu"
+            >
+              {menuOpen ? <X size={24} /> : <Menu size={24} />}
+            </button>
+          </div>
         </div>
 
         {/* Scroll-progress hairline */}
@@ -101,9 +112,9 @@ export default function Navbar() {
             className="fixed top-[69px] left-0 right-0 z-40 bg-graphite/97 backdrop-blur-xl border-b border-white/10 md:hidden"
           >
             <div className="flex flex-col px-6 py-6 gap-5">
-              {NAV_LINKS.map((link) => (
+              {navLinks.map((link) => (
                 <a
-                  key={link.label}
+                  key={link.href}
                   href={link.href}
                   onClick={() => setMenuOpen(false)}
                   className="font-mono text-sm tracking-[0.16em] uppercase text-hud-silver/70 hover:text-cyan transition-colors"
@@ -117,7 +128,7 @@ export default function Navbar() {
                 onClick={() => setMenuOpen(false)}
                 className="bg-cyan text-graphite text-center py-3 rounded font-mono font-medium text-sm tracking-[0.16em] uppercase mt-2"
               >
-                Get Quote
+                {t.nav.getQuote}
               </a>
             </div>
           </motion.div>

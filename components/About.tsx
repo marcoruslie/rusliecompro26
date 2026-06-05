@@ -9,37 +9,24 @@ import {
   CornerBrackets,
   Counter,
 } from "./hud";
+import { useLanguage } from "@/lib/i18n";
 
-const STATS = [
-  { to: 20, suffix: "+", label: "Years of Excellence" },
-  { to: 50, suffix: "K+", label: "Springs Daily" },
-  { to: 80, suffix: "+", label: "Companies Served" },
+const STAT_VALUES = [
+  { to: 20, suffix: "+" },
+  { to: 50, suffix: "K+" },
+  { to: 80, suffix: "+" },
 ];
 
-const FEATURES = [
-  {
-    icon: Factory,
-    title: "Indonesian Manufacturing Excellence",
-    text: "High-precision spring manufacturing proudly made in Indonesia, delivering global-standard quality without relying on imports.",
-  },
-  {
-    icon: MapPin,
-    title: "Proudly Made in Indonesia",
-    text: "World-class springs manufactured locally to support national industry and reduce dependence on imported components.",
-  },
-  {
-    icon: Cog,
-    title: "Custom Industry Solutions",
-    text: "Custom-engineered springs tailored to automotive, machinery, and manufacturing needs across Indonesian industry.",
-  },
-  {
-    icon: ShieldCheck,
-    title: "Trusted Domestic Quality",
-    text: "Every spring is inspected and load-tested to guarantee consistent performance — proof that local products meet world-class standards.",
-  },
-];
+const FEATURE_ICONS = [Factory, MapPin, Cog, ShieldCheck];
 
 export default function About() {
+  const { t } = useLanguage();
+  const stats = STAT_VALUES.map((s, i) => ({ ...s, label: t.about.stats[i] }));
+  const features = FEATURE_ICONS.map((icon, i) => ({
+    icon,
+    title: t.about.features[i].title,
+    text: t.about.features[i].text,
+  }));
   const ref = useRef<HTMLElement>(null);
   const inView = useInView(ref, { once: true, margin: "-100px" });
   return (
@@ -52,30 +39,26 @@ export default function About() {
         {/* Left */}
         <div>
           <ScanReveal>
-            <SectionIndex index="01" label="Who We Are" className="mb-6" />
+            <SectionIndex index="01" label={t.about.label} className="mb-6" />
             <h2 className="font-tech font-bold text-[clamp(1.9rem,3.6vw,3rem)] leading-[1.08] text-hud-silver mb-7">
-              Two Decades of
+              {t.about.heading[0]}
               <br />
-              <span className="text-cyan hud-glow-cyan">Springmaking Mastery</span>
+              <span className="text-cyan hud-glow-cyan">{t.about.heading[1]}</span>
             </h2>
           </ScanReveal>
 
           <ScanReveal delay={0.1} scan={false}>
             <p className="font-body text-[1rem] text-hud-silver/55 leading-[1.9] mb-5">
-              Ruslie Spring has grown from a small local workshop into a trusted
-              Indonesian spring manufacturer. Today we support domestic industry
-              with precision springs engineered to international standards.
+              {t.about.p1}
             </p>
             <p className="font-body text-[1rem] text-hud-silver/55 leading-[1.9] mb-10">
-              We serve applications where failure is not an option — automotive,
-              electronics, defense, and heavy engineering — holding the tightest
-              tolerances with zero compromise.
+              {t.about.p2}
             </p>
           </ScanReveal>
 
           {/* Stats */}
           <div className="grid grid-cols-3 gap-6">
-            {STATS.map((s, i) => (
+            {stats.map((s, i) => (
               <motion.div
                 key={s.label}
                 initial={{ opacity: 0, y: 18 }}
@@ -96,7 +79,7 @@ export default function About() {
 
         {/* Right — feature cards */}
         <div className="flex flex-col gap-4">
-          {FEATURES.map((item, i) => {
+          {features.map((item, i) => {
             const Icon = item.icon;
             return (
               <motion.div

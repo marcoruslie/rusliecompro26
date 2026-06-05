@@ -11,50 +11,26 @@ import {
 } from "framer-motion";
 import dynamic from "next/dynamic";
 import { BlueprintGrid, SectionIndex } from "./hud";
+import { useLanguage } from "@/lib/i18n";
 
 // 3D spring is client-only (WebGL) and code-split out of the main bundle.
 const SpringScene = dynamic(() => import("./SpringScene"), { ssr: false });
 
-const STEPS = [
-  {
-    n: "01",
-    key: "wire",
-    title: "Raw Wire Selection",
-    text: "High-tensile carbon and stainless wire is gauged and fed into the line — the starting point of every spring we make.",
-    spec: "Ø 0.1 – 50 mm",
-    compress: 0,
-    coils: 8,
-  },
-  {
-    n: "02",
-    key: "coil",
-    title: "CNC Precision Coiling",
-    text: "Computer-controlled coilers form each spring to an exact pitch, diameter, and free length — repeatable to the micron.",
-    spec: "OD 1 – 500 mm",
-    compress: 0.16,
-    coils: 9,
-  },
-  {
-    n: "03",
-    key: "heat",
-    title: "Stress-Relief & Heat-Treat",
-    text: "Coils are tempered to lock in elasticity and resist permanent set, giving the spring its long working life under load.",
-    spec: "Tempered · set-resistant",
-    compress: 0.42,
-    coils: 9,
-  },
-  {
-    n: "04",
-    key: "qc",
-    title: "Load-Test & Quality Control",
-    text: "Every batch is load-tested and dimensionally inspected before it ships — proof the tolerance holds in the real world.",
-    spec: "± 0.01 mm verified",
-    compress: 0.24,
-    coils: 8,
-  },
+const STEP_META = [
+  { n: "01", key: "wire", compress: 0, coils: 8 },
+  { n: "02", key: "coil", compress: 0.16, coils: 9 },
+  { n: "03", key: "heat", compress: 0.42, coils: 9 },
+  { n: "04", key: "qc", compress: 0.24, coils: 8 },
 ];
 
 export default function Process() {
+  const { t } = useLanguage();
+  const STEPS = STEP_META.map((meta, i) => ({
+    ...meta,
+    title: t.process.steps[i].title,
+    text: t.process.steps[i].text,
+    spec: t.process.steps[i].spec,
+  }));
   const ref = useRef<HTMLElement>(null);
   const [active, setActive] = useState(0);
   const { scrollYProgress } = useScroll({
@@ -102,9 +78,9 @@ export default function Process() {
         <div className="relative z-10 flex-1 max-w-7xl w-full mx-auto px-6 lg:px-10 grid grid-cols-1 lg:grid-cols-2 items-center gap-10">
           {/* Left — morphing copy */}
           <div className="pt-24 lg:pt-0">
-            <SectionIndex index="02" label="How It's Made" className="mb-8" />
+            <SectionIndex index="02" label={t.process.label} className="mb-8" />
             <div className="font-mono text-[0.72rem] tracking-[0.2em] text-cyan/70 mb-4">
-              STEP {step.n} / {String(STEPS.length).padStart(2, "0")}
+              {t.process.step} {step.n} / {String(STEPS.length).padStart(2, "0")}
             </div>
 
             <div className="relative min-h-[230px]">
