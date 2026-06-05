@@ -1,4 +1,9 @@
+"use client";
+
+import { useLanguage } from "@/components/LanguageProvider";
+
 export default function Footer() {
+  const { tr } = useLanguage();
   return (
     <footer className="relative bg-graphite border-t border-white/[0.06] overflow-hidden">
       <div
@@ -8,10 +13,10 @@ export default function Footer() {
       <div className="relative max-w-7xl mx-auto px-6 lg:px-10 py-8 flex flex-col sm:flex-row justify-between items-center gap-3 flex-wrap">
         <span className="font-tech text-hud-silver/45 text-[0.88rem]">
           © 2026{" "}
-          <span className="text-cyan">Ruslie Spring</span>. All rights reserved.
+          <span className="text-cyan">Ruslie Spring</span>. {tr.footer.rights}
         </span>
         <span className="font-mono text-hud-mute text-[0.66rem] tracking-[0.22em] uppercase">
-          Precision · Reliability · Innovation
+          {tr.footer.tagline}
         </span>
       </div>
     </footer>
