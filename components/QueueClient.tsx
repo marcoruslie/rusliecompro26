@@ -120,13 +120,35 @@ export default function QueueClient({
   async function toggleStatus(o: Transaction) {
     if (!o.id) return;
     const next: OrderStatus = o.status === "completed" ? "processing" : "completed";
+    // Marking an order "Selesai" also deletes its attached file (Drive + DB).
+    const shouldDeleteFile = next === "completed" && !!o.image_drive_id;
+    if (
+      shouldDeleteFile &&
+      !confirm("Tandai selesai & hapus file order ini?")
+    ) {
+      return;
+    }
     setBusyId(o.id);
     setError("");
     const supabase = createClient();
     try {
       await updateOrderStatus(supabase, o.id, next);
+      if (shouldDeleteFile) {
+        const res = await fetch(`/api/orders/${o.id}/image`, { method: "DELETE" });
+        if (!res.ok) throw new Error();
+      }
       setOrders((prev) =>
-        prev.map((x) => (x.id === o.id ? { ...x, status: next } : x))
+        prev.map((x) =>
+          x.id === o.id
+            ? {
+                ...x,
+                status: next,
+                ...(shouldDeleteFile
+                  ? { image_drive_id: null, image_name: null }
+                  : {}),
+              }
+            : x
+        )
       );
     } catch {
       setError("Gagal mengubah status.");

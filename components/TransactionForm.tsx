@@ -75,9 +75,31 @@ function getNamePrefix(name: string): string {
   return words[0][0] + words[1][0];
 }
 
-function buildInvoiceNumber(name: string): string {
+// Next 2-digit running sequence for a given date+suffix.
+// Example: first "CS" today -> "01", a second one -> "02".
+function nextSequence(
+  datePart: string,
+  suffix: string,
+  existingNumbers: string[]
+): string {
+  // New format: INV-<yymmdd><nn>-<suffix>. Also count legacy
+  // INV-<yymmdd>-<suffix> (no sequence) as occupying slot 01.
+  const seqPattern = new RegExp(`^INV-${datePart}(\\d{2})-${suffix}$`);
+  const legacy = `INV-${datePart}-${suffix}`;
+  let max = 0;
+  for (const num of existingNumbers) {
+    const m = num.match(seqPattern);
+    if (m) max = Math.max(max, parseInt(m[1], 10));
+    else if (num === legacy) max = Math.max(max, 1);
+  }
+  return String(max + 1).padStart(2, "0");
+}
+
+function buildInvoiceNumber(name: string, existingNumbers: string[]): string {
   const suffix = getNamePrefix(name) || randomLetters();
-  return `INV-${invoiceDatePart()}-${suffix}`;
+  const datePart = invoiceDatePart();
+  const seq = nextSequence(datePart, suffix, existingNumbers);
+  return `INV-${datePart}${seq}-${suffix}`;
 }
 
 function todayFormatted(): string {
@@ -94,11 +116,13 @@ export default function TransactionForm({
   initialWires,
   initialWireTypes,
   existing,
+  existingInvoiceNumbers,
 }: {
   initialCustomers: Customer[];
   initialWires: Wire[];
   initialWireTypes?: WireType[];
   existing?: Transaction;
+  existingInvoiceNumbers?: string[];
 }) {
   const router = useRouter();
   const [customers, setCustomers] = useState<Customer[]>(initialCustomers);
@@ -155,9 +179,12 @@ export default function TransactionForm({
   // The 2-letter suffix follows the customer name (falls back to random while blank).
   useEffect(() => {
     if (!existing) {
-      setInvoice((p) => ({ ...p, number: buildInvoiceNumber(p.customer.name) }));
+      setInvoice((p) => ({
+        ...p,
+        number: buildInvoiceNumber(p.customer.name, existingInvoiceNumbers ?? []),
+      }));
     }
-  }, [existing, invoice.customer.name]);
+  }, [existing, invoice.customer.name, existingInvoiceNumbers]);
 
   /* ── Derived ── */
   const subtotal = invoice.items.reduce((acc, i) => acc + i.qty * i.price, 0);
@@ -434,7 +461,7 @@ export default function TransactionForm({
                     <input
                       value={invoice.number}
                       onChange={(e) => setInvoice((p) => ({ ...p, number: e.target.value }))}
-                      placeholder="INV-260531-AB"
+                      placeholder="INV-26053101-AB"
                       className="print-input border-b border-dashed border-gray-300 bg-transparent text-right text-sm font-semibold text-gray-700 focus:outline-none focus:border-gray-500 w-40"
                     />
                   </div>
