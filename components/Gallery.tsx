@@ -12,29 +12,17 @@ import {
 import { X, ZoomIn, Play, ChevronLeft, ChevronRight } from "lucide-react"
 import Image from "next/image"
 import { SectionIndex } from "./hud"
+import { useLanguage } from "@/components/LanguageProvider"
 
-const GALLERY_ITEMS = [
-	{ label: "Stainless Steel Compression Spring", image: "/spring/gallery1.jpg", tag: "Compression" },
-	{ label: "Standard Coil Spring — General Use", image: "/spring/item1.jpg", tag: "Compression" },
-	{ label: "Steel Tension Spring", image: "/spring/gallery2.jpg", tag: "Tension" },
-	{ label: "Compression Coil Spring", image: "/spring/gallery4.jpg", tag: "Compression" },
-	{ label: "Battery Spring", image: "/spring/gallery3.jpg", tag: "Battery Spring" },
-	{ label: "Battery Spring", image: "/spring/item3.jpg", tag: "Battery Spring" },
-	{ label: "Mini Compression Spring — Electronics", image: "/spring/gallery5.jpg", tag: "Compression" },
-	{ label: "Steel Compression Spring", image: "/spring/gallery7.jpg", tag: "Compression" },
-	{ label: "Flat-Ground End Compression Spring", image: "/spring/gallery8.jpg", tag: "Compression" },
-	{ label: "Stainless Steel Wire Forming", image: "/spring/item2.jpg", tag: "Wire Forming" },
-	{ label: "Wire Forming Spring", image: "/spring/item4.jpg", tag: "Wire Forming" },
-	{ label: "Stainless Steel Torsion Spring", image: "/spring/item5.jpg", tag: "Compression" },
-	{ label: "Intercoller Hose Clamp", image: "/spring/gallery6.jpg", tag: "Wire Forming" },
-	{ label: "Stainless Steel Compression Spring", image: "/spring/item6.jpg", tag: "Compression" },
-	{ label: "Production Round Wire — Spring Coiling", image: "/spring/Mesin1.jpg", tag: "Production" },
+const GALLERY_IMAGES = [
+	"/spring/gallery1.jpg", "/spring/item1.jpg", "/spring/gallery2.jpg",
+	"/spring/gallery4.jpg", "/spring/gallery3.jpg", "/spring/item3.jpg",
+	"/spring/gallery5.jpg", "/spring/gallery7.jpg", "/spring/gallery8.jpg",
+	"/spring/item2.jpg", "/spring/item4.jpg", "/spring/item5.jpg",
+	"/spring/gallery6.jpg", "/spring/item6.jpg", "/spring/Mesin1.jpg",
 ]
 
-const VIDEO_ITEMS = [
-	{ label: "Round Wire — Live Production", src: "/spring/Mesin1Vid.mp4" },
-	{ label: "Compression Spring — Live Production", src: "/spring/Mesin2Vid.mp4" },
-]
+const VIDEO_SRCS = ["/spring/Mesin1Vid.mp4", "/spring/Mesin2Vid.mp4"]
 
 // portrait (720×1280) → tall | landscape (1280×720) → short | square (1599×1599) → medium
 const HEIGHTS = [
@@ -52,11 +40,15 @@ const SLIDE_FROM = [
 ]
 
 function GalleryTile({
-	item,
+	image,
+	label,
+	tag,
 	index,
 	onOpen,
 }: {
-	item: (typeof GALLERY_ITEMS)[number]
+	image: string
+	label: string
+	tag: string
 	index: number
 	onOpen: () => void
 }) {
@@ -103,8 +95,8 @@ function GalleryTile({
 					/>
 				)}
 				<Image
-					src={item.image}
-					alt={item.label}
+					src={image}
+					alt={label}
 					fill
 					sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
 					className="object-cover object-center transition-transform duration-500 group-hover:scale-105"
@@ -119,10 +111,10 @@ function GalleryTile({
 					}}>
 					<div className="absolute bottom-0 left-0 right-0 p-5">
 						<span className="block font-mono text-[0.64rem] text-cyan/80 tracking-[0.18em] uppercase mb-1.5">
-							{item.tag}
+							{tag}
 						</span>
 						<span className="font-tech text-hud-silver text-[0.97rem] font-semibold leading-[1.3]">
-							{item.label}
+							{label}
 						</span>
 					</div>
 					<div className="absolute top-4 right-4">
@@ -134,7 +126,7 @@ function GalleryTile({
 
 				{/* Tag badge */}
 				<div className="absolute top-3.5 left-3.5 z-20 px-3 py-1 rounded-full font-mono text-[0.62rem] font-medium tracking-[0.1em] uppercase text-graphite bg-cyan">
-					{item.tag}
+					{tag}
 				</div>
 			</motion.div>
 		</motion.div>
@@ -143,7 +135,6 @@ function GalleryTile({
 
 export default function Gallery() {
 	const [topIndex, setTopIndex] = useState(0)
-	const total = VIDEO_ITEMS.length
 	const videoRefs = useRef<(HTMLVideoElement | null)[]>([])
 
 	const cycleNext = () => {
@@ -167,6 +158,8 @@ export default function Gallery() {
 	const ref = useRef<HTMLElement>(null)
 	const inView = useInView(ref, { once: true, margin: "-80px" })
 	const [lightbox, setLightbox] = useState<number | null>(null)
+	const { tr } = useLanguage()
+	const total = VIDEO_SRCS.length
 
 	return (
 		<section
@@ -180,23 +173,25 @@ export default function Gallery() {
 					animate={inView ? { opacity: 1, y: 0 } : {}}
 					transition={{ duration: 0.6 }}
 					className="mb-14">
-					<SectionIndex index="05" label="Our Work" className="mb-6" />
+					<SectionIndex index="05" label={tr.gallery.index} className="mb-6" />
 					<div className="flex flex-col sm:flex-row sm:items-end justify-between gap-5">
 						<h2 className="font-tech font-bold text-[clamp(2rem,3.6vw,3rem)] text-hud-silver">
-							Spring <span className="text-cyan hud-glow-cyan">Gallery</span>
+							{tr.gallery.titlePrefix}{" "}<span className="text-cyan hud-glow-cyan">{tr.gallery.titleAccent}</span>
 						</h2>
 						<p className="font-body text-[0.88rem] text-hud-silver/50 max-w-[360px] leading-[1.7]">
-							A visual showcase of springs we&apos;ve engineered across industries and applications.
+							{tr.gallery.description}
 						</p>
 					</div>
 				</motion.div>
 
 				{/* ── Photo Grid (scroll-parallax tiles) ── */}
 				<div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-					{GALLERY_ITEMS.map((item, i) => (
+					{GALLERY_IMAGES.map((image, i) => (
 						<GalleryTile
 							key={i}
-							item={item}
+							image={image}
+							label={tr.gallery.items[i].label}
+							tag={tr.gallery.items[i].tag}
 							index={i}
 							onOpen={() => setLightbox(i)}
 						/>
@@ -217,10 +212,10 @@ export default function Gallery() {
 							</div>
 							<div>
 								<p className="font-mono text-[0.66rem] text-hud-mute tracking-[0.2em] uppercase">
-									Behind the Process
+									{tr.gallery.behindProcess}
 								</p>
 								<h3 className="font-tech text-[1.4rem] font-bold text-hud-silver">
-									Production Videos
+									{tr.gallery.productionVideos}
 								</h3>
 							</div>
 						</div>
@@ -232,7 +227,7 @@ export default function Gallery() {
 						<div
 							className="relative"
 							style={{ width: "min(360px, 100%)", height: "min(64vh, 640px)" }}>
-							{VIDEO_ITEMS.map((vid, i) => {
+							{VIDEO_SRCS.map((src, i) => {
 								const offset = (((i - topIndex) % total) + total) % total
 								const isActive = offset === 0
 
@@ -265,7 +260,7 @@ export default function Gallery() {
 											ref={(el) => {
 												videoRefs.current[i] = el
 											}}
-											src={vid.src}
+											src={src}
 											className="w-full h-full object-cover"
 											style={{ pointerEvents: isActive ? "auto" : "none" }}
 											controls={isActive}
@@ -291,7 +286,7 @@ export default function Gallery() {
 
 							{/* dot indicators */}
 							<div className="flex gap-2 items-center">
-								{VIDEO_ITEMS.map((_, i) => (
+								{VIDEO_SRCS.map((_, i) => (
 									<button
 										key={i}
 										onClick={() => setTopIndex(i)}
@@ -315,10 +310,10 @@ export default function Gallery() {
 						{/* active video caption */}
 						<div className="text-center">
 							<span className="block font-mono text-[0.6rem] text-hud-mute tracking-[0.15em] uppercase mb-1">
-								Production Process · {topIndex + 1} / {total}
+								{tr.gallery.productionCaption} · {topIndex + 1} / {total}
 							</span>
 							<span className="font-tech text-hud-silver text-[1rem] font-semibold">
-								{VIDEO_ITEMS[topIndex].label}
+								{tr.gallery.videos[topIndex]}
 							</span>
 						</div>
 					</div>
@@ -345,8 +340,8 @@ export default function Gallery() {
 								className="relative w-full"
 								style={{ minHeight: 300, maxHeight: "78vh" }}>
 								<Image
-									src={GALLERY_ITEMS[lightbox].image}
-									alt={GALLERY_ITEMS[lightbox].label}
+									src={GALLERY_IMAGES[lightbox]}
+									alt={tr.gallery.items[lightbox].label}
 									fill
 									sizes="(max-width: 768px) 100vw, 672px"
 									className="object-contain"
@@ -356,14 +351,14 @@ export default function Gallery() {
 							<div className="px-6 py-4 flex items-center justify-between border-t border-white/[0.06]">
 								<div>
 									<span className="inline-block px-2.5 py-0.5 rounded-full text-[0.6rem] font-medium uppercase tracking-wider text-graphite bg-cyan mb-1.5 font-mono">
-										{GALLERY_ITEMS[lightbox].tag}
+										{tr.gallery.items[lightbox].tag}
 									</span>
 									<p className="font-tech text-hud-silver text-[1rem] font-semibold">
-										{GALLERY_ITEMS[lightbox].label}
+										{tr.gallery.items[lightbox].label}
 									</p>
 								</div>
 								<span className="font-mono text-hud-mute text-sm">
-									{lightbox + 1} / {GALLERY_ITEMS.length}
+									{lightbox + 1} / {GALLERY_IMAGES.length}
 								</span>
 							</div>
 
