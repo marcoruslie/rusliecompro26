@@ -1,9 +1,10 @@
 "use client";
 
-import { useRef } from "react";
-import { motion, useInView, useScroll, useTransform } from "framer-motion";
+import { useRef, useState } from "react";
+import { motion, useInView, useTransform, useMotionValueEvent } from "framer-motion";
 import { SectionIndex, TiltSpotlightCard, type CardEntrance } from "./hud";
 import { useLanguage } from "@/lib/i18n";
+import { useSectionScrub, useScrollStage } from "@/lib/scrollStage";
 
 const PARALLAX = [30, 54, 20, 44];
 
@@ -69,18 +70,23 @@ export default function Capabilities() {
   const caps = CAPS.map((c, i) => ({ ...c, label: t.capabilities.caps[i] }));
   const industries = t.capabilities.industries;
   const ref = useRef<HTMLElement>(null);
-  const inView = useInView(ref, { once: true, margin: "-80px" });
-  const { scrollYProgress } = useScroll({
-    target: ref,
-    offset: ["start end", "end start"],
+  const { stageEnabled } = useScrollStage();
+  const progress = useSectionScrub("capabilities", ref);
+  const nativeInView = useInView(ref, { once: true, margin: "-80px" });
+  const [scrubReveal, setScrubReveal] = useState(false);
+  useMotionValueEvent(progress, "change", (v) => {
+    if (v > 0.1) setScrubReveal(true);
   });
-  const headerY = useTransform(scrollYProgress, [0, 1], [60, -60]);
+  const inView = stageEnabled ? scrubReveal : nativeInView;
+  const headerY = useTransform(progress, [0, 1], [60, -60]);
 
   return (
     <section
       id="capabilities"
       ref={ref}
-      className="relative bg-graphite py-[120px] px-6 lg:px-10 border-t border-white/[0.06] overflow-hidden"
+      className={`relative bg-graphite px-6 lg:px-10 border-t border-white/[0.06] overflow-hidden ${
+        stageEnabled ? "h-screen flex items-center py-20" : "py-[120px]"
+      }`}
     >
       <div className="max-w-7xl mx-auto">
         <motion.div style={{ y: headerY }} className="mb-12">

@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef } from "react";
+import { useRef, useState } from "react";
 import {
   motion,
   useInView,
@@ -10,6 +10,7 @@ import {
   useSpring,
   useTransform,
   useMotionTemplate,
+  useMotionValueEvent,
   type MotionProps,
 } from "framer-motion";
 
@@ -26,6 +27,7 @@ import {
 } from "lucide-react";
 import { SectionIndex, CornerBrackets, type CardEntrance } from "./hud";
 import { useLanguage } from "@/lib/i18n";
+import { useSectionScrub, usePanY, useScrollStage } from "@/lib/scrollStage";
 
 /* Each product enters with a motion that imitates how that spring
    actually behaves mechanically — no two scroll reveals are alike. */
@@ -103,6 +105,7 @@ const PRODUCT_META: { icon: LucideIcon; span: string; variant: VariantKey }[] = 
 
 function ProductCard({ p, index }: { p: Product; index: number }) {
   const { t } = useLanguage();
+  const { stageEnabled } = useScrollStage();
   const ref = useRef<HTMLDivElement>(null);
   const reduce = useReducedMotion();
   const inView = useInView(ref, { once: true, margin: "-12% 0px" });
@@ -158,7 +161,7 @@ function ProductCard({ p, index }: { p: Product; index: number }) {
   return (
     <motion.div
       className={p.span}
-      style={{ perspective: 1000, y: reduce ? 0 : py }}
+      style={{ perspective: 1000, y: reduce || stageEnabled ? 0 : py }}
     >
       <motion.div
         ref={ref}
@@ -243,20 +246,27 @@ export default function Products() {
     tag: t.products.items[i].tag,
   }));
   const ref = useRef<HTMLElement>(null);
-  const inView = useInView(ref, { once: true, margin: "-80px" });
-  const { scrollYProgress } = useScroll({
-    target: ref,
-    offset: ["start end", "end start"],
+  const contentRef = useRef<HTMLDivElement>(null);
+  const { stageEnabled } = useScrollStage();
+  const progress = useSectionScrub("products", ref);
+  const panY = usePanY(progress, contentRef, stageEnabled);
+  const nativeInView = useInView(ref, { once: true, margin: "-80px" });
+  const [scrubReveal, setScrubReveal] = useState(false);
+  useMotionValueEvent(progress, "change", (v) => {
+    if (v > 0.08) setScrubReveal(true);
   });
-  const headerY = useTransform(scrollYProgress, [0, 1], [60, -60]);
+  const inView = stageEnabled ? scrubReveal : nativeInView;
+  const headerY = useTransform(progress, [0, 1], [60, -60]);
 
   return (
     <section
       id="products"
       ref={ref}
-      className="relative bg-carbon py-[120px] px-6 lg:px-10 overflow-hidden border-t border-white/[0.06]"
+      className={`relative bg-carbon px-6 lg:px-10 overflow-hidden border-t border-white/[0.06] ${
+        stageEnabled ? "h-screen py-20" : "py-[120px]"
+      }`}
     >
-      <div className="relative z-10 max-w-7xl mx-auto">
+      <motion.div ref={contentRef} style={{ y: panY }} className="relative z-10 max-w-7xl mx-auto">
         <motion.div style={{ y: headerY }} className="mb-14">
           <motion.div
             initial={{ opacity: 0, y: 24 }}
@@ -276,7 +286,7 @@ export default function Products() {
             <ProductCard key={i} p={p} index={i} />
           ))}
         </div>
-      </div>
+      </motion.div>
     </section>
   );
 }

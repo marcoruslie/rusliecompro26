@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { Globe, Check } from "lucide-react";
+import { useRouter } from "next/navigation";
 import { useLanguage, LANGUAGES } from "@/lib/i18n";
 
 export default function LanguageSwitcher({
@@ -10,7 +11,8 @@ export default function LanguageSwitcher({
 }: {
   className?: string;
 }) {
-  const { lang, setLang } = useLanguage();
+  const { lang } = useLanguage();
+  const router = useRouter();
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
 
@@ -56,7 +58,7 @@ export default function LanguageSwitcher({
                 <li key={l.code} role="option" aria-selected={active}>
                   <button
                     onClick={() => {
-                      setLang(l.code);
+                      router.push(`/${l.code}`);
                       setOpen(false);
                     }}
                     className={`flex w-full items-center justify-between gap-3 px-4 py-2 font-mono text-[0.74rem] tracking-[0.12em] uppercase transition-colors duration-150 ${

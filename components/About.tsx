@@ -1,7 +1,7 @@
 "use client";
 
-import { useRef } from "react";
-import { motion, useInView } from "framer-motion";
+import { useRef, useState } from "react";
+import { motion, useInView, useMotionValueEvent } from "framer-motion";
 import { Factory, MapPin, Cog, ShieldCheck } from "lucide-react";
 import {
   ScanReveal,
@@ -10,6 +10,7 @@ import {
   Counter,
 } from "./hud";
 import { useLanguage } from "@/lib/i18n";
+import { useSectionScrub, useScrollStage } from "@/lib/scrollStage";
 
 const STAT_VALUES = [
   { to: 20, suffix: "+" },
@@ -28,12 +29,21 @@ export default function About() {
     text: t.about.features[i].text,
   }));
   const ref = useRef<HTMLElement>(null);
-  const inView = useInView(ref, { once: true, margin: "-100px" });
+  const nativeInView = useInView(ref, { once: true, margin: "-100px" });
+  const { stageEnabled } = useScrollStage();
+  const progress = useSectionScrub("about", ref);
+  const [scrubReveal, setScrubReveal] = useState(false);
+  useMotionValueEvent(progress, "change", (v) => {
+    if (v > 0.12) setScrubReveal(true);
+  });
+  const inView = stageEnabled ? scrubReveal : nativeInView;
   return (
     <section
       id="about"
       ref={ref}
-      className="relative bg-carbon py-[120px] px-6 lg:px-10 border-t border-white/[0.06]"
+      className={`relative bg-carbon px-6 lg:px-10 border-t border-white/[0.06] ${
+        stageEnabled ? "h-screen flex items-center py-20" : "py-[120px]"
+      }`}
     >
       <div className="relative z-10 max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-2 gap-16 lg:gap-24 items-start">
         {/* Left */}

@@ -3,10 +3,10 @@
 import { useRef } from "react";
 import {
   motion,
-  useScroll,
   useTransform,
   useReducedMotion,
 } from "framer-motion";
+import { useSectionScrub } from "@/lib/scrollStage";
 import HeroSpring from "./HeroSpring";
 import { BlueprintGrid, MagneticButton, Counter, SpecTag } from "./hud";
 import { useLanguage } from "@/lib/i18n";
@@ -28,16 +28,14 @@ export default function Hero() {
   const stats = STAT_VALUES.map((s, i) => ({ ...s, label: t.hero.stats[i] }));
   const ref = useRef<HTMLElement>(null);
   const reduce = useReducedMotion();
-  const { scrollYProgress } = useScroll({
-    target: ref,
-    offset: ["start start", "end start"],
-  });
+  const scrollYProgress = useSectionScrub("hero", ref);
   const contentY = useTransform(scrollYProgress, [0, 1], ["0%", "26%"]);
   const contentOpacity = useTransform(scrollYProgress, [0, 0.85], [1, 0]);
   const springY = useTransform(scrollYProgress, [0, 1], [0, 130]);
 
   return (
     <section
+      id="hero"
       ref={ref}
       className="relative min-h-screen flex items-center overflow-hidden bg-graphite"
     >

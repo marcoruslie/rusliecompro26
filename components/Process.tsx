@@ -4,7 +4,6 @@ import { useRef, useState } from "react";
 import {
   motion,
   AnimatePresence,
-  useScroll,
   useSpring,
   useTransform,
   useMotionValueEvent,
@@ -12,6 +11,7 @@ import {
 import dynamic from "next/dynamic";
 import { BlueprintGrid, SectionIndex } from "./hud";
 import { useLanguage } from "@/lib/i18n";
+import { useSectionScrub, useScrollStage } from "@/lib/scrollStage";
 
 // 3D spring is client-only (WebGL) and code-split out of the main bundle.
 const SpringScene = dynamic(() => import("./SpringScene"), { ssr: false });
@@ -33,10 +33,8 @@ export default function Process() {
   }));
   const ref = useRef<HTMLElement>(null);
   const [active, setActive] = useState(0);
-  const { scrollYProgress } = useScroll({
-    target: ref,
-    offset: ["start start", "end end"],
-  });
+  const { stageEnabled } = useScrollStage();
+  const scrollYProgress = useSectionScrub("process", ref);
 
   useMotionValueEvent(scrollYProgress, "change", (v) => {
     const idx = Math.min(STEPS.length - 1, Math.floor(v * STEPS.length));
@@ -63,9 +61,9 @@ export default function Process() {
       id="process"
       ref={ref}
       className="relative bg-graphite"
-      style={{ height: `${STEPS.length * 90}vh` }}
+      style={{ height: stageEnabled ? "100vh" : `${STEPS.length * 90}vh` }}
     >
-      <div className="sticky top-0 h-screen overflow-hidden flex flex-col">
+      <div className={`${stageEnabled ? "" : "sticky top-0"} h-screen overflow-hidden flex flex-col`}>
         <BlueprintGrid fade={false} />
         <div
           className="absolute inset-0 pointer-events-none"

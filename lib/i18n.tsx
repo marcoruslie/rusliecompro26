@@ -9,9 +9,6 @@ import {
 } from "react";
 import { translations, type Lang, type Dict } from "./translations";
 
-const STORAGE_KEY = "lang";
-const LANGS: Lang[] = ["en", "id", "zh"];
-
 type LanguageContextValue = {
   lang: Lang;
   setLang: (lang: Lang) => void;
@@ -20,33 +17,29 @@ type LanguageContextValue = {
 
 const LanguageContext = createContext<LanguageContextValue | null>(null);
 
-export function LanguageProvider({ children }: { children: ReactNode }) {
-  // Server + first client render use "en" so markup matches; the stored choice
-  // is applied on mount.
-  const [lang, setLangState] = useState<Lang>("en");
+export function LanguageProvider({
+  initialLang = "en",
+  children,
+}: {
+  initialLang?: Lang;
+  children: ReactNode;
+}) {
+  // The active language is owned by the route (/en, /id, /zh). The server
+  // renders the correct language directly from `initialLang`.
+  const [lang, setLangState] = useState<Lang>(initialLang);
 
+  // Keep state in sync if the locale prop changes (client navigation).
   useEffect(() => {
-    const stored = window.localStorage.getItem(STORAGE_KEY);
-    if (stored && (LANGS as string[]).includes(stored)) {
-      setLangState(stored as Lang);
-    }
-  }, []);
+    setLangState(initialLang);
+  }, [initialLang]);
 
+  // Reflect the active language on <html lang> for assistive tech / browsers.
   useEffect(() => {
     document.documentElement.lang = lang;
   }, [lang]);
 
-  const setLang = (next: Lang) => {
-    setLangState(next);
-    try {
-      window.localStorage.setItem(STORAGE_KEY, next);
-    } catch {
-      // localStorage may be unavailable (private mode); ignore.
-    }
-  };
-
   return (
-    <LanguageContext.Provider value={{ lang, setLang, t: translations[lang] }}>
+    <LanguageContext.Provider value={{ lang, setLang: setLangState, t: translations[lang] }}>
       {children}
     </LanguageContext.Provider>
   );

@@ -1,10 +1,11 @@
 "use client";
 
 import { useRef, useState } from "react";
-import { motion, useInView, useReducedMotion } from "framer-motion";
+import { motion, useInView, useReducedMotion, useMotionValueEvent } from "framer-motion";
 import { MapPin, Phone, Mail, Send } from "lucide-react";
 import { SectionIndex } from "./hud";
 import { useLanguage } from "@/lib/i18n";
+import { useSectionScrub, useScrollStage } from "@/lib/scrollStage";
 
 const CONTACT_INFO = [
   { icon: MapPin, text: "Jl. Sikatan 45, Manukan Wetan, Tandes" },
@@ -15,15 +16,24 @@ const CONTACT_INFO = [
 export default function Contact() {
   const { t } = useLanguage();
   const ref = useRef<HTMLElement>(null);
-  const inView = useInView(ref, { once: true, margin: "-80px" });
+  const { stageEnabled } = useScrollStage();
+  const progress = useSectionScrub("contact", ref);
+  const nativeInView = useInView(ref, { once: true, margin: "-80px" });
   const reduce = useReducedMotion();
   const [sent, setSent] = useState(false);
+  const [scrubReveal, setScrubReveal] = useState(false);
+  useMotionValueEvent(progress, "change", (v) => {
+    if (v > 0.1) setScrubReveal(true);
+  });
+  const inView = stageEnabled ? scrubReveal : nativeInView;
 
   return (
     <section
       id="contact"
       ref={ref}
-      className="relative py-[120px] px-6 lg:px-10 overflow-hidden bg-graphite border-t border-white/[0.06]"
+      className={`relative px-6 lg:px-10 overflow-hidden bg-graphite border-t border-white/[0.06] ${
+        stageEnabled ? "h-screen flex items-center py-20" : "py-[120px]"
+      }`}
     >
       <div
         className="absolute inset-0 hud-blueprint pointer-events-none"

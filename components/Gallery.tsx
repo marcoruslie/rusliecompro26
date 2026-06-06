@@ -13,6 +13,7 @@ import { X, ZoomIn, Play, ChevronLeft, ChevronRight } from "lucide-react"
 import Image from "next/image"
 import { SectionIndex } from "./hud"
 import { useLanguage } from "@/lib/i18n"
+import { useSectionScrub, usePanY, useScrollStage } from "@/lib/scrollStage"
 
 // Image paths only; label/tag come from the translation dictionary by index.
 const GALLERY_IMAGES = [
@@ -61,6 +62,7 @@ function GalleryTile({
 	index: number
 	onOpen: () => void
 }) {
+	const { stageEnabled } = useScrollStage()
 	const ref = useRef<HTMLDivElement>(null)
 	const reduce = useReducedMotion()
 	const inView = useInView(ref, { once: true, margin: "0px 0px -15% 0px" })
@@ -75,7 +77,7 @@ function GalleryTile({
 	const stagger = (index % 3) * 0.06
 
 	return (
-		<motion.div ref={ref} style={{ y: reduce ? 0 : y }} className="will-change-transform">
+		<motion.div ref={ref} style={{ y: reduce || stageEnabled ? 0 : y }} className="will-change-transform">
 			<motion.div
 				initial={reduce ? { opacity: 0 } : { opacity: 0, scale: 0.92, x: from.x, y: from.y }}
 				animate={
@@ -176,6 +178,10 @@ export default function Gallery() {
 		setTopIndex((p) => (p - 1 + total) % total)
 	}
 	const ref = useRef<HTMLElement>(null)
+	const contentRef = useRef<HTMLDivElement>(null)
+	const { stageEnabled } = useScrollStage()
+	const progress = useSectionScrub("gallery", ref)
+	const panY = usePanY(progress, contentRef, stageEnabled)
 	const inView = useInView(ref, { once: true, margin: "-80px" })
 	const [lightbox, setLightbox] = useState<number | null>(null)
 
@@ -183,8 +189,10 @@ export default function Gallery() {
 		<section
 			id="gallery"
 			ref={ref}
-			className="relative bg-carbon py-[120px] px-6 lg:px-10 border-t border-white/[0.06] overflow-hidden">
-			<div className="max-w-7xl mx-auto">
+			className={`relative bg-carbon px-6 lg:px-10 border-t border-white/[0.06] overflow-hidden ${
+				stageEnabled ? "h-screen py-20" : "py-[120px]"
+			}`}>
+			<motion.div ref={contentRef} style={{ y: panY }} className="max-w-7xl mx-auto">
 				{/* ── Header ── */}
 				<motion.div
 					initial={{ opacity: 0, y: 24 }}
@@ -334,7 +342,7 @@ export default function Gallery() {
 						</div>
 					</div>
 				</motion.div>
-			</div>
+			</motion.div>
 
 			{/* ── Lightbox ── */}
 			<AnimatePresence>
