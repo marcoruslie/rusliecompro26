@@ -20,27 +20,27 @@ type SeoEntry = {
 
 export const SEO: Record<Lang, SeoEntry> = {
   en: {
-    title: "Ruslie Spring — Precision Spring Manufacturer in Indonesia",
+    title: "Ruslie Spring — Custom Spring Manufacturer in Surabaya, Indonesia",
     description:
-      "Ruslie Spring manufactures precision compression, extension, and torsion springs in Indonesia for automotive, electronics, defense, and heavy industry — engineered to international tolerances.",
+      "Ruslie Spring is a custom spring manufacturer in Surabaya, Indonesia — compression, extension, and torsion springs plus wire forms, made to your exact specifications for automotive, electronics, defense, and heavy industry.",
     keywords:
-      "spring manufacturer Indonesia, compression springs, extension springs, torsion springs, custom springs, precision springs, wire forms, Surabaya spring factory",
+      "custom spring Surabaya, custom spring Indonesia, kustom spring Surabaya, custom springs, bespoke springs, spring manufacturer Indonesia, Surabaya spring factory, compression springs, extension springs, torsion springs, precision springs, wire forms",
     ogLocale: "en_US",
   },
   id: {
-    title: "Ruslie Spring — Produsen Pegas Presisi di Indonesia",
+    title: "Ruslie Spring — Produsen Kustom Spring (Pegas) di Surabaya, Indonesia",
     description:
-      "Ruslie Spring memproduksi pegas presisi — per tekan, per tarik, dan per puntir — di Indonesia untuk industri otomotif, elektronik, pertahanan, dan berat, sesuai toleransi internasional.",
+      "Ruslie Spring adalah produsen kustom spring / pegas presisi di Surabaya, Indonesia — per tekan, per tarik, per puntir, dan kawat per dibuat sesuai pesanan untuk industri otomotif, elektronik, pertahanan, dan berat.",
     keywords:
-      "produsen pegas, pabrik pegas Indonesia, pegas presisi, per tekan, per tarik, per puntir, pegas custom, kawat per, pabrik pegas Surabaya",
+      "kustom spring Surabaya, custom spring Surabaya, kustom spring Indonesia, pegas kustom, per custom, produsen pegas Surabaya, pabrik pegas Surabaya, pabrik pegas Indonesia, pegas presisi, per tekan, per tarik, per puntir, kawat per",
     ogLocale: "id_ID",
   },
   zh: {
-    title: "Ruslie Spring — 印度尼西亚精密弹簧制造商",
+    title: "Ruslie Spring — 印度尼西亚泗水定制弹簧制造商",
     description:
-      "Ruslie Spring 在印度尼西亚生产精密压缩弹簧、拉伸弹簧和扭转弹簧，服务于汽车、电子、国防和重工业，均按国际公差精密制造。",
+      "Ruslie Spring 是位于印度尼西亚泗水的定制弹簧制造商，按需定制压缩弹簧、拉伸弹簧、扭转弹簧及线成型件，服务于汽车、电子、国防和重工业。",
     keywords:
-      "弹簧制造商, 印尼弹簧厂, 精密弹簧, 压缩弹簧, 拉伸弹簧, 扭转弹簧, 定制弹簧, 泗水弹簧厂",
+      "定制弹簧, 印尼定制弹簧, 泗水定制弹簧, 定制弹簧制造商, 印尼弹簧厂, 泗水弹簧厂, 精密弹簧, 压缩弹簧, 拉伸弹簧, 扭转弹簧, custom spring Surabaya, kustom spring Indonesia",
     ogLocale: "zh_CN",
   },
 };
@@ -58,16 +58,28 @@ export function localeAlternates(): Record<string, string> {
   return languages;
 }
 
+// Products/specialities we want associated with the business (local + product SEO).
+const KNOWS_ABOUT = [
+  "Custom springs",
+  "Compression springs",
+  "Extension springs",
+  "Torsion springs",
+  "Wire forms",
+  "Precision spring manufacturing",
+];
+
 /** Organization / LocalBusiness JSON-LD, localized per page. */
 export function organizationJsonLd(locale: Lang) {
   return {
     "@context": "https://schema.org",
-    "@type": "Organization",
+    "@type": ["Organization", "LocalBusiness"],
     name: ORG_NAME,
     url: `${SITE_URL}/${locale}`,
     logo: `${SITE_URL}/Logo_Ruslie_Spring.png`,
     image: `${SITE_URL}${OG_IMAGE}`,
     description: SEO[locale].description,
+    keywords: SEO[locale].keywords,
+    slogan: "Custom springs, made in Surabaya, Indonesia",
     email: ORG_EMAIL,
     telephone: ORG_PHONE,
     address: {
@@ -77,6 +89,18 @@ export function organizationJsonLd(locale: Lang) {
       addressRegion: "Jawa Timur",
       addressCountry: "ID",
     },
-    areaServed: "ID",
+    areaServed: [
+      { "@type": "City", name: "Surabaya" },
+      { "@type": "Country", name: "Indonesia" },
+    ],
+    knowsAbout: KNOWS_ABOUT,
+    makesOffer: {
+      "@type": "Offer",
+      itemOffered: {
+        "@type": "Product",
+        name: "Custom springs",
+        category: "Spring manufacturing",
+      },
+    },
   };
 }
