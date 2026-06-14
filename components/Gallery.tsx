@@ -7,9 +7,9 @@ import {
 	useReducedMotion,
 	AnimatePresence,
 } from "framer-motion"
-import { X, ZoomIn, Play, ChevronLeft, ChevronRight } from "lucide-react"
+import { X, Play, ChevronLeft, ChevronRight, Maximize2, ArrowUpRight } from "lucide-react"
 import Image from "next/image"
-import { SectionIndex } from "./hud"
+import { SectionIndex, BlueprintGrid, TiltSpotlightCard } from "./hud"
 import { useLanguage } from "@/lib/i18n"
 import { useSectionScrub, usePanY, useScrollStage } from "@/lib/scrollStage"
 
@@ -62,72 +62,92 @@ type CatalogEntry = { item: GalleryItem; flatIndex: number }
 
 function CatalogCard({
 	item,
-	delay,
+	index,
+	flatIndex,
 	onOpen,
 }: {
 	item: GalleryItem
-	delay: number
+	index: number
+	flatIndex: number
 	onOpen: () => void
 }) {
-	const ref = useRef<HTMLDivElement>(null)
 	const reduce = useReducedMotion()
+	const ref = useRef<HTMLDivElement>(null)
 	const inView = useInView(ref, { once: true, margin: "0px 0px -12% 0px" })
+	const code = `RS-${String(flatIndex + 1).padStart(3, "0")}`
 
 	return (
-		<motion.div
-			ref={ref}
-			initial={reduce ? { opacity: 0 } : { opacity: 0, y: 28 }}
-			animate={inView ? { opacity: 1, y: 0 } : undefined}
-			transition={{ type: "spring", stiffness: 90, damping: 18, mass: 0.9, delay }}
-			whileHover={{ y: -4 }}
-			onClick={onOpen}
-			className="group cursor-pointer rounded-xl overflow-hidden border border-white/[0.08] bg-graphite/40 hover:border-cyan/40 transition-colors duration-300"
-			style={{ boxShadow: "0 1px 0 rgba(255,255,255,0.02) inset" }}>
-			{/* Image */}
-			<div className="relative aspect-[4/3] overflow-hidden">
-				{/* Cyan scan-line sweep on reveal (height-independent) */}
-				{!reduce && (
-					<motion.span
-						aria-hidden
-						initial={{ top: "-6%", opacity: 0 }}
-						animate={inView ? { top: "106%", opacity: [0, 1, 0] } : undefined}
-						transition={{ duration: 0.9, ease: "easeOut", delay: delay + 0.18 }}
-						className="absolute left-0 right-0 z-30 h-[2px] pointer-events-none"
-						style={{
-							background:
-								"linear-gradient(90deg, transparent, rgba(34,211,238,0.9), transparent)",
-							boxShadow: "0 0 14px rgba(34,211,238,0.8)",
-						}}
+		<TiltSpotlightCard
+			index={index}
+			cardClassName="rounded-xl border border-white/[0.08] bg-graphite/40 cursor-pointer">
+			<div ref={ref} onClick={onOpen} className="flex h-full flex-col">
+				{/* Image */}
+				<div className="relative aspect-[4/3] overflow-hidden rounded-t-xl">
+					{/* Cyan scan-line sweep on reveal (height-independent) */}
+					{!reduce && (
+						<motion.span
+							aria-hidden
+							initial={{ top: "-6%", opacity: 0 }}
+							animate={inView ? { top: "106%", opacity: [0, 1, 0] } : undefined}
+							transition={{ duration: 0.9, ease: "easeOut", delay: index * 0.07 + 0.18 }}
+							className="absolute left-0 right-0 z-30 h-[2px] pointer-events-none"
+							style={{
+								background:
+									"linear-gradient(90deg, transparent, rgba(34,211,238,0.9), transparent)",
+								boxShadow: "0 0 14px rgba(34,211,238,0.8)",
+							}}
+						/>
+					)}
+					<Image
+						src={item.image}
+						alt={item.label}
+						fill
+						sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
+						className="object-cover object-center transition-transform duration-[600ms] group-hover:scale-[1.07]"
 					/>
-				)}
-				<Image
-					src={item.image}
-					alt={item.label}
-					fill
-					sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
-					className="object-cover object-center transition-transform duration-500 group-hover:scale-105"
-				/>
 
-				{/* Tag badge */}
-				<div className="absolute top-3 left-3 z-20 px-2.5 py-1 rounded-full font-mono text-[0.58rem] font-medium tracking-[0.1em] uppercase text-graphite bg-cyan">
-					{item.tag}
-				</div>
+					{/* Top fade for badge legibility */}
+					<div
+						aria-hidden
+						className="absolute inset-x-0 top-0 h-16 z-10 pointer-events-none"
+						style={{ background: "linear-gradient(to bottom, rgba(10,14,20,0.55), transparent)" }}
+					/>
 
-				{/* Zoom affordance on hover */}
-				<div className="absolute top-3 right-3 z-20 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-					<div className="w-8 h-8 rounded-full bg-cyan/15 border border-cyan/40 backdrop-blur-sm flex items-center justify-center">
-						<ZoomIn size={14} className="text-cyan" />
+					{/* Tag badge */}
+					<div className="absolute top-3 left-3 z-20 px-2.5 py-1 rounded font-mono text-[0.56rem] font-medium tracking-[0.14em] uppercase text-graphite bg-cyan">
+						{item.tag}
+					</div>
+
+					{/* Crosshair + EXPAND affordance on hover */}
+					<div className="absolute inset-0 z-20 opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none">
+						<span className="absolute left-1/2 top-1/2 h-7 w-px -translate-x-1/2 -translate-y-1/2 bg-cyan/50" />
+						<span className="absolute left-1/2 top-1/2 h-px w-7 -translate-x-1/2 -translate-y-1/2 bg-cyan/50" />
+						<div className="absolute bottom-3 right-3 flex items-center gap-1.5 rounded bg-graphite/70 px-2 py-1 backdrop-blur-sm border border-cyan/30">
+							<Maximize2 size={11} className="text-cyan" />
+							<span className="font-mono text-[0.54rem] tracking-[0.18em] uppercase text-cyan">
+								Expand
+							</span>
+						</div>
 					</div>
 				</div>
-			</div>
 
-			{/* Caption */}
-			<div className="px-4 py-3 border-t border-white/[0.06]">
-				<span className="font-tech text-hud-silver text-[0.9rem] font-semibold leading-[1.35] line-clamp-2">
-					{item.label}
-				</span>
+				{/* Datasheet caption */}
+				<div className="flex flex-1 flex-col gap-1.5 px-4 py-3 border-t border-white/[0.06]">
+					<div className="flex items-center justify-between">
+						<span className="font-mono text-[0.58rem] tracking-[0.16em] text-cyan/70">
+							{code}
+						</span>
+						<ArrowUpRight
+							size={13}
+							className="text-hud-mute transition-all duration-300 group-hover:text-cyan group-hover:-translate-y-0.5 group-hover:translate-x-0.5"
+						/>
+					</div>
+					<span className="font-tech text-hud-silver text-[0.9rem] font-semibold leading-[1.35] line-clamp-2">
+						{item.label}
+					</span>
+				</div>
 			</div>
-		</motion.div>
+		</TiltSpotlightCard>
 	)
 }
 
@@ -192,7 +212,17 @@ export default function Gallery() {
 			className={`relative bg-carbon px-6 lg:px-10 border-t border-white/[0.06] overflow-hidden ${
 				stageEnabled ? "h-screen py-20" : "py-[120px]"
 			}`}>
-			<motion.div ref={contentRef} style={{ y: panY }} className="max-w-7xl mx-auto">
+			{/* Blueprint datasheet backdrop */}
+			<BlueprintGrid />
+			<div
+				aria-hidden
+				className="pointer-events-none absolute inset-x-0 top-0 h-[420px]"
+				style={{
+					background:
+						"radial-gradient(120% 100% at 50% 0%, rgba(34,211,238,0.07), transparent 70%)",
+				}}
+			/>
+			<motion.div ref={contentRef} style={{ y: panY }} className="relative max-w-7xl mx-auto">
 				{/* ── Header ── */}
 				<motion.div
 					initial={{ opacity: 0, y: 24 }}
@@ -212,17 +242,40 @@ export default function Gallery() {
 
 				{/* ── Catalog sections (one per category) ── */}
 				<div className="space-y-16">
-					{catalog.map((group) => (
-						<div key={group.key}>
+					{catalog.map((group, gi) => (
+						<motion.div
+							key={group.key}
+							initial={{ opacity: 0, y: 24 }}
+							whileInView={{ opacity: 1, y: 0 }}
+							viewport={{ once: true, margin: "-12% 0px" }}
+							transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}>
 							{/* Category header */}
 							<div className="flex items-center gap-4 mb-7">
-								<h3 className="font-tech text-hud-silver text-[1.3rem] font-bold tracking-tight">
-									{group.heading}
-								</h3>
+								{/* Outlined index numeral */}
+								<span
+									aria-hidden
+									className="font-tech font-bold text-[2.5rem] leading-none text-transparent select-none"
+									style={{ WebkitTextStroke: "1px rgba(34,211,238,0.32)" }}>
+									{String(gi + 1).padStart(2, "0")}
+								</span>
+								<div className="flex flex-col">
+									<span className="font-mono text-[0.6rem] tracking-[0.28em] uppercase text-cyan/70 mb-0.5">
+										Catalog · Series
+									</span>
+									<h3 className="font-tech text-hud-silver text-[1.35rem] font-bold tracking-tight leading-none">
+										{group.heading}
+									</h3>
+								</div>
 								<span className="font-mono text-[0.62rem] text-cyan/80 tracking-[0.1em] px-2 py-0.5 rounded-full border border-cyan/25 bg-cyan/[0.06]">
 									{String(group.entries.length).padStart(2, "0")}
 								</span>
-								<div className="flex-1 h-px bg-white/10" />
+								<div
+									className="flex-1 h-px"
+									style={{
+										background:
+											"linear-gradient(90deg, rgba(34,211,238,0.4), rgba(255,255,255,0.08) 30%, rgba(255,255,255,0.05))",
+									}}
+								/>
 							</div>
 
 							{/* Uniform card grid */}
@@ -231,12 +284,13 @@ export default function Gallery() {
 									<CatalogCard
 										key={flatIndex}
 										item={item}
-										delay={(i % 4) * 0.05}
+										index={i}
+										flatIndex={flatIndex}
 										onOpen={() => setLightbox(flatIndex)}
 									/>
 								))}
 							</div>
-						</div>
+						</motion.div>
 					))}
 				</div>
 
