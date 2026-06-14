@@ -4,8 +4,6 @@ import { useRef, useState } from "react"
 import {
 	motion,
 	useInView,
-	useScroll,
-	useTransform,
 	useReducedMotion,
 	AnimatePresence,
 } from "framer-motion"
@@ -34,70 +32,67 @@ const GALLERY_IMAGES = [
 	"/spring/Mesin1.jpg",
 ]
 
+// Stable category key per image index (tags are localized, so we can't group by
+// the tag string). Each category's localized heading comes from the first item's tag.
+const CATEGORY_OF_IMAGE = [
+	"compression", // 0  gallery1
+	"compression", // 1  item1
+	"tension", //     2  gallery2
+	"compression", // 3  gallery4
+	"battery", //     4  gallery3
+	"battery", //     5  item3
+	"compression", // 6  gallery5
+	"compression", // 7  gallery7
+	"compression", // 8  gallery8
+	"wireforming", // 9  item2
+	"wireforming", // 10 item4
+	"compression", // 11 item5
+	"wireforming", // 12 gallery6
+	"compression", // 13 item6
+	"production", //  14 Mesin1 — machine shot, excluded from the catalog grid
+] as const
+
+// Display order of the catalog sections (production is intentionally omitted).
+const CATEGORY_ORDER = ["compression", "battery", "tension", "wireforming"] as const
+
 const VIDEO_SRCS = ["/spring/Mesin1Vid.mp4", "/spring/Mesin2Vid.mp4"]
 
 type GalleryItem = { label: string; image: string; tag: string }
+type CatalogEntry = { item: GalleryItem; flatIndex: number }
 
-// portrait (720×1280) → tall | landscape (1280×720) → short | square (1599×1599) → medium
-const HEIGHTS = [
-	440, 440, 440, 440, 440, 440, 440, 440, 440,
-	340, 340, 340, 640, 340, 640,
-]
-
-// Per-column parallax magnitudes (px) — different speeds create depth.
-const PARALLAX = [28, 52, 18]
-// Per-column slide-in origin: left col → from left, middle → up, right → from right.
-const SLIDE_FROM = [
-	{ x: -80, y: 0 },
-	{ x: 0, y: 64 },
-	{ x: 80, y: 0 },
-]
-
-function GalleryTile({
+function CatalogCard({
 	item,
-	index,
+	delay,
 	onOpen,
 }: {
 	item: GalleryItem
-	index: number
+	delay: number
 	onOpen: () => void
 }) {
-	const { stageEnabled } = useScrollStage()
 	const ref = useRef<HTMLDivElement>(null)
 	const reduce = useReducedMotion()
-	const inView = useInView(ref, { once: true, margin: "0px 0px -15% 0px" })
-	const { scrollYProgress } = useScroll({
-		target: ref,
-		offset: ["start end", "end start"],
-	})
-	const mag = PARALLAX[index % 3]
-	const y = useTransform(scrollYProgress, [0, 1], [mag, -mag])
-	const from = SLIDE_FROM[index % 3]
-	const tileH = HEIGHTS[index]
-	const stagger = (index % 3) * 0.06
+	const inView = useInView(ref, { once: true, margin: "0px 0px -12% 0px" })
 
 	return (
-		<motion.div ref={ref} style={{ y: reduce || stageEnabled ? 0 : y }} className="will-change-transform">
-			<motion.div
-				initial={reduce ? { opacity: 0 } : { opacity: 0, scale: 0.92, x: from.x, y: from.y }}
-				animate={
-					inView
-						? { opacity: 1, scale: 1, x: 0, y: 0 }
-						: undefined
-				}
-				transition={{ type: "spring", stiffness: 90, damping: 18, mass: 0.9, delay: stagger }}
-				whileHover={{ scale: 1.02, boxShadow: "0 18px 52px rgba(34,211,238,0.18)" }}
-				onClick={onOpen}
-				className="relative rounded-2xl overflow-hidden cursor-pointer border border-white/[0.08] group"
-				style={{ height: tileH }}>
-				{/* Cyan scan-line sweep on reveal (transform-only) */}
+		<motion.div
+			ref={ref}
+			initial={reduce ? { opacity: 0 } : { opacity: 0, y: 28 }}
+			animate={inView ? { opacity: 1, y: 0 } : undefined}
+			transition={{ type: "spring", stiffness: 90, damping: 18, mass: 0.9, delay }}
+			whileHover={{ y: -4 }}
+			onClick={onOpen}
+			className="group cursor-pointer rounded-xl overflow-hidden border border-white/[0.08] bg-graphite/40 hover:border-cyan/40 transition-colors duration-300"
+			style={{ boxShadow: "0 1px 0 rgba(255,255,255,0.02) inset" }}>
+			{/* Image */}
+			<div className="relative aspect-[4/3] overflow-hidden">
+				{/* Cyan scan-line sweep on reveal (height-independent) */}
 				{!reduce && (
 					<motion.span
 						aria-hidden
-						initial={{ y: -14, opacity: 0 }}
-						animate={inView ? { y: tileH + 14, opacity: [0, 1, 0] } : undefined}
-						transition={{ duration: 0.95, ease: "easeOut", delay: stagger + 0.2 }}
-						className="absolute top-0 left-0 right-0 z-30 h-[2px] pointer-events-none"
+						initial={{ top: "-6%", opacity: 0 }}
+						animate={inView ? { top: "106%", opacity: [0, 1, 0] } : undefined}
+						transition={{ duration: 0.9, ease: "easeOut", delay: delay + 0.18 }}
+						className="absolute left-0 right-0 z-30 h-[2px] pointer-events-none"
 						style={{
 							background:
 								"linear-gradient(90deg, transparent, rgba(34,211,238,0.9), transparent)",
@@ -109,37 +104,29 @@ function GalleryTile({
 					src={item.image}
 					alt={item.label}
 					fill
-					sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
+					sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
 					className="object-cover object-center transition-transform duration-500 group-hover:scale-105"
 				/>
 
-				{/* Hover overlay */}
-				<div
-					className="absolute inset-0 z-10 opacity-0 group-hover:opacity-100 transition-opacity duration-300"
-					style={{
-						background:
-							"linear-gradient(to top, rgba(10,14,20,0.94) 0%, rgba(10,14,20,0.4) 55%, transparent 100%)",
-					}}>
-					<div className="absolute bottom-0 left-0 right-0 p-5">
-						<span className="block font-mono text-[0.64rem] text-cyan/80 tracking-[0.18em] uppercase mb-1.5">
-							{item.tag}
-						</span>
-						<span className="font-tech text-hud-silver text-[0.97rem] font-semibold leading-[1.3]">
-							{item.label}
-						</span>
-					</div>
-					<div className="absolute top-4 right-4">
-						<div className="w-8 h-8 rounded-full bg-cyan/15 border border-cyan/40 backdrop-blur-sm flex items-center justify-center">
-							<ZoomIn size={14} className="text-cyan" />
-						</div>
-					</div>
-				</div>
-
 				{/* Tag badge */}
-				<div className="absolute top-3.5 left-3.5 z-20 px-3 py-1 rounded-full font-mono text-[0.62rem] font-medium tracking-[0.1em] uppercase text-graphite bg-cyan">
+				<div className="absolute top-3 left-3 z-20 px-2.5 py-1 rounded-full font-mono text-[0.58rem] font-medium tracking-[0.1em] uppercase text-graphite bg-cyan">
 					{item.tag}
 				</div>
-			</motion.div>
+
+				{/* Zoom affordance on hover */}
+				<div className="absolute top-3 right-3 z-20 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+					<div className="w-8 h-8 rounded-full bg-cyan/15 border border-cyan/40 backdrop-blur-sm flex items-center justify-center">
+						<ZoomIn size={14} className="text-cyan" />
+					</div>
+				</div>
+			</div>
+
+			{/* Caption */}
+			<div className="px-4 py-3 border-t border-white/[0.06]">
+				<span className="font-tech text-hud-silver text-[0.9rem] font-semibold leading-[1.35] line-clamp-2">
+					{item.label}
+				</span>
+			</div>
 		</motion.div>
 	)
 }
@@ -151,6 +138,19 @@ export default function Gallery() {
 		label: t.gallery.items[i].label,
 		tag: t.gallery.items[i].tag,
 	}))
+
+	// Group items into catalog sections by stable category key, in display order.
+	const catalog = CATEGORY_ORDER.map((key) => {
+		const entries: CatalogEntry[] = galleryItems
+			.map((item, flatIndex) => ({ item, flatIndex }))
+			.filter(({ flatIndex }) => CATEGORY_OF_IMAGE[flatIndex] === key)
+		return {
+			key,
+			heading: entries[0]?.item.tag ?? key,
+			entries,
+		}
+	}).filter((g) => g.entries.length > 0)
+
 	const videoItems = VIDEO_SRCS.map((src, i) => ({
 		src,
 		label: t.gallery.videos[i],
@@ -210,15 +210,33 @@ export default function Gallery() {
 					</div>
 				</motion.div>
 
-				{/* ── Photo Grid (scroll-parallax tiles) ── */}
-				<div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-					{galleryItems.map((item, i) => (
-						<GalleryTile
-							key={i}
-							item={item}
-							index={i}
-							onOpen={() => setLightbox(i)}
-						/>
+				{/* ── Catalog sections (one per category) ── */}
+				<div className="space-y-16">
+					{catalog.map((group) => (
+						<div key={group.key}>
+							{/* Category header */}
+							<div className="flex items-center gap-4 mb-7">
+								<h3 className="font-tech text-hud-silver text-[1.3rem] font-bold tracking-tight">
+									{group.heading}
+								</h3>
+								<span className="font-mono text-[0.62rem] text-cyan/80 tracking-[0.1em] px-2 py-0.5 rounded-full border border-cyan/25 bg-cyan/[0.06]">
+									{String(group.entries.length).padStart(2, "0")}
+								</span>
+								<div className="flex-1 h-px bg-white/10" />
+							</div>
+
+							{/* Uniform card grid */}
+							<div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
+								{group.entries.map(({ item, flatIndex }, i) => (
+									<CatalogCard
+										key={flatIndex}
+										item={item}
+										delay={(i % 4) * 0.05}
+										onOpen={() => setLightbox(flatIndex)}
+									/>
+								))}
+							</div>
+						</div>
 					))}
 				</div>
 
@@ -227,7 +245,7 @@ export default function Gallery() {
 					initial={{ opacity: 0, y: 24 }}
 					animate={inView ? { opacity: 1, y: 0 } : {}}
 					transition={{ duration: 0.7, delay: 0.3 }}
-					className="mt-16">
+					className="mt-20">
 					{/* Header */}
 					<div className="flex items-center gap-4 mb-8">
 						<div className="flex items-center gap-2">
