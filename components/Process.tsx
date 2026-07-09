@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import {
   motion,
   AnimatePresence,
@@ -33,6 +33,26 @@ export default function Process() {
   }));
   const ref = useRef<HTMLElement>(null);
   const [active, setActive] = useState(0);
+
+  // Mount the 3D spring only when its container approaches the viewport, so the
+  // three.js chunk isn't fetched during initial load. Observing the container
+  // (not the section) also skips it entirely on mobile, where the wrapper is
+  // display:none and never intersects.
+  const sceneRef = useRef<HTMLDivElement>(null);
+  const [nearScene, setNearScene] = useState(false);
+  useEffect(() => {
+    const el = sceneRef.current;
+    if (!el || nearScene) return;
+    const io = new IntersectionObserver(
+      (entries) => {
+        if (entries.some((e) => e.isIntersecting)) setNearScene(true);
+      },
+      // Start fetching ~1 viewport early so the scene is ready before it shows.
+      { rootMargin: "600px 0px" }
+    );
+    io.observe(el);
+    return () => io.disconnect();
+  }, [nearScene]);
   const { stageEnabled } = useScrollStage();
   const scrollYProgress = useSectionScrub("process", ref);
 
@@ -106,8 +126,11 @@ export default function Process() {
           </div>
 
           {/* Right — scroll-reactive 3D spring */}
-          <div className="relative hidden lg:flex justify-center items-center h-[62vh]">
-            <SpringScene progress={smooth} />
+          <div
+            ref={sceneRef}
+            className="relative hidden lg:flex justify-center items-center h-[62vh]"
+          >
+            {nearScene && <SpringScene progress={smooth} />}
           </div>
         </div>
 

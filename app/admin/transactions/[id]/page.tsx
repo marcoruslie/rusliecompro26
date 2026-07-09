@@ -2,7 +2,7 @@ import { notFound } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import {
   getTransaction,
-  listTransactions,
+  listTransactionItemHistory,
   buildItemSuggestions,
 } from "@/lib/transactions";
 import { listCustomers } from "@/lib/customers";
@@ -22,7 +22,7 @@ export default async function TransactionDetailPage({
     listCustomers(supabase),
     listWires(supabase),
     listWireTypes(supabase),
-    listTransactions(supabase),
+    listTransactionItemHistory(supabase),
   ]);
   if (!txn) notFound();
   return (

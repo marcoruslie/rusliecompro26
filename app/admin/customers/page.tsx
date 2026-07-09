@@ -7,11 +7,15 @@ export const metadata = { title: "Customers — Ruslie Spring Admin" };
 
 export default async function AdminCustomersPage() {
   const supabase = createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  // Auth check and the data query don't depend on each other, so fire them
+  // together instead of awaiting auth first (removes a request waterfall).
+  const [
+    {
+      data: { user },
+    },
+    customers,
+  ] = await Promise.all([supabase.auth.getUser(), listCustomers(supabase)]);
   if (!user) redirect("/admin");
 
-  const customers = await listCustomers(supabase);
   return <CustomersClient initialCustomers={customers} />;
 }

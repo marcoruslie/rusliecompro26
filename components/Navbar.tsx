@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { motion, AnimatePresence, useScroll, useSpring } from "framer-motion";
 import { Menu, X } from "lucide-react";
 import Link from "next/link";
+import Image from "next/image";
 import { useLanguage } from "@/lib/i18n";
 import LanguageSwitcher from "./LanguageSwitcher";
 import { useScrollStage } from "@/lib/scrollStage";
@@ -65,9 +66,13 @@ export default function Navbar() {
       >
         <div className="max-w-7xl mx-auto px-6 lg:px-10 flex items-center justify-between h-[68px]">
           <Link href="/" className="flex items-center gap-3 group">
-            <img
+            {/* next/image serves a ~96px WebP instead of the 128KB 1024px source PNG */}
+            <Image
               src="/Logo_Ruslie_Spring.png"
               alt="Ruslie Spring"
+              width={96}
+              height={96}
+              priority
               className="h-auto w-24 object-contain"
             />
           </Link>

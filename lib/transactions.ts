@@ -7,12 +7,32 @@ export interface ItemSuggestion {
   price: number;
 }
 
+// The transaction form pages only need past invoice numbers (to pick the next
+// daily sequence) and item lines (for name autocomplete) — never the customer
+// JSONB, notes, or totals of every historical row. Selecting just these two
+// columns keeps that query's payload from growing with full-row width.
+export interface TransactionItemHistory {
+  invoice_number: string | null;
+  items: Transaction["items"];
+}
+
+export async function listTransactionItemHistory(
+  supabase: SupabaseClient
+): Promise<TransactionItemHistory[]> {
+  const { data, error } = await supabase
+    .from("transactions")
+    .select("invoice_number, items")
+    .order("created_at", { ascending: false });
+  if (error) throw error;
+  return (data ?? []) as TransactionItemHistory[];
+}
+
 // Distinct item suggestions for the transaction form's name autocomplete.
-// `transactions` MUST be newest-first (as listTransactions returns them): we keep
+// `transactions` MUST be newest-first (as the list queries return them): we keep
 // the first occurrence of each name, so its price and wire come from the most
 // recent transaction that used that item.
 export function buildItemSuggestions(
-  transactions: Transaction[]
+  transactions: Pick<TransactionItemHistory, "items">[]
 ): ItemSuggestion[] {
   const seen = new Set<string>();
   const suggestions: ItemSuggestion[] = [];

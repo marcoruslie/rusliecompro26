@@ -8,12 +8,16 @@ export const metadata = { title: "Warehouses — Ruslie Spring Admin" };
 
 export default async function AdminWarehousesPage() {
   const supabase = createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  // Auth check and the data query don't depend on each other, so fire them
+  // together instead of awaiting auth first (removes a request waterfall).
+  const [
+    {
+      data: { user },
+    },
+    warehouses,
+  ] = await Promise.all([supabase.auth.getUser(), listWarehouses(supabase)]);
   if (!user) redirect("/admin");
   if (roleFromUser(user) !== "admin") redirect("/admin/queue");
 
-  const warehouses = await listWarehouses(supabase);
   return <WarehousesClient initialWarehouses={warehouses} />;
 }

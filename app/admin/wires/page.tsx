@@ -7,14 +7,20 @@ export const metadata = { title: "Wires — Ruslie Spring Admin" };
 
 export default async function AdminWiresPage() {
   const supabase = createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-  if (!user) redirect("/admin");
-
-  const [wires, types] = await Promise.all([
+  // Auth check and the data queries don't depend on each other, so fire them
+  // together instead of awaiting auth first (removes a request waterfall).
+  const [
+    {
+      data: { user },
+    },
+    wires,
+    types,
+  ] = await Promise.all([
+    supabase.auth.getUser(),
     listWires(supabase),
     listWireTypes(supabase),
   ]);
+  if (!user) redirect("/admin");
+
   return <WiresClient initialWires={wires} initialTypes={types} />;
 }

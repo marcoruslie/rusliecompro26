@@ -1,12 +1,14 @@
 "use client";
 
-import { useDeferredValue, useMemo, useState } from "react";
+import { useDeferredValue, useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Trash2 } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import { deleteTransaction, type DashboardTransaction } from "@/lib/transactions";
 import AdminNav from "@/components/AdminNav";
 import RevenueBarChart, { BarDatum } from "@/components/RevenueBarChart";
+
+const PAGE_SIZE = 50;
 
 function rupiah(val: number): string {
   return "Rp" + (val || 0).toLocaleString("id-ID");
@@ -90,7 +92,17 @@ export default function DashboardClient({
       const matchesTo = !to || created <= to;
       return matchesSearch && matchesFrom && matchesTo;
     });
-  }, [transactions, deferredSearch, from, to]);
+  }, [rows, deferredSearch, from, to]);
+
+  // Paginate the rendered table so the DOM stays small as history grows;
+  // stats, chart, and search still operate on the full list.
+  const [page, setPage] = useState(0);
+  useEffect(() => {
+    setPage(0); // new filter set → back to the first page
+  }, [deferredSearch, from, to]);
+  const pageCount = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
+  const safePage = Math.min(page, pageCount - 1);
+  const pageRows = filtered.slice(safePage * PAGE_SIZE, (safePage + 1) * PAGE_SIZE);
 
   return (
     <div className="admin-shell px-6 pb-10 pt-[92px]">
@@ -180,7 +192,7 @@ export default function DashboardClient({
                   </td>
                 </tr>
               ) : (
-                filtered.map((t) => (
+                pageRows.map((t) => (
                   <tr
                     key={t.id}
                     onClick={() => router.push(`/admin/transactions/${t.id}`)}
@@ -215,6 +227,34 @@ export default function DashboardClient({
               )}
             </tbody>
           </table>
+          {filtered.length > PAGE_SIZE && (
+            <div className="flex items-center justify-between gap-3 px-4 py-3 border-t border-gray-100">
+              <span className="text-xs text-gray-400">
+                {safePage * PAGE_SIZE + 1}–
+                {Math.min((safePage + 1) * PAGE_SIZE, filtered.length)} dari{" "}
+                {filtered.length} transaksi
+              </span>
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={() => setPage(safePage - 1)}
+                  disabled={safePage === 0}
+                  className="px-3 py-1.5 text-xs font-semibold rounded-lg border border-gray-200 text-gray-600 hover:text-[#021d47] hover:border-gray-300 disabled:opacity-40 disabled:cursor-default transition-colors"
+                >
+                  ‹ Prev
+                </button>
+                <span className="text-xs text-gray-500 tabular-nums">
+                  {safePage + 1} / {pageCount}
+                </span>
+                <button
+                  onClick={() => setPage(safePage + 1)}
+                  disabled={safePage >= pageCount - 1}
+                  className="px-3 py-1.5 text-xs font-semibold rounded-lg border border-gray-200 text-gray-600 hover:text-[#021d47] hover:border-gray-300 disabled:opacity-40 disabled:cursor-default transition-colors"
+                >
+                  Next ›
+                </button>
+              </div>
+            </div>
+          )}
         </div>
       </div>
     </div>

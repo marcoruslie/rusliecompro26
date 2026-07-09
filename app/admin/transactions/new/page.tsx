@@ -1,7 +1,7 @@
 import { createClient } from "@/lib/supabase/server";
 import { listCustomers } from "@/lib/customers";
 import { listWires, listWireTypes } from "@/lib/wires";
-import { listTransactions, buildItemSuggestions } from "@/lib/transactions";
+import { listTransactionItemHistory, buildItemSuggestions } from "@/lib/transactions";
 import TransactionForm from "@/components/TransactionForm";
 
 export const metadata = { title: "New Transaction — Ruslie Spring Admin" };
@@ -12,7 +12,7 @@ export default async function NewTransactionPage() {
     listCustomers(supabase),
     listWires(supabase),
     listWireTypes(supabase),
-    listTransactions(supabase),
+    listTransactionItemHistory(supabase),
   ]);
   // Pass existing invoice numbers so the form can pick the next daily sequence.
   const existingInvoiceNumbers = transactions

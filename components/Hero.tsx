@@ -6,6 +6,7 @@ import {
   useTransform,
   useReducedMotion,
 } from "framer-motion";
+import Image from "next/image";
 import { useSectionScrub } from "@/lib/scrollStage";
 import HeroSpring from "./HeroSpring";
 import { BlueprintGrid, MagneticButton, Counter, SpecTag } from "./hud";
@@ -41,10 +42,14 @@ export default function Hero() {
     >
       {/* Atmospheric photo, heavily graded into graphite */}
       <div className="absolute inset-0 z-0">
-        <img
+        {/* priority: this is the LCP backdrop — preload it instead of waiting for hydration */}
+        <Image
           src="/banner/banner2.jpg"
           alt="Ruslie Spring manufacturing facility"
-          className="w-full h-full object-cover object-center opacity-[0.16]"
+          fill
+          priority
+          sizes="100vw"
+          className="object-cover object-center opacity-[0.16]"
           style={{ filter: "grayscale(1) contrast(1.1)" }}
         />
         <div

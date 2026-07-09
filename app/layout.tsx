@@ -1,29 +1,26 @@
 import type { Metadata } from "next";
 import { Analytics } from "@vercel/analytics/next";
 import { SpeedInsights } from "@vercel/speed-insights/next";
-import {
-  Playfair_Display,
-  DM_Sans,
-  IBM_Plex_Mono,
-  Chakra_Petch,
-} from "next/font/google";
+import { Playfair_Display, DM_Sans, IBM_Plex_Mono } from "next/font/google";
 import "./globals.css";
 import { SITE_URL, SEO } from "@/lib/seo";
 
 // Self-hosted via next/font: no render-blocking @import, no third-party round
 // trips, and automatic size-adjust fallbacks to minimize CLS. Each exposes the
 // same CSS variable the styles/components already consume (var(--font-*)).
+// Weights/styles are trimmed to what the codebase actually uses (audited via
+// grep for font-* classes and inline fontWeight) — every extra variant here is
+// another preloaded woff2 on every page.
 const playfair = Playfair_Display({
   subsets: ["latin"],
   weight: ["400", "600", "700"],
-  style: ["normal", "italic"],
   variable: "--font-playfair",
   display: "swap",
   fallback: ["Georgia", "serif"],
 });
 const dmSans = DM_Sans({
   subsets: ["latin"],
-  weight: ["300", "400", "500", "600", "700", "800", "900"],
+  weight: ["400", "500", "600", "700", "800", "900"],
   variable: "--font-dm-sans",
   display: "swap",
   fallback: ["system-ui", "sans-serif"],
@@ -35,13 +32,8 @@ const ibmPlexMono = IBM_Plex_Mono({
   display: "swap",
   fallback: ["ui-monospace", "SFMono-Regular", "Menlo", "monospace"],
 });
-const chakraPetch = Chakra_Petch({
-  subsets: ["latin"],
-  weight: ["400", "500", "600", "700"],
-  variable: "--font-chakra",
-  display: "swap",
-  fallback: ["system-ui", "sans-serif"],
-});
+// Chakra Petch (--font-chakra / font-tech) is marketing-only, so it's loaded in
+// app/[locale]/page.tsx instead of here — admin pages shouldn't preload it.
 
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
@@ -65,7 +57,7 @@ export default function RootLayout({
   return (
     <html
       lang="en"
-      className={`scroll-smooth ${playfair.variable} ${dmSans.variable} ${ibmPlexMono.variable} ${chakraPetch.variable}`}
+      className={`scroll-smooth ${playfair.variable} ${dmSans.variable} ${ibmPlexMono.variable}`}
     >
       <body>
         {children}

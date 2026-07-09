@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
+import { Chakra_Petch } from "next/font/google";
 import Navbar from "@/components/Navbar";
 import Hero from "@/components/Hero";
 import About from "@/components/About";
@@ -22,6 +23,17 @@ import {
   localeAlternates,
   organizationJsonLd,
 } from "@/lib/seo";
+
+// The HUD display font is only used by the marketing sections (font-tech →
+// --font-chakra), so it's loaded here rather than in the root layout — admin
+// and tool pages don't pay for it. The variable is scoped to <main> below.
+const chakraPetch = Chakra_Petch({
+  subsets: ["latin"],
+  weight: ["400", "500", "600", "700"],
+  variable: "--font-chakra",
+  display: "swap",
+  fallback: ["system-ui", "sans-serif"],
+});
 
 // Only the three known locales exist; any other path 404s.
 export const dynamicParams = false;
@@ -91,7 +103,7 @@ export default function LocaleHome({ params }: { params: { locale: string } }) {
       />
       <LanguageProvider initialLang={locale}>
         <ScrollStageProvider sections={SECTIONS}>
-          <main className="hud-root">
+          <main className={`hud-root ${chakraPetch.variable}`}>
             <Navbar />
             <Hero />
             <About />
