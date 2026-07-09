@@ -1,8 +1,8 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useDeferredValue, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
-import type { Transaction } from "@/lib/types";
+import type { DashboardTransaction } from "@/lib/transactions";
 import AdminNav from "@/components/AdminNav";
 import RevenueBarChart, { BarDatum } from "@/components/RevenueBarChart";
 
@@ -19,12 +19,15 @@ function monthKey(iso: string): string {
 export default function DashboardClient({
   transactions,
 }: {
-  transactions: Transaction[];
+  transactions: DashboardTransaction[];
 }) {
   const router = useRouter();
   const [search, setSearch] = useState("");
   const [from, setFrom] = useState("");
   const [to, setTo] = useState("");
+  // Keep the input responsive: the expensive table filter reads the deferred
+  // value so typing never blocks on re-filtering the full list (better INP).
+  const deferredSearch = useDeferredValue(search);
 
   const thisMonthKey = new Date().toISOString().slice(0, 7);
 
@@ -56,17 +59,18 @@ export default function DashboardClient({
   }, [transactions]);
 
   const filtered = useMemo(() => {
+    const q = deferredSearch.toLowerCase();
     return transactions.filter((t) => {
       const matchesSearch =
-        !search ||
-        t.customer?.name?.toLowerCase().includes(search.toLowerCase()) ||
-        t.invoice_number?.toLowerCase().includes(search.toLowerCase());
+        !q ||
+        t.customer?.name?.toLowerCase().includes(q) ||
+        t.invoice_number?.toLowerCase().includes(q);
       const created = t.created_at ? t.created_at.slice(0, 10) : "";
       const matchesFrom = !from || created >= from;
       const matchesTo = !to || created <= to;
       return matchesSearch && matchesFrom && matchesTo;
     });
-  }, [transactions, search, from, to]);
+  }, [transactions, deferredSearch, from, to]);
 
   return (
     <div className="admin-shell px-6 pb-10 pt-[92px]">
