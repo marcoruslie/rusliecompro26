@@ -1,16 +1,27 @@
 "use client";
 
 import Link from "next/link";
-import { Home, Users, Cable, FileText, ListChecks } from "lucide-react";
+import { Home, Users, Cable, FileText, ListChecks, Warehouse, MapPin, Package } from "lucide-react";
 import AdminSignOutButton from "@/components/AdminSignOutButton";
 import type { AppRole } from "@/lib/auth";
 
-export type AdminPage = "dashboard" | "customers" | "wires" | "transaction" | "queue";
+export type AdminPage =
+  | "dashboard"
+  | "customers"
+  | "wires"
+  | "transaction"
+  | "queue"
+  | "warehouses"
+  | "storage-locations"
+  | "items";
 
 const LINKS = [
   { key: "dashboard", href: "/admin/dashboard", label: "Dashboard", Icon: Home },
   { key: "customers", href: "/admin/customers", label: "Customers", Icon: Users },
   { key: "wires", href: "/admin/wires", label: "Wires", Icon: Cable },
+  { key: "items", href: "/admin/items", label: "Items", Icon: Package },
+  { key: "warehouses", href: "/admin/warehouses", label: "Warehouses", Icon: Warehouse },
+  { key: "storage-locations", href: "/admin/storage-locations", label: "Locations", Icon: MapPin },
   { key: "transaction", href: "/admin/transactions/new", label: "Transaction", Icon: FileText },
   { key: "queue", href: "/admin/queue", label: "Queue", Icon: ListChecks },
 ] as const;
@@ -32,7 +43,7 @@ export default function AdminNav({
         background: "rgba(2,29,71,0.97)",
         backdropFilter: "blur(14px)",
         borderBottom: "1px solid rgba(255,255,255,0.07)",
-        fontFamily: "'DM Sans', sans-serif",
+        fontFamily: "var(--font-dm-sans)",
       }}
     >
       <Link href={homeHref} className="flex items-center gap-2.5">

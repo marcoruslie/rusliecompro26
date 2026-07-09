@@ -50,3 +50,39 @@ export interface Transaction {
   image_drive_id?: string | null;
   image_name?: string | null;
 }
+
+export interface Warehouse {
+  id?: string;
+  created_at?: string;
+  deleted_at?: string | null;
+  code: string;
+  name: string;
+  address: string | null;
+  is_active: boolean;
+}
+
+export interface StorageLocation {
+  id?: string;
+  created_at?: string;
+  deleted_at?: string | null;
+  warehouse_id: string;
+  code: string;
+  name: string | null;
+  is_active: boolean;
+}
+
+export type ItemCategory = "raw_material" | "finished_good";
+
+export interface Item {
+  id?: string;
+  created_at?: string;
+  deleted_at?: string | null;
+  sku: string;
+  name: string;
+  category: ItemCategory;
+  unit: string;
+  cost_price: number;
+  sale_price: number;
+  reorder_level: number;
+  is_active: boolean;
+}
