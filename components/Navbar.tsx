@@ -4,8 +4,9 @@ import { useState, useEffect } from "react";
 import { motion, AnimatePresence, useScroll, useSpring } from "framer-motion";
 import { Menu, X } from "lucide-react";
 import Link from "next/link";
-import { useLanguage } from "@/components/LanguageProvider";
-import { LANGS } from "@/lib/i18n";
+import { useLanguage } from "@/lib/i18n";
+import LanguageSwitcher from "./LanguageSwitcher";
+import { useScrollStage } from "@/lib/scrollStage";
 
 const NAV_META = [
   { href: "#about", n: "01" },
@@ -17,16 +18,32 @@ const NAV_META = [
 ];
 
 export default function Navbar() {
+  const { t } = useLanguage();
+  const { stageEnabled, sections, goTo, globalProgress } = useScrollStage();
+  const indexOf = (href: string) =>
+    sections.findIndex((s) => `#${s.id}` === href);
+  const onNavClick = (href: string) => (e: React.MouseEvent) => {
+    if (!stageEnabled) return; // native hash scroll
+    const i = indexOf(href);
+    if (i >= 0) {
+      e.preventDefault();
+      goTo(i);
+    }
+  };
+  const navLinks = NAV_META.map((meta, i) => ({
+    ...meta,
+    label: t.nav.links[i],
+  }));
   const [scrolled, setScrolled] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
   const { scrollYProgress } = useScroll();
-  const { lang, setLang, tr } = useLanguage();
-  const navLinks = NAV_META.map((m, i) => ({ ...m, label: tr.nav.links[i] }));
   const progress = useSpring(scrollYProgress, {
     stiffness: 120,
     damping: 28,
     restDelta: 0.001,
   });
+  // In stage mode the document doesn't scroll; drive the hairline from deck progress.
+  const barProgress = stageEnabled ? globalProgress : progress;
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 40);
@@ -61,6 +78,7 @@ export default function Navbar() {
               <a
                 key={link.href}
                 href={link.href}
+                onClick={onNavClick(link.href)}
                 className="group relative font-mono text-[0.74rem] tracking-[0.18em] uppercase text-hud-silver/55 hover:text-cyan transition-colors duration-200"
               >
                 <span className="text-cyan/40 mr-1.5 text-[0.62rem] align-top">
@@ -70,46 +88,32 @@ export default function Navbar() {
                 <span className="absolute -bottom-1.5 left-0 h-px w-0 bg-cyan transition-all duration-300 group-hover:w-full" />
               </a>
             ))}
-
-            {/* Language toggle */}
-            <div className="flex items-center gap-0.5 rounded-full border border-white/10 bg-white/[0.03] p-0.5">
-              {LANGS.map((l) => (
-                <button
-                  key={l.code}
-                  onClick={() => setLang(l.code)}
-                  aria-pressed={lang === l.code}
-                  className={`px-2.5 py-1 rounded-full font-mono text-[0.66rem] tracking-[0.08em] uppercase transition-colors duration-200 ${
-                    lang === l.code
-                      ? "bg-cyan text-graphite"
-                      : "text-hud-silver/55 hover:text-cyan"
-                  }`}
-                >
-                  {l.label}
-                </button>
-              ))}
-            </div>
-
+            <LanguageSwitcher />
             <a
               href="#contact"
+              onClick={onNavClick("#contact")}
               className="relative font-mono text-[0.74rem] font-medium tracking-[0.16em] uppercase text-graphite bg-cyan px-4 py-2 rounded hover:shadow-cyan-glow transition-shadow duration-300"
             >
-              {tr.nav.getQuote}
+              {t.nav.getQuote}
             </a>
           </div>
 
-          <button
-            className="md:hidden text-hud-silver p-1"
-            onClick={() => setMenuOpen(!menuOpen)}
-            aria-label="Toggle menu"
-          >
-            {menuOpen ? <X size={24} /> : <Menu size={24} />}
-          </button>
+          <div className="md:hidden flex items-center gap-4">
+            <LanguageSwitcher />
+            <button
+              className="text-hud-silver p-1"
+              onClick={() => setMenuOpen(!menuOpen)}
+              aria-label="Toggle menu"
+            >
+              {menuOpen ? <X size={24} /> : <Menu size={24} />}
+            </button>
+          </div>
         </div>
 
         {/* Scroll-progress hairline */}
         <motion.div
           aria-hidden
-          style={{ scaleX: progress }}
+          style={{ scaleX: barProgress }}
           className="origin-left h-px w-full bg-gradient-to-r from-cyan via-cyan/70 to-transparent"
         />
       </motion.nav>
@@ -128,38 +132,25 @@ export default function Navbar() {
                 <a
                   key={link.href}
                   href={link.href}
-                  onClick={() => setMenuOpen(false)}
+                  onClick={(e) => {
+                    onNavClick(link.href)(e);
+                    setMenuOpen(false);
+                  }}
                   className="font-mono text-sm tracking-[0.16em] uppercase text-hud-silver/70 hover:text-cyan transition-colors"
                 >
                   <span className="text-cyan/40 mr-2 text-xs">{link.n}</span>
                   {link.label}
                 </a>
               ))}
-
-              {/* Language toggle (mobile) */}
-              <div className="flex items-center gap-1.5 mt-1">
-                {LANGS.map((l) => (
-                  <button
-                    key={l.code}
-                    onClick={() => setLang(l.code)}
-                    aria-pressed={lang === l.code}
-                    className={`px-3 py-1.5 rounded-full font-mono text-xs tracking-[0.08em] uppercase border transition-colors ${
-                      lang === l.code
-                        ? "bg-cyan text-graphite border-cyan"
-                        : "text-hud-silver/60 border-white/15 hover:text-cyan"
-                    }`}
-                  >
-                    {l.label}
-                  </button>
-                ))}
-              </div>
-
               <a
                 href="#contact"
-                onClick={() => setMenuOpen(false)}
+                onClick={(e) => {
+                  onNavClick("#contact")(e);
+                  setMenuOpen(false);
+                }}
                 className="bg-cyan text-graphite text-center py-3 rounded font-mono font-medium text-sm tracking-[0.16em] uppercase mt-2"
               >
-                {tr.nav.getQuote}
+                {t.nav.getQuote}
               </a>
             </div>
           </motion.div>

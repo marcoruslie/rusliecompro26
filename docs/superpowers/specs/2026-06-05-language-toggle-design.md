@@ -1,98 +1,57 @@
-# Language Toggle — Design
+# Language Toggle — Design Spec
 
 **Date:** 2026-06-05
-**Status:** Approved
+**Status:** Approved (design)
 
 ## Goal
 
-Add a language toggle to the public marketing page so visitors can switch the
-site copy between **English (`en`)**, **Indonesian (`id`)**, and **Chinese
-(`zh`, displayed as 中文)**. Switching is instant (no reload) and the choice is
-remembered across visits.
+Let visitors switch the marketing homepage between **English (en)**, **Indonesian (id)**, and **Simplified Chinese (zh)** with a small language selector in the navbar. The chosen language persists across visits.
 
 ## Scope
 
-**In scope:** the single-page marketing site only — `app/page.tsx` and the
-section components it stacks: `Navbar`, `Hero`, `About`, `Process`, `Products`,
-`Capabilities`, `Gallery`, `Contact`, `Footer`.
+**In scope:** The single-page marketing site only — `Navbar`, `Hero`, `About`, `Process`, `Products`, `Capabilities`, `Gallery`, `Contact`, `Footer`.
 
-**Out of scope:**
-- Calculator (`app/calculator`), Invoice (`app/invoice`), and Admin
-  (`app/admin`) pages — left exactly as they are.
-- URL-based locale routing / SEO per-language indexing.
-- Translating dynamic data (DB-backed invoices, customer records, etc.).
+**Out of scope:** `/calculator`, `/invoice`, public invoice, and all admin/dashboard pages. These keep their current language.
 
-The architecture supports adding more languages later by appending to the
-dictionary; no component changes required.
+**Translated content:** all prose, plus product names, capability labels, gallery captions/tags, and industry names. **Not translated:** phone number, email, street address, brand name "Ruslie Spring".
 
 ## Approach
 
-Client-side React context + a central translation dictionary, persisted to
-`localStorage`. Chosen over URL-routed i18n (overkill for one client-rendered
-page) and a full i18n library (heavier than needed).
+Lightweight client-side React Context + a central dictionary. No new dependencies, no routing changes. Chosen over `next-intl` locale routing (overkill for one page) and URL query params (more plumbing, little benefit). Every section component is already `"use client"`, so context consumption is natural.
 
-## Components
+### Components / Units
 
-### 1. `lib/i18n.ts` — translation core
-- `export type Lang = 'en' | 'id' | 'zh'`.
-- `export const LANGS: { code: Lang; label: string }[]` — `EN`, `ID`, `中文`.
-  Drives the toggle UI and iteration order.
-- `export const translations: Record<Lang, Record<string, string>>` — a flat,
-  dot-keyed map (e.g. `'hero.tagline'`, `'about.feature.manufacturing.title'`).
-  English is the source of truth; `id` and `zh` mirror every English key.
-- For repeated/array content (stats, feature cards, product items, process
-  steps), key each field individually (e.g. `'about.stats.0.label'`) or expose
-  small per-language arrays, so existing `.map()` rendering keeps working.
+**`lib/i18n.tsx`** (client)
+- Exports `type Lang = 'en' | 'id' | 'zh'`.
+- `LanguageProvider`: holds `lang` state (default `'en'`). On mount, reads `localStorage["lang"]` and applies it if valid. On change, writes `localStorage["lang"]` and sets `document.documentElement.lang`.
+- `useLanguage()` hook returns `{ lang, setLang, t }`, where `t = translations[lang]` (the active dictionary).
+- What it depends on: `translations` from `lib/translations.ts`.
 
-### 2. `components/LanguageProvider.tsx` (`"use client"`)
-- React context exposing `{ lang, setLang, t }`.
-- On mount, reads `localStorage('rs-lang')`; defaults to `en` when absent or
-  invalid. Writes back whenever `lang` changes.
-- SSR-safe: no `window` access until after mount. First paint renders `en`,
-  then hydrates to the saved choice — avoids hydration mismatch warnings.
-- `t(key)` returns
-  `translations[lang][key] ?? translations.en[key] ?? key`
-  so a missing translation falls back to English (never blank).
-- `useLanguage()` hook for consumers.
+**`lib/translations.ts`**
+- One `translations` object: `{ en: {...}, id: {...}, zh: {...} }`.
+- Each language has the same shape, keyed by section: `nav`, `hero`, `about`, `process`, `products`, `capabilities`, `gallery`, `contact`, `footer`.
+- The `en` shape is the source of truth; `id` and `zh` mirror its keys. A TypeScript type derived from `en` enforces that `id`/`zh` stay complete.
+- Animation-split text (Hero headline, any `<br/>`-split headings) is stored as string arrays so kinetic reveals keep working across languages.
 
-### 3. `app/page.tsx` — wiring
-- Wrap the marketing component stack in `<LanguageProvider>`. Because only this
-  page is wrapped, all other routes are unaffected.
+**`components/LanguageSwitcher.tsx`** (client)
+- Globe-icon button showing the current language (`EN` / `ID` / `中文`); click opens a 3-item dropdown.
+- Calls `setLang` on selection. Used in both the desktop navbar and the mobile menu.
 
-### 4. `components/Navbar.tsx` — the toggle UI
-- Desktop: a three-pill segmented control (`EN · ID · 中文`) placed next to the
-  "Get Quote" button. Active language uses the cyan accent; inactive pills are
-  muted, matching the existing nav styling.
-- Mobile: the same three pills as a row inside the open menu.
+### Changed files
 
-### 5. Marketing component refactor
-- Each component calls `useLanguage()` and replaces hardcoded English strings
-  with `t(...)` lookups.
-- Non-text stays as-is: counter numbers (`20+`, `50K+`), engineering spec
-  values (`Ø 0.1 – 50 mm`, `± 0.01 mm`), image paths, hash links, icons.
+- `app/page.tsx` — wrap the section stack in `<LanguageProvider>`. `page.tsx` stays a server component rendering a client provider with client children (valid in App Router).
+- The 9 section components — replace hardcoded English with `t.<section>.<key>` via `useLanguage()`. Lists currently held in module-level `const` arrays (nav links, features, steps, products, caps, industries, gallery items, contact info) move to dictionary-driven data: keep non-text fields (icons, hrefs, image paths, animation variants) in the component, pull text fields from `t`.
 
 ## Data flow
 
-`localStorage` → `LanguageProvider` (holds `lang`) → context → `useLanguage().t`
-in each component → renders the active-language string. `setLang` (from the
-navbar pills) updates context + `localStorage`, triggering a re-render of the
-whole marketing tree.
+`LanguageProvider` (state + localStorage) → `useLanguage()` in each section → render `t` strings. Selecting a language calls `setLang` → re-render + persist.
 
-## Error / edge handling
+## Error handling / edge cases
 
-- Invalid or absent `localStorage` value → default `en`.
-- Missing translation key → English fallback, then the raw key as last resort.
-- SSR/hydration → render `en` on the server and first client paint, apply the
-  saved language after mount.
+- Invalid or missing `localStorage["lang"]` → fall back to `'en'`.
+- SSR renders `'en'`; a returning visitor who picked id/zh sees a brief English flash before the mount effect applies their choice. Accepted tradeoff for a no-dependency approach.
+- Icons, hrefs, image `src`, animation variants, and counter numbers stay language-agnostic in the components; only display text is translated.
 
-## Testing / verification
+## Testing
 
-- `npm run build` passes (no type errors from the typed dictionary).
-- Manual: toggling pills instantly re-renders every section in the chosen
-  language; the choice survives a full page reload; browser console shows no
-  hydration warnings; calculator/invoice/admin pages are visually unchanged.
-
-## Translation quality note
-
-English copy is authoritative. Indonesian and Chinese drafts will be written to
-mirror it; a native speaker should proofread `id` and `zh` before launch.
+No automated test suite in this repo. Verification is manual: `npm run dev`, confirm the switcher changes all nine sections, the choice survives a reload, animations still play, and `npm run build` succeeds.

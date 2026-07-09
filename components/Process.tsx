@@ -4,33 +4,37 @@ import { useRef, useState } from "react";
 import {
   motion,
   AnimatePresence,
-  useScroll,
   useSpring,
   useTransform,
   useMotionValueEvent,
 } from "framer-motion";
 import dynamic from "next/dynamic";
 import { BlueprintGrid, SectionIndex } from "./hud";
-import { useLanguage } from "@/components/LanguageProvider";
+import { useLanguage } from "@/lib/i18n";
+import { useSectionScrub, useScrollStage } from "@/lib/scrollStage";
 
 // 3D spring is client-only (WebGL) and code-split out of the main bundle.
 const SpringScene = dynamic(() => import("./SpringScene"), { ssr: false });
 
-const STEPS = [
-  { n: "01", key: "wire", spec: "Ø 0.1 – 50 mm", compress: 0, coils: 8 },
-  { n: "02", key: "coil", spec: "OD 1 – 500 mm", compress: 0.16, coils: 9 },
-  { n: "03", key: "heat", spec: "Tempered · set-resistant", compress: 0.42, coils: 9 },
-  { n: "04", key: "qc", spec: "± 0.01 mm verified", compress: 0.24, coils: 8 },
+const STEP_META = [
+  { n: "01", key: "wire", compress: 0, coils: 8 },
+  { n: "02", key: "coil", compress: 0.16, coils: 9 },
+  { n: "03", key: "heat", compress: 0.42, coils: 9 },
+  { n: "04", key: "qc", compress: 0.24, coils: 8 },
 ];
 
 export default function Process() {
+  const { t } = useLanguage();
+  const STEPS = STEP_META.map((meta, i) => ({
+    ...meta,
+    title: t.process.steps[i].title,
+    text: t.process.steps[i].text,
+    spec: t.process.steps[i].spec,
+  }));
   const ref = useRef<HTMLElement>(null);
   const [active, setActive] = useState(0);
-  const { tr } = useLanguage();
-  const { scrollYProgress } = useScroll({
-    target: ref,
-    offset: ["start start", "end end"],
-  });
+  const { stageEnabled } = useScrollStage();
+  const scrollYProgress = useSectionScrub("process", ref);
 
   useMotionValueEvent(scrollYProgress, "change", (v) => {
     const idx = Math.min(STEPS.length - 1, Math.floor(v * STEPS.length));
@@ -57,9 +61,9 @@ export default function Process() {
       id="process"
       ref={ref}
       className="relative bg-graphite"
-      style={{ height: `${STEPS.length * 90}vh` }}
+      style={{ height: stageEnabled ? "100vh" : `${STEPS.length * 90}vh` }}
     >
-      <div className="sticky top-0 h-screen overflow-hidden flex flex-col">
+      <div className={`${stageEnabled ? "" : "sticky top-0"} h-screen overflow-hidden flex flex-col`}>
         <BlueprintGrid fade={false} />
         <div
           className="absolute inset-0 pointer-events-none"
@@ -72,9 +76,9 @@ export default function Process() {
         <div className="relative z-10 flex-1 max-w-7xl w-full mx-auto px-6 lg:px-10 grid grid-cols-1 lg:grid-cols-2 items-center gap-10">
           {/* Left — morphing copy */}
           <div className="pt-24 lg:pt-0">
-            <SectionIndex index="02" label={tr.process.index} className="mb-8" />
+            <SectionIndex index="02" label={t.process.label} className="mb-8" />
             <div className="font-mono text-[0.72rem] tracking-[0.2em] text-cyan/70 mb-4">
-              {tr.process.stepWord} {step.n} / {String(STEPS.length).padStart(2, "0")}
+              {t.process.step} {step.n} / {String(STEPS.length).padStart(2, "0")}
             </div>
 
             <div className="relative min-h-[230px]">
@@ -87,10 +91,10 @@ export default function Process() {
                   transition={{ duration: 0.45, ease: [0.22, 1, 0.36, 1] }}
                 >
                   <h3 className="font-tech font-bold text-[clamp(1.8rem,3.4vw,2.9rem)] leading-[1.05] text-hud-silver mb-5">
-                    {tr.process.steps[active].title}
+                    {step.title}
                   </h3>
                   <p className="font-body text-[1.02rem] text-hud-silver/55 leading-[1.85] max-w-[460px] mb-6">
-                    {tr.process.steps[active].text}
+                    {step.text}
                   </p>
                   <span className="inline-flex items-center gap-2 font-mono text-[0.74rem] tracking-[0.12em] uppercase text-cyan border border-cyan/35 bg-cyan/5 rounded px-3 py-1.5">
                     <span className="w-1.5 h-1.5 rounded-full bg-cyan" />
@@ -132,7 +136,7 @@ export default function Process() {
                       : "bg-white/15"
                   }`}
                 />
-                <span className="hidden sm:inline">{tr.process.steps[i].title.split(" ")[0]}</span>
+                <span className="hidden sm:inline">{s.title.split(" ")[0]}</span>
                 <span className="sm:hidden">{s.n}</span>
               </div>
             ))}

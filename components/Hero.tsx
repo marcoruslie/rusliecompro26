@@ -3,13 +3,13 @@
 import { useRef } from "react";
 import {
   motion,
-  useScroll,
   useTransform,
   useReducedMotion,
 } from "framer-motion";
+import { useSectionScrub } from "@/lib/scrollStage";
 import HeroSpring from "./HeroSpring";
 import { BlueprintGrid, MagneticButton, Counter, SpecTag } from "./hud";
-import { useLanguage } from "@/components/LanguageProvider";
+import { useLanguage } from "@/lib/i18n";
 
 const STAT_VALUES = [
   { to: 20, suffix: "+" },
@@ -24,19 +24,18 @@ const FLOAT_SPECS = [
 ];
 
 export default function Hero() {
+  const { t } = useLanguage();
+  const stats = STAT_VALUES.map((s, i) => ({ ...s, label: t.hero.stats[i] }));
   const ref = useRef<HTMLElement>(null);
   const reduce = useReducedMotion();
-  const { tr } = useLanguage();
-  const { scrollYProgress } = useScroll({
-    target: ref,
-    offset: ["start start", "end start"],
-  });
+  const scrollYProgress = useSectionScrub("hero", ref);
   const contentY = useTransform(scrollYProgress, [0, 1], ["0%", "26%"]);
   const contentOpacity = useTransform(scrollYProgress, [0, 0.85], [1, 0]);
   const springY = useTransform(scrollYProgress, [0, 1], [0, 130]);
 
   return (
     <section
+      id="hero"
       ref={ref}
       className="relative min-h-screen flex items-center overflow-hidden bg-graphite"
     >
@@ -97,13 +96,13 @@ export default function Hero() {
             transition={{ duration: 0.7, delay: 0.15 }}
             className="mb-7"
           >
-            <SpecTag active>{tr.hero.badge}</SpecTag>
+            <SpecTag active>{t.hero.badge}</SpecTag>
           </motion.div>
 
           {/* Kinetic split-text headline */}
           <h1 className="font-tech font-bold text-[clamp(3rem,6vw,5.4rem)] leading-[0.98] tracking-tight text-hud-silver mb-6">
-            {tr.hero.headline.map((word, i) => (
-              <span key={word} className="inline-block overflow-hidden align-bottom mr-[0.28em]">
+            {t.hero.headline.map((word, i) => (
+              <span key={i} className="inline-block overflow-hidden align-bottom mr-[0.28em]">
                 <motion.span
                   initial={{ y: "110%" }}
                   animate={{ y: 0 }}
@@ -113,7 +112,7 @@ export default function Hero() {
                     ease: [0.22, 1, 0.36, 1],
                   }}
                   className={`inline-block ${
-                    i === 2 ? "text-cyan hud-glow-cyan" : ""
+                    i === t.hero.headline.length - 1 ? "text-cyan hud-glow-cyan" : ""
                   }`}
                 >
                   {word}
@@ -128,7 +127,7 @@ export default function Hero() {
             transition={{ duration: 0.8, delay: 0.7 }}
             className="font-body text-[1.05rem] text-hud-silver/55 leading-[1.8] max-w-[470px] mb-9"
           >
-            {tr.hero.tagline}
+            {t.hero.paragraph}
           </motion.p>
 
           <motion.div
@@ -137,9 +136,9 @@ export default function Hero() {
             transition={{ duration: 0.7, delay: 0.85 }}
             className="flex gap-4 flex-wrap mb-12"
           >
-            <MagneticButton href="#products">{tr.hero.exploreProducts}</MagneticButton>
+            <MagneticButton href="#products">{t.hero.ctaProducts}</MagneticButton>
             <MagneticButton href="#process" variant="ghost">
-              {tr.hero.seeProcess}
+              {t.hero.ctaProcess}
             </MagneticButton>
           </motion.div>
 
@@ -150,13 +149,13 @@ export default function Hero() {
             transition={{ duration: 0.8, delay: 1 }}
             className="flex gap-8 sm:gap-12"
           >
-            {STAT_VALUES.map((s, i) => (
-              <div key={i}>
+            {stats.map((s) => (
+              <div key={s.label}>
                 <div className="font-tech text-[2rem] font-bold text-hud-silver leading-none">
                   <Counter to={s.to} suffix={s.suffix} />
                 </div>
                 <div className="font-mono text-[0.62rem] tracking-[0.16em] uppercase text-hud-mute mt-2">
-                  {tr.hero.stats[i]}
+                  {s.label}
                 </div>
               </div>
             ))}
@@ -182,7 +181,7 @@ export default function Hero() {
         className="absolute bottom-7 left-1/2 -translate-x-1/2 flex flex-col items-center gap-2 z-20"
       >
         <span className="font-mono text-[0.6rem] text-hud-mute tracking-[0.3em] uppercase">
-          {tr.hero.scroll}
+          {t.hero.scroll}
         </span>
         <div className="w-px h-9 bg-gradient-to-b from-cyan/70 to-transparent" />
       </motion.div>

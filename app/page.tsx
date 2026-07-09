@@ -1,28 +1,7 @@
-import Navbar from "@/components/Navbar";
-import Hero from "@/components/Hero";
-import About from "@/components/About";
-import Process from "@/components/Process";
-import Products from "@/components/Products";
-import Gallery from "@/components/Gallery";
-import Capabilities from "@/components/Capabilities";
-import Contact from "@/components/Contact";
-import Footer from "@/components/Footer";
-import { LanguageProvider } from "@/components/LanguageProvider";
+import { redirect } from "next/navigation";
+import { DEFAULT_LOCALE } from "@/lib/seo";
 
-export default function Home() {
-  return (
-    <LanguageProvider>
-      <main className="hud-root">
-        <Navbar />
-        <Hero />
-        <About />
-        <Process />
-        <Products />
-        <Capabilities />
-        <Gallery />
-        <Contact />
-        <Footer />
-      </main>
-    </LanguageProvider>
-  );
+// The marketing site lives under /[locale]; send the bare root to the default.
+export default function RootPage() {
+  redirect(`/${DEFAULT_LOCALE}`);
 }

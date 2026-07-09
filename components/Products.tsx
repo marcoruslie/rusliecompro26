@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef } from "react";
+import { useRef, useState } from "react";
 import {
   motion,
   useInView,
@@ -10,6 +10,7 @@ import {
   useSpring,
   useTransform,
   useMotionTemplate,
+  useMotionValueEvent,
   type MotionProps,
 } from "framer-motion";
 
@@ -25,7 +26,8 @@ import {
   type LucideIcon,
 } from "lucide-react";
 import { SectionIndex, CornerBrackets, type CardEntrance } from "./hud";
-import { useLanguage } from "@/components/LanguageProvider";
+import { useLanguage } from "@/lib/i18n";
+import { useSectionScrub, usePanY, useScrollStage } from "@/lib/scrollStage";
 
 /* Each product enters with a motion that imitates how that spring
    actually behaves mechanically — no two scroll reveals are alike. */
@@ -82,6 +84,16 @@ const VARIANTS: Record<VariantKey, CardEntrance> = {
   },
 };
 
+type Product = {
+  name: string;
+  desc: string;
+  icon: LucideIcon;
+  tag: string;
+  span: string;
+  variant: VariantKey;
+};
+
+// Non-text fields; name/desc/tag come from the translation dictionary by index.
 const PRODUCT_META: { icon: LucideIcon; span: string; variant: VariantKey }[] = [
   { icon: ArrowDownUp, span: "lg:col-span-2", variant: "compress" },
   { icon: MoveVertical, span: "", variant: "extend" },
@@ -91,21 +103,14 @@ const PRODUCT_META: { icon: LucideIcon; span: string; variant: VariantKey }[] = 
   { icon: BatteryCharging, span: "lg:col-span-2", variant: "charge" },
 ];
 
-function ProductCard({
-  meta,
-  text,
-  index,
-}: {
-  meta: (typeof PRODUCT_META)[number];
-  text: { name: string; desc: string; tag: string };
-  index: number;
-}) {
+function ProductCard({ p, index }: { p: Product; index: number }) {
+  const { t } = useLanguage();
+  const { stageEnabled } = useScrollStage();
   const ref = useRef<HTMLDivElement>(null);
   const reduce = useReducedMotion();
   const inView = useInView(ref, { once: true, margin: "-12% 0px" });
-  const Icon = meta.icon;
-  const entrance = VARIANTS[meta.variant];
-  const { tr } = useLanguage();
+  const Icon = p.icon;
+  const entrance = VARIANTS[p.variant];
 
   // Continuous scroll-linked parallax drift (column-varied speed).
   const { scrollYProgress } = useScroll({
@@ -155,8 +160,8 @@ function ProductCard({
 
   return (
     <motion.div
-      className={meta.span}
-      style={{ perspective: 1000, y: reduce ? 0 : py }}
+      className={p.span}
+      style={{ perspective: 1000, y: reduce || stageEnabled ? 0 : py }}
     >
       <motion.div
         ref={ref}
@@ -182,7 +187,7 @@ function ProductCard({
           className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none"
         />
         {/* charge sweep — only the battery spring "powers up" on reveal */}
-        {meta.variant === "charge" && !reduce && (
+        {p.variant === "charge" && !reduce && (
           <motion.div
             aria-hidden
             initial={{ y: "100%", opacity: 0 }}
@@ -204,21 +209,21 @@ function ProductCard({
             <Icon size={22} className="text-cyan" />
           </div>
           <span className="font-mono text-[0.66rem] text-hud-mute tracking-[0.16em] border border-white/10 rounded px-2 py-1 group-hover:text-cyan group-hover:border-cyan/30 transition-colors">
-            {text.tag}
+            {p.tag}
           </span>
         </div>
 
         <h3 className="relative font-tech text-[1.1rem] font-semibold text-hud-silver mb-2.5">
-          {text.name}
+          {p.name}
         </h3>
         <p className="relative font-body text-[0.86rem] text-hud-silver/50 leading-[1.7] max-w-[42ch]">
-          {text.desc}
+          {p.desc}
         </p>
 
         <div className="relative mt-5 flex items-center justify-between">
           <div className="h-0.5 w-8 bg-cyan/50 rounded-full transition-all duration-300 group-hover:w-16" />
           <span className="flex items-center gap-1 font-mono text-[0.62rem] tracking-[0.16em] uppercase text-cyan opacity-0 translate-x-2 group-hover:opacity-100 group-hover:translate-x-0 transition-all duration-300">
-            {tr.products.detail}
+            {t.products.detail}
             <ArrowUpRight size={13} />
           </span>
         </div>
@@ -233,46 +238,55 @@ function ProductCard({
 }
 
 export default function Products() {
+  const { t } = useLanguage();
+  const products: Product[] = PRODUCT_META.map((meta, i) => ({
+    ...meta,
+    name: t.products.items[i].name,
+    desc: t.products.items[i].desc,
+    tag: t.products.items[i].tag,
+  }));
   const ref = useRef<HTMLElement>(null);
-  const inView = useInView(ref, { once: true, margin: "-80px" });
-  const { scrollYProgress } = useScroll({
-    target: ref,
-    offset: ["start end", "end start"],
+  const contentRef = useRef<HTMLDivElement>(null);
+  const { stageEnabled } = useScrollStage();
+  const progress = useSectionScrub("products", ref);
+  const panY = usePanY(progress, contentRef, stageEnabled);
+  const nativeInView = useInView(ref, { once: true, margin: "-80px" });
+  const [scrubReveal, setScrubReveal] = useState(false);
+  useMotionValueEvent(progress, "change", (v) => {
+    if (v > 0.08) setScrubReveal(true);
   });
-  const headerY = useTransform(scrollYProgress, [0, 1], [60, -60]);
-  const { tr } = useLanguage();
+  const inView = stageEnabled ? scrubReveal : nativeInView;
+  const headerY = useTransform(progress, [0, 1], [60, -60]);
 
   return (
     <section
       id="products"
       ref={ref}
-      className="relative bg-carbon py-[120px] px-6 lg:px-10 overflow-hidden border-t border-white/[0.06]"
+      className={`relative bg-carbon px-6 lg:px-10 overflow-hidden border-t border-white/[0.06] ${
+        stageEnabled ? "h-screen py-20" : "py-[120px]"
+      }`}
     >
-      <div className="relative z-10 max-w-7xl mx-auto">
+      <motion.div ref={contentRef} style={{ y: panY }} className="relative z-10 max-w-7xl mx-auto">
         <motion.div style={{ y: headerY }} className="mb-14">
           <motion.div
             initial={{ opacity: 0, y: 24 }}
             animate={inView ? { opacity: 1, y: 0 } : {}}
             transition={{ duration: 0.6 }}
           >
-            <SectionIndex index="03" label={tr.products.index} className="mb-6" />
+            <SectionIndex index="03" label={t.products.label} className="mb-6" />
             <h2 className="font-tech font-bold text-[clamp(2rem,4vw,3rem)] text-hud-silver">
-              {tr.products.titlePrefix}{" "}<span className="text-cyan hud-glow-cyan">{tr.products.titleAccent}</span>
+              {t.products.heading[0]}{" "}
+              <span className="text-cyan hud-glow-cyan">{t.products.heading[1]}</span>
             </h2>
           </motion.div>
         </motion.div>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-          {PRODUCT_META.map((meta, i) => (
-            <ProductCard
-              key={i}
-              meta={meta}
-              text={tr.products.items[i]}
-              index={i}
-            />
+          {products.map((p, i) => (
+            <ProductCard key={i} p={p} index={i} />
           ))}
         </div>
-      </div>
+      </motion.div>
     </section>
   );
 }
