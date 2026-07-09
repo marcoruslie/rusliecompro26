@@ -51,7 +51,7 @@ export default function PublicInvoiceClient({ id }: { id: string }) {
         className="min-h-screen flex items-center justify-center px-4"
         style={{
           background: "linear-gradient(135deg, #021d47 0%, #0b2255 100%)",
-          fontFamily: "'DM Sans', sans-serif",
+          fontFamily: "var(--font-dm-sans)",
         }}
       >
         <div className="w-full max-w-sm bg-white rounded-2xl shadow-2xl p-8">
@@ -64,7 +64,7 @@ export default function PublicInvoiceClient({ id }: { id: string }) {
             </div>
             <h1
               className="text-xl font-bold"
-              style={{ color: "#021d47", fontFamily: "'Playfair Display', serif" }}
+              style={{ color: "#021d47", fontFamily: "var(--font-playfair)" }}
             >
               Faktur Terkunci
             </h1>
@@ -113,7 +113,7 @@ export default function PublicInvoiceClient({ id }: { id: string }) {
   return (
     <div
       className="min-h-screen px-4 py-8 sm:py-12 no-print-bg"
-      style={{ background: "#f0f4f8", fontFamily: "'DM Sans', sans-serif" }}
+      style={{ background: "#f0f4f8", fontFamily: "var(--font-dm-sans)" }}
     >
       <style>{`
         @media print {
@@ -152,7 +152,7 @@ export default function PublicInvoiceClient({ id }: { id: string }) {
           <div>
             <h2
               className="text-3xl sm:text-[2.5rem] font-extrabold tracking-tight"
-              style={{ color: "#021d47", fontFamily: "'Playfair Display', serif" }}
+              style={{ color: "#021d47", fontFamily: "var(--font-playfair)" }}
             >
               INVOICE
             </h2>
@@ -279,10 +279,10 @@ export default function PublicInvoiceClient({ id }: { id: string }) {
               <span className="font-medium text-gray-800">{rupiah(invoice.shipping)}</span>
             </div>
             <div className="flex justify-between items-center pt-3 pb-1">
-              <span className="font-bold text-base" style={{ color: "#021d47", fontFamily: "'Playfair Display', serif" }}>
+              <span className="font-bold text-base" style={{ color: "#021d47", fontFamily: "var(--font-playfair)" }}>
                 TOTAL
               </span>
-              <span className="font-extrabold text-[1.25rem]" style={{ color: "#021d47", fontFamily: "'Playfair Display', serif" }}>
+              <span className="font-extrabold text-[1.25rem]" style={{ color: "#021d47", fontFamily: "var(--font-playfair)" }}>
                 {rupiah(invoice.total)}
               </span>
             </div>

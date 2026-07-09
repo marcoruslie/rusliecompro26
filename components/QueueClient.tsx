@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, Fragment } from "react";
+import { useState, useEffect, useRef, Fragment } from "react";
 import { useSearchParams } from "next/navigation";
 import {
   Eye,
@@ -12,12 +12,14 @@ import {
   Unlink,
   ClipboardPaste,
   Printer,
+  Copy,
 } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import { updateOrderStatus } from "@/lib/orders";
 import type { Transaction, OrderStatus } from "@/lib/types";
 import type { AppRole } from "@/lib/auth";
 import AdminNav from "@/components/AdminNav";
+import InvoiceDocument from "@/components/InvoiceDocument";
 
 function formatRupiah(n: number) {
   return "Rp " + (n ?? 0).toLocaleString("id-ID");
@@ -68,6 +70,11 @@ export default function QueueClient({
   // Printing is built on demand: preload every file, render the off-screen grid,
   // then call window.print() — so we don't eagerly fetch all files on page load.
   const [printing, setPrinting] = useState(false);
+  // Copy-invoice-as-image: the order currently being captured (off-screen), plus a
+  // per-row status message ("Tersalin ✓" / "Terunduh ✓" / error).
+  const [copyingId, setCopyingId] = useState<string | null>(null);
+  const [copyMsg, setCopyMsg] = useState<Record<string, string>>({});
+  const invoiceRef = useRef<HTMLDivElement>(null);
 
   const justConnected = params.get("connected") === "1";
   const oauthError = params.get("error");
@@ -118,6 +125,82 @@ export default function QueueClient({
       window.print();
     } finally {
       setPrinting(false);
+    }
+  }
+
+  function triggerDownload(blob: Blob, filename: string) {
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    URL.revokeObjectURL(url);
+  }
+
+  // Render the order's invoice off-screen, capture it to a PNG, and copy it to the
+  // clipboard. Falls back to a download when clipboard image-write is unavailable.
+  async function copyInvoiceImage(o: Transaction) {
+    if (!canManagePdf || !o.id || copyingId) return;
+    const id = o.id;
+    setCopyMsg((p) => ({ ...p, [id]: "" }));
+    setCopyingId(id);
+    try {
+      // Let React mount the off-screen node, then wait for fonts + images.
+      await new Promise<void>((r) =>
+        requestAnimationFrame(() => requestAnimationFrame(() => r()))
+      );
+      if (document.fonts?.ready) await document.fonts.ready;
+      const node = invoiceRef.current;
+      if (!node) throw new Error("no node");
+      await Promise.all(
+        Array.from(node.querySelectorAll("img")).map((img) =>
+          img.complete
+            ? Promise.resolve()
+            : new Promise<void>((res) => {
+                img.onload = () => res();
+                img.onerror = () => res();
+              })
+        )
+      );
+      // Loaded on demand so html-to-image stays out of the queue's initial bundle.
+      const { toBlob } = await import("html-to-image");
+      const blob = await toBlob(node, {
+        pixelRatio: 2,
+        backgroundColor: "#ffffff",
+      });
+      if (!blob) throw new Error("no blob");
+
+      const canCopyImage =
+        typeof ClipboardItem !== "undefined" &&
+        !!navigator.clipboard?.write;
+      if (canCopyImage) {
+        try {
+          await navigator.clipboard.write([
+            new ClipboardItem({ "image/png": blob }),
+          ]);
+          setCopyMsg((p) => ({ ...p, [id]: "Tersalin ✓" }));
+        } catch {
+          triggerDownload(blob, `invoice-${o.invoice_number}.png`);
+          setCopyMsg((p) => ({ ...p, [id]: "Terunduh ✓" }));
+        }
+      } else {
+        triggerDownload(blob, `invoice-${o.invoice_number}.png`);
+        setCopyMsg((p) => ({ ...p, [id]: "Terunduh ✓" }));
+      }
+    } catch {
+      setCopyMsg((p) => ({ ...p, [id]: "Gagal menyalin gambar." }));
+    } finally {
+      setCopyingId(null);
+      setTimeout(() => {
+        setCopyMsg((p) => {
+          if (!p[id]) return p;
+          const n = { ...p };
+          delete n[id];
+          return n;
+        });
+      }, 2500);
     }
   }
 
@@ -443,6 +526,35 @@ export default function QueueClient({
                             )}
                           </div>
                         )}
+                        {/* Copy invoice as image (editors only) */}
+                        {canManagePdf && (
+                          <div className="flex items-center gap-2">
+                            <button
+                              onClick={() => copyInvoiceImage(o)}
+                              disabled={copyingId === o.id}
+                              className="text-gray-400 hover:text-[#021d47] transition-colors disabled:opacity-40"
+                              title="Salin gambar invoice"
+                            >
+                              {copyingId === o.id ? (
+                                <span className="admin-spinner-xs" />
+                              ) : (
+                                <Copy size={17} />
+                              )}
+                            </button>
+                            {o.id && copyMsg[o.id] && (
+                              <span
+                                className="text-xs whitespace-nowrap"
+                                style={{
+                                  color: copyMsg[o.id].startsWith("Gagal")
+                                    ? "#ef4444"
+                                    : "#15803d",
+                                }}
+                              >
+                                {copyMsg[o.id]}
+                              </span>
+                            )}
+                          </div>
+                        )}
                         {/* View PDF in a new tab */}
                         <a
                           href={o.image_drive_id ? `/api/orders/${o.id}/image` : undefined}
@@ -546,6 +658,22 @@ export default function QueueClient({
       </div>
     </div>
 
+    {/* Off-screen invoice, mounted only while capturing, used as the html-to-image
+        source for "copy invoice as image". Positioned off-screen (not display:none)
+        so layout and fonts compute correctly. */}
+    {copyingId && (() => {
+      const o = orders.find((x) => x.id === copyingId);
+      return o ? (
+        <div
+          style={{ position: "fixed", left: -10000, top: 0, pointerEvents: "none" }}
+          aria-hidden
+        >
+          <div ref={invoiceRef}>
+            <InvoiceDocument invoice={o} />
+          </div>
+        </div>
+      ) : null;
+    })()}
     {/* Print layout — built only while printing, off-screen until the print
         dialog opens. Each A4 page holds a 2×2 grid of A6 cells (4 files). */}
     {printing && (
