@@ -9,6 +9,7 @@ import {
   RotateCcw,
   FileText,
   Link2,
+  Unlink,
   ClipboardPaste,
   Printer,
 } from "lucide-react";
@@ -53,6 +54,9 @@ export default function QueueClient({
   role?: AppRole;
 }) {
   const params = useSearchParams();
+  // Mirror the server-provided `connected` so disconnecting flips the UI
+  // immediately (revealing the Connect banner) without a full page reload.
+  const [conn, setConn] = useState(connected);
   const [orders, setOrders] = useState<Transaction[]>(initialOrders);
   const [tab, setTab] = useState<OrderStatus>("processing");
   const [busyId, setBusyId] = useState<string | null>(null);
@@ -215,11 +219,23 @@ export default function QueueClient({
     }
   }
 
+  async function handleDisconnect() {
+    if (!confirm("Putuskan koneksi Google Drive?")) return;
+    setError("");
+    try {
+      const res = await fetch("/api/google/disconnect", { method: "POST" });
+      if (!res.ok) throw new Error();
+      setConn(false);
+    } catch {
+      setError("Gagal memutuskan koneksi Google Drive.");
+    }
+  }
+
   // Per-row paste: read a PDF or image from the clipboard and upload it straight
   // to this order. On iOS the async Clipboard API only ever yields images (never
   // PDFs) — that's expected and still useful.
   async function pasteForOrder(o: Transaction) {
-    if (!canManagePdf || !connected || !o.id) return;
+    if (!canManagePdf || !conn || !o.id) return;
     clearPasteErr(o.id);
     try {
       if (!navigator.clipboard?.read) throw new Error("unsupported");
@@ -245,7 +261,7 @@ export default function QueueClient({
   // select it, then Ctrl+V.
   useEffect(() => {
     function onPaste(e: ClipboardEvent) {
-      if (!canManagePdf || !selectedId || !connected) return;
+      if (!canManagePdf || !selectedId || !conn) return;
       const file = attachmentFromDataTransfer(e.clipboardData);
       if (!file) return;
       const order = orders.find((o) => o.id === selectedId);
@@ -256,7 +272,7 @@ export default function QueueClient({
     window.addEventListener("paste", onPaste);
     return () => window.removeEventListener("paste", onPaste);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [selectedId, connected, orders]);
+  }, [selectedId, conn, orders]);
 
   return (
     <>
@@ -284,7 +300,7 @@ export default function QueueClient({
         </div>
 
         {/* Google connect banner */}
-        {!connected && (
+        {!conn && (
           <div className="admin-panel admin-rise rounded-2xl p-5 mb-6 flex items-center justify-between gap-4">
             <div>
               <p className="admin-panel-heading flex items-center gap-2">
@@ -297,6 +313,20 @@ export default function QueueClient({
             <a href="/api/google/connect" className="admin-btn whitespace-nowrap">
               <Link2 size={14} /> Connect Google Account
             </a>
+          </div>
+        )}
+        {/* Connected status + disconnect (editors only) */}
+        {conn && canManagePdf && (
+          <div className="admin-panel rounded-2xl px-5 py-3 mb-6 flex items-center justify-between gap-4">
+            <p className="text-sm text-gray-500 flex items-center gap-2">
+              <Link2 size={14} className="shrink-0" /> Google Drive terhubung.
+            </p>
+            <button
+              onClick={handleDisconnect}
+              className="admin-btn-ghost whitespace-nowrap"
+            >
+              <Unlink size={14} /> Putuskan
+            </button>
           </div>
         )}
         {justConnected && (
@@ -327,7 +357,7 @@ export default function QueueClient({
           <div className="mb-4">
             <p className="text-sm text-gray-500 flex items-center gap-2">
               <ClipboardPaste size={15} className="shrink-0" />
-              {!connected ? (
+              {!conn ? (
                 "Hubungkan Google Drive untuk mengunggah file."
               ) : selectedOrder ? (
                 <>
@@ -396,9 +426,9 @@ export default function QueueClient({
                           <div className="flex items-center gap-2">
                             <button
                               onClick={() => pasteForOrder(o)}
-                              disabled={!connected || busyId === o.id}
+                              disabled={!conn || busyId === o.id}
                               className="text-gray-400 hover:text-[#021d47] transition-colors disabled:opacity-40"
-                              title={connected ? "Tempel file dari clipboard" : "Hubungkan Google dulu"}
+                              title={conn ? "Tempel file dari clipboard" : "Hubungkan Google dulu"}
                             >
                               {busyId === o.id ? (
                                 <span className="admin-spinner-xs" />

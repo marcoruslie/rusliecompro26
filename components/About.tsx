@@ -1,7 +1,7 @@
 "use client";
 
-import { useRef } from "react";
-import { motion, useInView } from "framer-motion";
+import { useRef, useState } from "react";
+import { motion, useInView, useMotionValueEvent } from "framer-motion";
 import { Factory, MapPin, Cog, ShieldCheck } from "lucide-react";
 import {
   ScanReveal,
@@ -9,7 +9,8 @@ import {
   CornerBrackets,
   Counter,
 } from "./hud";
-import { useLanguage } from "@/components/LanguageProvider";
+import { useLanguage } from "@/lib/i18n";
+import { useSectionScrub, useScrollStage } from "@/lib/scrollStage";
 
 const STAT_VALUES = [
   { to: 20, suffix: "+" },
@@ -20,41 +21,56 @@ const STAT_VALUES = [
 const FEATURE_ICONS = [Factory, MapPin, Cog, ShieldCheck];
 
 export default function About() {
+  const { t } = useLanguage();
+  const stats = STAT_VALUES.map((s, i) => ({ ...s, label: t.about.stats[i] }));
+  const features = FEATURE_ICONS.map((icon, i) => ({
+    icon,
+    title: t.about.features[i].title,
+    text: t.about.features[i].text,
+  }));
   const ref = useRef<HTMLElement>(null);
-  const inView = useInView(ref, { once: true, margin: "-100px" });
-  const { tr } = useLanguage();
+  const nativeInView = useInView(ref, { once: true, margin: "-100px" });
+  const { stageEnabled } = useScrollStage();
+  const progress = useSectionScrub("about", ref);
+  const [scrubReveal, setScrubReveal] = useState(false);
+  useMotionValueEvent(progress, "change", (v) => {
+    if (v > 0.12) setScrubReveal(true);
+  });
+  const inView = stageEnabled ? scrubReveal : nativeInView;
   return (
     <section
       id="about"
       ref={ref}
-      className="relative bg-carbon py-[120px] px-6 lg:px-10 border-t border-white/[0.06]"
+      className={`relative bg-carbon px-6 lg:px-10 border-t border-white/[0.06] ${
+        stageEnabled ? "h-screen flex items-center py-20" : "py-[120px]"
+      }`}
     >
       <div className="relative z-10 max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-2 gap-16 lg:gap-24 items-start">
         {/* Left */}
         <div>
           <ScanReveal>
-            <SectionIndex index="01" label={tr.about.index} className="mb-6" />
+            <SectionIndex index="01" label={t.about.label} className="mb-6" />
             <h2 className="font-tech font-bold text-[clamp(1.9rem,3.6vw,3rem)] leading-[1.08] text-hud-silver mb-7">
-              {tr.about.titleLine1}
+              {t.about.heading[0]}
               <br />
-              <span className="text-cyan hud-glow-cyan">{tr.about.titleLine2}</span>
+              <span className="text-cyan hud-glow-cyan">{t.about.heading[1]}</span>
             </h2>
           </ScanReveal>
 
           <ScanReveal delay={0.1} scan={false}>
             <p className="font-body text-[1rem] text-hud-silver/55 leading-[1.9] mb-5">
-              {tr.about.paragraph1}
+              {t.about.p1}
             </p>
             <p className="font-body text-[1rem] text-hud-silver/55 leading-[1.9] mb-10">
-              {tr.about.paragraph2}
+              {t.about.p2}
             </p>
           </ScanReveal>
 
           {/* Stats */}
           <div className="grid grid-cols-3 gap-6">
-            {STAT_VALUES.map((s, i) => (
+            {stats.map((s, i) => (
               <motion.div
-                key={i}
+                key={s.label}
                 initial={{ opacity: 0, y: 18 }}
                 animate={inView ? { opacity: 1, y: 0 } : {}}
                 transition={{ delay: 0.3 + i * 0.1 }}
@@ -64,7 +80,7 @@ export default function About() {
                   <Counter to={s.to} suffix={s.suffix} />
                 </div>
                 <div className="font-mono text-[0.62rem] text-hud-mute uppercase tracking-[0.14em] mt-2 leading-tight">
-                  {tr.about.stats[i]}
+                  {s.label}
                 </div>
               </motion.div>
             ))}
@@ -73,8 +89,8 @@ export default function About() {
 
         {/* Right — feature cards */}
         <div className="flex flex-col gap-4">
-          {tr.about.features.map((item, i) => {
-            const Icon = FEATURE_ICONS[i];
+          {features.map((item, i) => {
+            const Icon = item.icon;
             return (
               <motion.div
                 key={item.title}

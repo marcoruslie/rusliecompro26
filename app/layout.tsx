@@ -1,15 +1,21 @@
 import type { Metadata } from "next";
+import { Analytics } from "@vercel/analytics/next";
+import { SpeedInsights } from "@vercel/speed-insights/next";
 import "./globals.css";
+import { SITE_URL, SEO } from "@/lib/seo";
 
 export const metadata: Metadata = {
-  title: "Ruslie Spring — Precision Spring Manufacturing",
+  metadataBase: new URL(SITE_URL),
+  title: {
+    default: SEO.en.title,
+    template: "%s",
+  },
+  description: SEO.en.description,
+  keywords: SEO.en.keywords,
   icons: {
     icon: "/favicon.ico",
     shortcut: "/Logo_Ruslie_Spring.png",
   },
-  description:
-    "Ruslie Spring manufactures world-class springs for automotive, aerospace, electronics, and heavy industry. Engineered to exact specifications since 1999.",
-  keywords: "spring manufacturer, compression springs, extension springs, torsion springs, precision engineering",
 };
 
 export default function RootLayout({
@@ -19,7 +25,11 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en" className="scroll-smooth">
-      <body>{children}</body>
+      <body>
+        {children}
+        <Analytics />
+        <SpeedInsights />
+      </body>
     </html>
   );
 }

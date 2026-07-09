@@ -1,13 +1,15 @@
 "use client";
 
-import { useRef } from "react";
-import { motion, useInView, useScroll, useTransform } from "framer-motion";
+import { useRef, useState } from "react";
+import { motion, useInView, useTransform, useMotionValueEvent } from "framer-motion";
 import { SectionIndex, TiltSpotlightCard, type CardEntrance } from "./hud";
-import { useLanguage } from "@/components/LanguageProvider";
+import { useLanguage } from "@/lib/i18n";
+import { useSectionScrub, useScrollStage } from "@/lib/scrollStage";
 
 const PARALLAX = [30, 54, 20, 44];
 
 // Each spec card animates in a way that mirrors what it measures.
+// `label` is filled from the translation dictionary by index.
 const CAPS: {
   value: string;
   unit: string;
@@ -64,20 +66,27 @@ const CAPS: {
 ];
 
 export default function Capabilities() {
+  const { t } = useLanguage();
+  const caps = CAPS.map((c, i) => ({ ...c, label: t.capabilities.caps[i] }));
+  const industries = t.capabilities.industries;
   const ref = useRef<HTMLElement>(null);
-  const inView = useInView(ref, { once: true, margin: "-80px" });
-  const { scrollYProgress } = useScroll({
-    target: ref,
-    offset: ["start end", "end start"],
+  const { stageEnabled } = useScrollStage();
+  const progress = useSectionScrub("capabilities", ref);
+  const nativeInView = useInView(ref, { once: true, margin: "-80px" });
+  const [scrubReveal, setScrubReveal] = useState(false);
+  useMotionValueEvent(progress, "change", (v) => {
+    if (v > 0.1) setScrubReveal(true);
   });
-  const headerY = useTransform(scrollYProgress, [0, 1], [60, -60]);
-  const { tr } = useLanguage();
+  const inView = stageEnabled ? scrubReveal : nativeInView;
+  const headerY = useTransform(progress, [0, 1], [60, -60]);
 
   return (
     <section
       id="capabilities"
       ref={ref}
-      className="relative bg-graphite py-[120px] px-6 lg:px-10 border-t border-white/[0.06] overflow-hidden"
+      className={`relative bg-graphite px-6 lg:px-10 border-t border-white/[0.06] overflow-hidden ${
+        stageEnabled ? "h-screen flex items-center py-20" : "py-[120px]"
+      }`}
     >
       <div className="max-w-7xl mx-auto">
         <motion.div style={{ y: headerY }} className="mb-12">
@@ -86,26 +95,26 @@ export default function Capabilities() {
             animate={inView ? { opacity: 1, y: 0 } : {}}
             transition={{ duration: 0.6 }}
           >
-            <SectionIndex index="04" label={tr.capabilities.index} className="mb-6" />
+            <SectionIndex index="04" label={t.capabilities.label} className="mb-6" />
             <h2 className="font-tech font-bold text-[clamp(2rem,3.6vw,3rem)] text-hud-silver">
-              {tr.capabilities.titlePrefix}{" "}
-              <span className="text-cyan hud-glow-cyan">{tr.capabilities.titleAccent}</span>
+              {t.capabilities.heading[0]}{" "}
+              <span className="text-cyan hud-glow-cyan">{t.capabilities.heading[1]}</span>
             </h2>
           </motion.div>
         </motion.div>
 
         {/* Instrument readout */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-16">
-          {CAPS.map((c, i) => (
+          {caps.map((c, i) => (
             <TiltSpotlightCard
-              key={i}
+              key={c.label}
               index={i}
               parallax={PARALLAX[i % PARALLAX.length]}
               entrance={c.entrance}
               cardClassName="rounded-xl border border-white/[0.08] bg-carbon px-6 py-7"
             >
               <div className="font-mono text-[0.66rem] tracking-[0.18em] uppercase text-hud-mute mb-4 group-hover:text-cyan/70 transition-colors">
-                {tr.capabilities.caps[i]}
+                {c.label}
               </div>
               <div className="flex items-baseline gap-1.5">
                 <span className="font-tech text-[1.9rem] font-bold text-hud-silver leading-none">
@@ -134,10 +143,10 @@ export default function Capabilities() {
           transition={{ duration: 0.6, delay: 0.4 }}
         >
           <p className="font-mono text-[0.66rem] text-hud-mute tracking-[0.2em] uppercase mb-5">
-            {tr.capabilities.industriesHeading}
+            {t.capabilities.industriesTitle}
           </p>
           <div className="flex flex-wrap gap-2.5">
-            {tr.capabilities.industries.map((ind, i) => (
+            {industries.map((ind, i) => (
               <motion.span
                 key={ind}
                 initial={{ opacity: 0, scale: 0.9 }}

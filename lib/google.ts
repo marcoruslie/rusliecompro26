@@ -1,6 +1,7 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 
 const TOKEN_URL = "https://oauth2.googleapis.com/token";
+const REVOKE_URL = "https://oauth2.googleapis.com/revoke";
 const AUTH_URL = "https://accounts.google.com/o/oauth2/v2/auth";
 const DRIVE_FILES = "https://www.googleapis.com/drive/v3/files";
 const DRIVE_UPLOAD =
@@ -158,6 +159,34 @@ export async function saveTokens(
   const { error } = await supabase
     .from("google_oauth")
     .upsert(payload, { onConflict: "id" });
+  if (error) throw error;
+}
+
+// Revokes a token at Google. Best-effort: a token that's already invalid/expired
+// returns a 400, which we ignore — the goal is just to ensure it's no longer usable.
+export async function revokeToken(token: string): Promise<void> {
+  try {
+    await fetch(REVOKE_URL, {
+      method: "POST",
+      headers: { "Content-Type": "application/x-www-form-urlencoded" },
+      body: new URLSearchParams({ token }),
+    });
+  } catch {
+    // Network failure shouldn't block clearing the local connection.
+  }
+}
+
+// Disconnects the Google account: revokes the refresh token at Google, then clears
+// the stored tokens. `drive_folder_id` is kept so reconnecting with the same Gmail
+// reuses the existing "Ruslie Spring Orders" folder instead of creating a new one.
+export async function disconnect(supabase: SupabaseClient): Promise<void> {
+  const row = await getStoredAuth(supabase);
+  const token = row?.refresh_token ?? row?.access_token;
+  if (token) await revokeToken(token);
+  const { error } = await supabase
+    .from("google_oauth")
+    .update({ refresh_token: null, access_token: null, token_expiry: null })
+    .eq("id", 1);
   if (error) throw error;
 }
 
