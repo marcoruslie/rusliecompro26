@@ -1,5 +1,6 @@
 import type { CSSProperties } from "react";
 import { ShieldCheck } from "lucide-react";
+import InvoiceQrSeal from "@/components/InvoiceQrSeal";
 import type { Transaction } from "@/lib/types";
 
 function rupiah(val: number): string {
@@ -78,15 +79,24 @@ export default function InvoiceDocument({ invoice }: { invoice: Transaction }) {
             +62 851 0481 5151
           </p>
         </div>
-        <div style={{ textAlign: "right", fontSize: 14, lineHeight: 1.8, color: "#4b5563" }}>
-          <div>
-            <span style={{ color: "#9ca3af" }}>Date:</span>{" "}
-            <span style={{ color: "#374151" }}>{invoice.invoice_date}</span>
+        <div style={{ display: "flex", alignItems: "flex-start", gap: 16 }}>
+          <div style={{ textAlign: "right", fontSize: 14, lineHeight: 1.8, color: "#4b5563" }}>
+            <div>
+              <span style={{ color: "#9ca3af" }}>Date:</span>{" "}
+              <span style={{ color: "#374151" }}>{invoice.invoice_date}</span>
+            </div>
+            <div>
+              <span style={{ color: "#9ca3af" }}>Invoice No:</span>{" "}
+              <span style={{ fontWeight: 600, color: "#374151" }}>{invoice.invoice_number}</span>
+            </div>
           </div>
-          <div>
-            <span style={{ color: "#9ca3af" }}>Invoice No:</span>{" "}
-            <span style={{ fontWeight: 600, color: "#374151" }}>{invoice.invoice_number}</span>
-          </div>
+          {/* Same digital-signature QR as the printed invoice (TransactionForm).
+              QRCodeSVG is inline SVG, so html-to-image captures it without any
+              external resource. */}
+          <InvoiceQrSeal
+            invoiceNumber={invoice.invoice_number}
+            transactionId={invoice.id}
+          />
         </div>
       </div>
 
