@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useRef, useEffect } from "react"
+import { useState, useRef } from "react"
 import { motion, AnimatePresence } from "framer-motion"
 import Link from "next/link"
 import {
@@ -219,15 +219,6 @@ export default function CalculatorClient() {
 	const [loading, setLoading] = useState(false)
 	const resultRef = useRef<HTMLDivElement>(null)
 
-	// load Google Fonts
-	useEffect(() => {
-		const link = document.createElement("link")
-		link.href =
-			"https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700&family=DM+Sans:wght@300;400;500;600;700&display=swap"
-		link.rel = "stylesheet"
-		document.head.appendChild(link)
-	}, [])
-
 	function validate(): boolean {
 		const newErrors: Partial<Record<keyof FormState, string>> = {}
 		const required: (keyof FormState)[] = ["wireDiameter", "innerDiameter", "length", "constant"]
@@ -264,7 +255,7 @@ export default function CalculatorClient() {
 	return (
 		<div
 			className="min-h-screen flex flex-col"
-			style={{ fontFamily: "'DM Sans', system-ui, sans-serif", background: "#f5f7fa" }}>
+			style={{ fontFamily: "var(--font-dm-sans)", background: "#f5f7fa" }}>
 			{/* ── NAVBAR ───────────────────────────────────────────────── */}
 			<motion.nav
 				initial={{ y: -70 }}
@@ -284,13 +275,13 @@ export default function CalculatorClient() {
 						style={{
 							background: "#fff",
 							color: "#021d47",
-							fontFamily: "'Playfair Display', serif",
+							fontFamily: "var(--font-playfair)",
 						}}>
 						R
 					</div>
 					<span
 						className="text-white font-bold text-[1.15rem] tracking-wide"
-						style={{ fontFamily: "'Playfair Display', serif" }}>
+						style={{ fontFamily: "var(--font-playfair)" }}>
 						RUSLIE <span className="text-gray-400">SPRING</span>
 					</span>
 				</Link>
@@ -359,7 +350,7 @@ export default function CalculatorClient() {
 						transition={{ delay: 0.3, duration: 0.7 }}
 						className="text-white font-bold leading-[1.1] mb-3"
 						style={{
-							fontFamily: "'Playfair Display', serif",
+							fontFamily: "var(--font-playfair)",
 							fontSize: "clamp(1.9rem, 4vw, 2.9rem)",
 						}}>
 						Spring & Wire
@@ -405,7 +396,7 @@ export default function CalculatorClient() {
 						<div>
 							<p
 								className="font-bold text-[#021d47] text-[0.95rem]"
-								style={{ fontFamily: "'Playfair Display', serif" }}>
+								style={{ fontFamily: "var(--font-playfair)" }}>
 								Input Spesifikasi
 							</p>
 							<p className="text-[0.75rem] text-gray-400">Kolom bertanda * wajib diisi</p>
@@ -449,7 +440,7 @@ export default function CalculatorClient() {
 												border: errors[f.key]
 													? "1.5px solid #f87171"
 													: "1.5px solid rgba(2,29,71,0.1)",
-												fontFamily: "'DM Sans', sans-serif",
+												fontFamily: "var(--font-dm-sans)",
 											}}
 											onFocus={(e) => {
 												e.currentTarget.style.border = "1.5px solid rgba(2,29,71,0.45)"
@@ -514,7 +505,7 @@ export default function CalculatorClient() {
 										? "rgba(2,29,71,0.5)"
 										: "linear-gradient(135deg, #021d47 0%, #0a2a5e 100%)",
 									cursor: loading ? "not-allowed" : "pointer",
-									fontFamily: "'DM Sans', sans-serif",
+									fontFamily: "var(--font-dm-sans)",
 								}}>
 								{loading ? (
 									<>
@@ -546,7 +537,7 @@ export default function CalculatorClient() {
 									style={{
 										background: "#f8fafc",
 										border: "1.5px solid rgba(2,29,71,0.12)",
-										fontFamily: "'DM Sans', sans-serif",
+										fontFamily: "var(--font-dm-sans)",
 										cursor: "pointer",
 									}}>
 									<RotateCcw size={15} />
@@ -581,7 +572,7 @@ export default function CalculatorClient() {
 								<div>
 									<p
 										className="font-bold text-[#021d47] text-[1rem]"
-										style={{ fontFamily: "'Playfair Display', serif" }}>
+										style={{ fontFamily: "var(--font-playfair)" }}>
 										Hasil Perhitungan
 									</p>
 									<p className="text-[0.75rem] text-gray-400">Berdasarkan input yang Anda masukkan</p>
@@ -606,7 +597,7 @@ export default function CalculatorClient() {
 									</div>
 									<div
 										className="text-white text-[2rem] font-bold leading-none"
-										style={{ fontFamily: "'Playfair Display', serif" }}>
+										style={{ fontFamily: "var(--font-playfair)" }}>
 										{result.weight.toFixed(2)}
 									</div>
 									<div className="text-white/40 text-[0.8rem]">gram</div>
@@ -628,7 +619,7 @@ export default function CalculatorClient() {
 									</div>
 									<div
 										className="text-[#021d47] text-[1.55rem] font-bold leading-none"
-										style={{ fontFamily: "'Playfair Display', serif" }}>
+										style={{ fontFamily: "var(--font-playfair)" }}>
 										{rupiah(result.priceSteel)}
 									</div>
 									<div className="text-gray-300 text-[0.75rem]">@ Rp 90 / gram × konstanta</div>
@@ -650,7 +641,7 @@ export default function CalculatorClient() {
 									</div>
 									<div
 										className="text-[#021d47] text-[1.55rem] font-bold leading-none"
-										style={{ fontFamily: "'Playfair Display', serif" }}>
+										style={{ fontFamily: "var(--font-playfair)" }}>
 										{rupiah(result.priceStainless)}
 									</div>
 									<div className="text-gray-300 text-[0.75rem]">@ Rp 180 / gram × konstanta</div>
@@ -723,7 +714,7 @@ export default function CalculatorClient() {
 												<span className="text-[0.83rem] text-gray-400">{row.label}</span>
 												<span
 													className="text-[0.88rem] font-semibold text-[#021d47]"
-													style={{ fontFamily: "'Playfair Display', serif" }}>
+													style={{ fontFamily: "var(--font-playfair)" }}>
 													{row.value}
 												</span>
 											</div>
@@ -744,7 +735,7 @@ export default function CalculatorClient() {
 					© {new Date().getFullYear()}{" "}
 					<span
 						className="text-white/80"
-						style={{ fontFamily: "'Playfair Display', serif" }}>
+						style={{ fontFamily: "var(--font-playfair)" }}>
 						Ruslie Spring
 					</span>
 					. All rights reserved.

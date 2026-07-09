@@ -166,15 +166,6 @@ export default function TransactionForm({
     setTimeout(() => setLinkCopied(false), 2000);
   }
 
-  // fonts
-  useEffect(() => {
-    const link = document.createElement("link");
-    link.href =
-      "https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700;800&family=DM+Sans:wght@300;400;500;600;700&display=swap";
-    link.rel = "stylesheet";
-    document.head.appendChild(link);
-  }, []);
-
   // Auto-generate an invoice number only when creating a new transaction.
   // The 2-letter suffix follows the customer name (falls back to random while blank).
   useEffect(() => {
@@ -389,7 +380,7 @@ export default function TransactionForm({
       {/* ── PAGE SHELL ───────────────────────────────────────────── */}
       <div
         className="admin-shell flex flex-col no-print-bg"
-        style={{ fontFamily: "'DM Sans', sans-serif" }}
+        style={{ fontFamily: "var(--font-dm-sans)" }}
       >
         {/* hero banner */}
         <header
@@ -400,7 +391,7 @@ export default function TransactionForm({
             <p className="text-white/40 text-[0.7rem] tracking-[0.2em] uppercase mb-2">Ruslie Spring Tools</p>
             <h1
               className="text-white text-[clamp(1.7rem,4vw,2.4rem)] font-bold"
-              style={{ fontFamily: "'Playfair Display', serif" }}
+              style={{ fontFamily: "var(--font-playfair)" }}
             >
               {existing ? "Edit" : "New"} <span className="text-gray-300">Transaction</span>
             </h1>
@@ -435,7 +426,7 @@ export default function TransactionForm({
               <div>
                 <h2
                   className="text-[2.5rem] font-extrabold tracking-tight"
-                  style={{ color: "#021d47", fontFamily: "'Playfair Display', serif" }}
+                  style={{ color: "#021d47", fontFamily: "var(--font-playfair)" }}
                 >
                   INVOICE
                 </h2>
@@ -692,7 +683,7 @@ export default function TransactionForm({
                 whileHover={{ scale: 1.03 }}
                 whileTap={{ scale: 0.97 }}
                 className="mt-3 flex items-center gap-1.5 text-white text-sm font-semibold px-5 py-2 rounded-lg transition-colors"
-                style={{ background: "#021d47", cursor: "pointer", fontFamily: "'DM Sans', sans-serif", border: "none" }}
+                style={{ background: "#021d47", cursor: "pointer", fontFamily: "var(--font-dm-sans)", border: "none" }}
               >
                 <Plus size={14} /> Add Item
               </motion.button>
@@ -789,13 +780,13 @@ export default function TransactionForm({
                 <div className="flex justify-between items-center pt-3 pb-1">
                   <span
                     className="font-bold text-base"
-                    style={{ color: "#021d47", fontFamily: "'Playfair Display', serif" }}
+                    style={{ color: "#021d47", fontFamily: "var(--font-playfair)" }}
                   >
                     TOTAL
                   </span>
                   <span
                     className="font-extrabold text-[1.25rem]"
-                    style={{ color: "#021d47", fontFamily: "'Playfair Display', serif" }}
+                    style={{ color: "#021d47", fontFamily: "var(--font-playfair)" }}
                   >
                     Rp{formatCurrency(total)}
                   </span>
@@ -847,7 +838,7 @@ export default function TransactionForm({
                   background: "linear-gradient(135deg, #16a34a 0%, #15803d 100%)",
                   border: "none",
                   cursor: saving ? "default" : "pointer",
-                  fontFamily: "'DM Sans', sans-serif",
+                  fontFamily: "var(--font-dm-sans)",
                 }}
               >
                 {saving ? <span className="admin-btn-spinner" /> : <Save size={16} />}
@@ -864,7 +855,7 @@ export default function TransactionForm({
                     color: linkCopied ? "#fff" : "#021d47",
                     border: `1.5px solid ${linkCopied ? "#16a34a" : "#021d47"}`,
                     cursor: "pointer",
-                    fontFamily: "'DM Sans', sans-serif",
+                    fontFamily: "var(--font-dm-sans)",
                   }}
                   title="Salin link faktur publik (dibuka dengan 4 digit terakhir no. HP)"
                 >
@@ -881,7 +872,7 @@ export default function TransactionForm({
                   background: "linear-gradient(135deg, #021d47 0%, #0a2a5e 100%)",
                   border: "none",
                   cursor: "pointer",
-                  fontFamily: "'DM Sans', sans-serif",
+                  fontFamily: "var(--font-dm-sans)",
                 }}
               >
                 <Printer size={16} />
@@ -897,7 +888,7 @@ export default function TransactionForm({
                   color: "#021d47",
                   border: "1.5px solid #021d47",
                   cursor: "pointer",
-                  fontFamily: "'DM Sans', sans-serif",
+                  fontFamily: "var(--font-dm-sans)",
                 }}
               >
                 <Printer size={16} />
@@ -913,7 +904,7 @@ export default function TransactionForm({
                   color: "#021d47",
                   border: "1.5px solid #021d47",
                   cursor: "pointer",
-                  fontFamily: "'DM Sans', sans-serif",
+                  fontFamily: "var(--font-dm-sans)",
                 }}
               >
                 <Printer size={16} />
@@ -928,7 +919,7 @@ export default function TransactionForm({
                   background: "#f8fafc",
                   border: "1.5px solid rgba(2,29,71,0.12)",
                   cursor: "pointer",
-                  fontFamily: "'DM Sans', sans-serif",
+                  fontFamily: "var(--font-dm-sans)",
                 }}
               >
                 New Transaction
@@ -959,7 +950,7 @@ export default function TransactionForm({
               <div>
                 <h2
                   className="text-[2.3rem] font-extrabold tracking-tight leading-none"
-                  style={{ color: "#021d47", fontFamily: "'Playfair Display', serif" }}
+                  style={{ color: "#021d47", fontFamily: "var(--font-playfair)" }}
                 >
                   SURAT JALAN
                 </h2>
@@ -1414,7 +1405,7 @@ export default function TransactionForm({
             © {new Date().getFullYear()}{" "}
             <span
               className="text-white/75"
-              style={{ fontFamily: "'Playfair Display', serif" }}
+              style={{ fontFamily: "var(--font-playfair)" }}
             >
               Ruslie Spring
             </span>

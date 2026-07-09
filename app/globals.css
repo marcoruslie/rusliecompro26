@@ -1,14 +1,11 @@
-@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400&family=DM+Sans:wght@300;400;500;600;700;800;900&family=IBM+Plex+Mono:wght@400;500;600&family=Chakra+Petch:wght@400;500;600;700&display=swap');
-
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
 :root {
-  --font-playfair: 'Playfair Display', Georgia, serif;
-  --font-dm-sans: 'DM Sans', system-ui, sans-serif;
-  --font-mono: 'IBM Plex Mono', ui-monospace, SFMono-Regular, Menlo, monospace;
-  --font-chakra: 'Chakra Petch', 'DM Sans', system-ui, sans-serif;
+  /* Font CSS variables (--font-playfair, --font-dm-sans, --font-mono,
+     --font-chakra) are defined by next/font on the <html> element in
+     app/layout.tsx and inherited here. */
 
   /* Engineering-HUD palette (marketing site) */
   --graphite: #0a0e14;
@@ -463,4 +460,26 @@ select.admin-input option { background: #ffffff; color: #1e293b; }
     animation-iteration-count: 1 !important;
     transition-duration: 0.001ms !important;
   }
+}
+
+/* ── Status badges (inventory pages) ── */
+.admin-badge-green {
+  display: inline-block;
+  padding: 0.15rem 0.6rem;
+  border-radius: 9999px;
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: #15803d;
+  background: rgba(22, 163, 74, 0.1);
+  border: 1px solid rgba(22, 163, 74, 0.2);
+}
+.admin-badge-gray {
+  display: inline-block;
+  padding: 0.15rem 0.6rem;
+  border-radius: 9999px;
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: #6b7280;
+  background: rgba(107, 114, 128, 0.1);
+  border: 1px solid rgba(107, 114, 128, 0.2);
 }

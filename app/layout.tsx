@@ -1,8 +1,47 @@
 import type { Metadata } from "next";
 import { Analytics } from "@vercel/analytics/next";
 import { SpeedInsights } from "@vercel/speed-insights/next";
+import {
+  Playfair_Display,
+  DM_Sans,
+  IBM_Plex_Mono,
+  Chakra_Petch,
+} from "next/font/google";
 import "./globals.css";
 import { SITE_URL, SEO } from "@/lib/seo";
+
+// Self-hosted via next/font: no render-blocking @import, no third-party round
+// trips, and automatic size-adjust fallbacks to minimize CLS. Each exposes the
+// same CSS variable the styles/components already consume (var(--font-*)).
+const playfair = Playfair_Display({
+  subsets: ["latin"],
+  weight: ["400", "600", "700"],
+  style: ["normal", "italic"],
+  variable: "--font-playfair",
+  display: "swap",
+  fallback: ["Georgia", "serif"],
+});
+const dmSans = DM_Sans({
+  subsets: ["latin"],
+  weight: ["300", "400", "500", "600", "700", "800", "900"],
+  variable: "--font-dm-sans",
+  display: "swap",
+  fallback: ["system-ui", "sans-serif"],
+});
+const ibmPlexMono = IBM_Plex_Mono({
+  subsets: ["latin"],
+  weight: ["400", "500", "600"],
+  variable: "--font-mono",
+  display: "swap",
+  fallback: ["ui-monospace", "SFMono-Regular", "Menlo", "monospace"],
+});
+const chakraPetch = Chakra_Petch({
+  subsets: ["latin"],
+  weight: ["400", "500", "600", "700"],
+  variable: "--font-chakra",
+  display: "swap",
+  fallback: ["system-ui", "sans-serif"],
+});
 
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
@@ -24,7 +63,10 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en" className="scroll-smooth">
+    <html
+      lang="en"
+      className={`scroll-smooth ${playfair.variable} ${dmSans.variable} ${ibmPlexMono.variable} ${chakraPetch.variable}`}
+    >
       <body>
         {children}
         <Analytics />
