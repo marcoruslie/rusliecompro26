@@ -1,13 +1,17 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import Link from "next/link";
 import { Plus, Trash2, Printer, Save, Cable, Link2, Check } from "lucide-react";
 import AdminNav from "@/components/AdminNav";
 import { createClient } from "@/lib/supabase/client";
-import { createTransaction, updateTransaction } from "@/lib/transactions";
+import {
+  createTransaction,
+  updateTransaction,
+  type ItemSuggestion,
+} from "@/lib/transactions";
 import { createCustomer } from "@/lib/customers";
 import type { Customer, Channel, Transaction, Wire, WireType } from "@/lib/types";
 import CustomerSelect from "@/components/CustomerSelect";
@@ -117,12 +121,14 @@ export default function TransactionForm({
   initialWireTypes,
   existing,
   existingInvoiceNumbers,
+  itemSuggestions = [],
 }: {
   initialCustomers: Customer[];
   initialWires: Wire[];
   initialWireTypes?: WireType[];
   existing?: Transaction;
   existingInvoiceNumbers?: string[];
+  itemSuggestions?: ItemSuggestion[];
 }) {
   const router = useRouter();
   const [customers, setCustomers] = useState<Customer[]>(initialCustomers);
@@ -149,6 +155,8 @@ export default function TransactionForm({
 
   const [newItem, setNewItem] = useState<InvoiceItem>({ wire_id: "", name: "", qty: 0, price: 0 });
   const [itemError, setItemError] = useState("");
+  const [showSuggestions, setShowSuggestions] = useState(false);
+  const [activeSuggestion, setActiveSuggestion] = useState(0);
   const [senderName, setSenderName] = useState(existing?.sender_name ?? "");
   const [linkCopied, setLinkCopied] = useState(false);
 
@@ -189,6 +197,32 @@ export default function TransactionForm({
   function handleSelectWire(w: Wire | null) {
     setSelectedWireId(w?.wire_id ?? null);
     setNewItem((p) => ({ ...p, wire_id: w?.wire_id ?? "" }));
+    setItemError("");
+  }
+
+  // Past items whose name contains what's typed (case-insensitive), capped so the
+  // dropdown stays short. Empty query shows nothing.
+  const matchedSuggestions = useMemo(() => {
+    const q = newItem.name.trim().toLowerCase();
+    if (!q) return [];
+    return itemSuggestions
+      .filter((s) => s.name.toLowerCase().includes(q))
+      .slice(0, 8);
+  }, [newItem.name, itemSuggestions]);
+
+  function handleSelectSuggestion(s: ItemSuggestion) {
+    // Only adopt the remembered wire if it still exists, so WireSelect never
+    // shows a dangling id; name and price always fill.
+    const wireStillExists = !!s.wire_id && wires.some((w) => w.wire_id === s.wire_id);
+    setNewItem((p) => ({
+      ...p,
+      name: s.name,
+      price: s.price,
+      wire_id: wireStillExists ? s.wire_id : p.wire_id,
+    }));
+    if (wireStillExists) setSelectedWireId(s.wire_id);
+    setShowSuggestions(false);
+    setActiveSuggestion(0);
     setItemError("");
   }
 
@@ -641,13 +675,75 @@ export default function TransactionForm({
               </div>
 
               <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
-                <input
-                  value={newItem.name}
-                  onChange={(e) => { setNewItem((p) => ({ ...p, name: e.target.value })); setItemError(""); }}
-                  placeholder="Nama item"
-                  className="col-span-2 border border-gray-200 rounded-lg px-3 py-2 text-sm text-gray-700 focus:outline-none focus:border-blue-400 transition-colors"
-                  onKeyDown={(e) => e.key === "Enter" && addItem()}
-                />
+                <div className="col-span-2 relative">
+                  <input
+                    value={newItem.name}
+                    onChange={(e) => {
+                      setNewItem((p) => ({ ...p, name: e.target.value }));
+                      setItemError("");
+                      setShowSuggestions(true);
+                      setActiveSuggestion(0);
+                    }}
+                    onFocus={() => setShowSuggestions(true)}
+                    onBlur={() => setShowSuggestions(false)}
+                    placeholder="Nama item"
+                    autoComplete="off"
+                    className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm text-gray-700 focus:outline-none focus:border-blue-400 transition-colors"
+                    onKeyDown={(e) => {
+                      const open = showSuggestions && matchedSuggestions.length > 0;
+                      if (open && e.key === "ArrowDown") {
+                        e.preventDefault();
+                        setActiveSuggestion((i) => Math.min(i + 1, matchedSuggestions.length - 1));
+                      } else if (open && e.key === "ArrowUp") {
+                        e.preventDefault();
+                        setActiveSuggestion((i) => Math.max(i - 1, 0));
+                      } else if (e.key === "Enter") {
+                        if (open) {
+                          e.preventDefault();
+                          handleSelectSuggestion(matchedSuggestions[activeSuggestion]);
+                        } else {
+                          addItem();
+                        }
+                      } else if (e.key === "Escape") {
+                        setShowSuggestions(false);
+                      }
+                    }}
+                  />
+                  {showSuggestions && matchedSuggestions.length > 0 && (
+                    <ul className="absolute left-0 right-0 top-full mt-1 z-20 max-h-56 overflow-auto rounded-lg border border-gray-200 bg-white shadow-lg">
+                      {matchedSuggestions.map((s, i) => {
+                        const wireName = wires.find((w) => w.wire_id === s.wire_id)?.name;
+                        return (
+                          <li key={s.name}>
+                            <button
+                              type="button"
+                              // Prevent the input's blur from firing before the click,
+                              // which would close the dropdown and swallow the selection.
+                              onMouseDown={(e) => e.preventDefault()}
+                              onMouseEnter={() => setActiveSuggestion(i)}
+                              onClick={() => handleSelectSuggestion(s)}
+                              className={`flex w-full items-center justify-between gap-3 px-3 py-2 text-left text-sm transition-colors ${
+                                i === activeSuggestion ? "bg-blue-50 text-[#021d47]" : "text-gray-700 hover:bg-gray-50"
+                              }`}
+                            >
+                              <span className="min-w-0">
+                                <span className="block truncate">{s.name}</span>
+                                {wireName && (
+                                  <span className="block truncate text-xs text-gray-400">
+                                    {wireName}
+                                  </span>
+                                )}
+                              </span>
+                              <span className="shrink-0 text-xs text-gray-400">
+                                Rp{formatCurrency(s.price)}
+                              </span>
+                            </button>
+                          </li>
+                        );
+                      })}
+                    </ul>
+                  )}
+                </div>
                 <input
                   value={newItem.qty || ""}
                   onChange={(e) => setNewItem((p) => ({ ...p, qty: Number(e.target.value) }))}

@@ -2,7 +2,9 @@
 
 import { useDeferredValue, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
-import type { DashboardTransaction } from "@/lib/transactions";
+import { Trash2 } from "lucide-react";
+import { createClient } from "@/lib/supabase/client";
+import { deleteTransaction, type DashboardTransaction } from "@/lib/transactions";
 import AdminNav from "@/components/AdminNav";
 import RevenueBarChart, { BarDatum } from "@/components/RevenueBarChart";
 
@@ -22,6 +24,10 @@ export default function DashboardClient({
   transactions: DashboardTransaction[];
 }) {
   const router = useRouter();
+  // Seed the prop into local state so deleting a row updates the stats, chart,
+  // and list in place — no full reload — and correctly drops duplicates from totals.
+  const [rows, setRows] = useState<DashboardTransaction[]>(transactions);
+  const [deletingId, setDeletingId] = useState<string | null>(null);
   const [search, setSearch] = useState("");
   const [from, setFrom] = useState("");
   const [to, setTo] = useState("");
@@ -31,23 +37,37 @@ export default function DashboardClient({
 
   const thisMonthKey = new Date().toISOString().slice(0, 7);
 
+  async function handleDelete(id: string) {
+    if (!confirm("Hapus transaksi ini secara permanen?")) return;
+    setDeletingId(id);
+    const supabase = createClient();
+    try {
+      await deleteTransaction(supabase, id);
+      setRows((prev) => prev.filter((t) => t.id !== id));
+    } catch {
+      alert("Gagal menghapus transaksi. Coba lagi.");
+    } finally {
+      setDeletingId(null);
+    }
+  }
+
   const stats = useMemo(() => {
-    const all = transactions.reduce((s, t) => s + (t.total || 0), 0);
-    const month = transactions
+    const all = rows.reduce((s, t) => s + (t.total || 0), 0);
+    const month = rows
       .filter((t) => t.created_at && monthKey(t.created_at) === thisMonthKey)
       .reduce((s, t) => s + (t.total || 0), 0);
-    const online = transactions
+    const online = rows
       .filter((t) => t.channel === "online")
       .reduce((s, t) => s + (t.total || 0), 0);
-    const direct = transactions
+    const direct = rows
       .filter((t) => t.channel === "direct")
       .reduce((s, t) => s + (t.total || 0), 0);
-    return { all, month, online, direct, count: transactions.length };
-  }, [transactions, thisMonthKey]);
+    return { all, month, online, direct, count: rows.length };
+  }, [rows, thisMonthKey]);
 
   const chartData: BarDatum[] = useMemo(() => {
     const byMonth = new Map<string, number>();
-    for (const t of transactions) {
+    for (const t of rows) {
       if (!t.created_at) continue;
       const k = monthKey(t.created_at);
       byMonth.set(k, (byMonth.get(k) ?? 0) + (t.total || 0));
@@ -56,11 +76,11 @@ export default function DashboardClient({
       .sort((a, b) => a[0].localeCompare(b[0]))
       .slice(-6)
       .map(([label, value]) => ({ label: label.slice(2), value }));
-  }, [transactions]);
+  }, [rows]);
 
   const filtered = useMemo(() => {
     const q = deferredSearch.toLowerCase();
-    return transactions.filter((t) => {
+    return rows.filter((t) => {
       const matchesSearch =
         !q ||
         t.customer?.name?.toLowerCase().includes(q) ||
@@ -149,12 +169,13 @@ export default function DashboardClient({
                 <th>Customer</th>
                 <th>Kategori</th>
                 <th className="!text-right">Total</th>
+                <th></th>
               </tr>
             </thead>
             <tbody>
               {filtered.length === 0 ? (
                 <tr>
-                  <td colSpan={5} className="!text-center py-10 text-gray-400 italic">
+                  <td colSpan={6} className="!text-center py-10 text-gray-400 italic">
                     Tidak ada transaksi.
                   </td>
                 </tr>
@@ -174,6 +195,21 @@ export default function DashboardClient({
                       {t.channel === "online" ? "Online Shop" : "Direct"}
                     </td>
                     <td className="!text-right font-semibold text-[#021d47]">{rupiah(t.total)}</td>
+                    <td className="!text-right" onClick={(e) => e.stopPropagation()}>
+                      <button
+                        onClick={() => handleDelete(t.id)}
+                        disabled={deletingId === t.id}
+                        className="text-red-400 hover:text-red-600 transition-colors disabled:opacity-60"
+                        title="Hapus transaksi"
+                        aria-label="Hapus transaksi"
+                      >
+                        {deletingId === t.id ? (
+                          <span className="admin-spinner-xs" />
+                        ) : (
+                          <Trash2 size={15} />
+                        )}
+                      </button>
+                    </td>
                   </tr>
                 ))
               )}

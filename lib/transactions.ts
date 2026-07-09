@@ -1,6 +1,34 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { Transaction, Channel } from "./types";
 
+export interface ItemSuggestion {
+  name: string;
+  wire_id: string | null;
+  price: number;
+}
+
+// Distinct item suggestions for the transaction form's name autocomplete.
+// `transactions` MUST be newest-first (as listTransactions returns them): we keep
+// the first occurrence of each name, so its price and wire come from the most
+// recent transaction that used that item.
+export function buildItemSuggestions(
+  transactions: Transaction[]
+): ItemSuggestion[] {
+  const seen = new Set<string>();
+  const suggestions: ItemSuggestion[] = [];
+  for (const txn of transactions) {
+    for (const item of txn.items ?? []) {
+      const name = item.name?.trim();
+      if (!name) continue;
+      const key = name.toLowerCase();
+      if (seen.has(key)) continue;
+      seen.add(key);
+      suggestions.push({ name, wire_id: item.wire_id ?? null, price: item.price });
+    }
+  }
+  return suggestions;
+}
+
 export async function listTransactions(
   supabase: SupabaseClient
 ): Promise<Transaction[]> {
