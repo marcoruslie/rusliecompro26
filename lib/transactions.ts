@@ -1,5 +1,5 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
-import type { Transaction, Channel } from "./types";
+import type { Transaction, Channel, TransactionItem } from "./types";
 
 export interface ItemSuggestion {
   name: string;
@@ -83,6 +83,35 @@ export async function listDashboardTransactions(
     .order("created_at", { ascending: false });
   if (error) throw error;
   return (data ?? []) as DashboardTransaction[];
+}
+
+// The dashboard invoice list omits `items` (the bulk of each row) to stay lean,
+// then fetches a single invoice's line items on demand when a row is expanded.
+// Selecting just the amount-bearing columns keeps that per-expand request small.
+export interface InvoiceItemsDetail {
+  items: TransactionItem[];
+  shipping: number;
+  subtotal: number;
+  total: number;
+}
+
+export async function getInvoiceItems(
+  supabase: SupabaseClient,
+  id: string
+): Promise<InvoiceItemsDetail> {
+  const { data, error } = await supabase
+    .from("transactions")
+    .select("items, shipping, subtotal, total")
+    .eq("id", id)
+    .single();
+  if (error) throw error;
+  const row = data as Partial<InvoiceItemsDetail>;
+  return {
+    items: row.items ?? [],
+    shipping: row.shipping ?? 0,
+    subtotal: row.subtotal ?? 0,
+    total: row.total ?? 0,
+  };
 }
 
 export async function getTransaction(

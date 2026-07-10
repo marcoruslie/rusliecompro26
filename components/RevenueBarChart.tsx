@@ -18,6 +18,10 @@ export default function RevenueBarChart({ data }: { data: BarDatum[] }) {
     );
   }
   const max = Math.max(...data.map((d) => d.value), 1);
+  // Tallest bar in px. Bar heights are computed in pixels (not %) because a
+  // percentage height collapses here: the parent column isn't stretched
+  // (the row uses items-end), so it has no definite height to resolve against.
+  const MAX_BAR = 150;
   return (
     <div className="flex items-end gap-3 h-48 w-full overflow-x-auto pt-6">
       {data.map((d) => (
@@ -26,8 +30,7 @@ export default function RevenueBarChart({ data }: { data: BarDatum[] }) {
           <div
             className="w-full rounded-t-md transition-all duration-300 group-hover:brightness-110"
             style={{
-              height: `${(d.value / max) * 100}%`,
-              minHeight: d.value > 0 ? "4px" : "0",
+              height: `${d.value > 0 ? Math.max((d.value / max) * MAX_BAR, 4) : 0}px`,
               background: "linear-gradient(180deg, #0b2255 0%, #021d47 100%)",
             }}
             title={`${d.label}: ${d.value}`}

@@ -1,14 +1,26 @@
 "use client";
 
 import { useDeferredValue, useEffect, useMemo, useState } from "react";
-import { useRouter } from "next/navigation";
-import { Trash2 } from "lucide-react";
+import Link from "next/link";
+import { ChevronDown, Trash2 } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
-import { deleteTransaction, type DashboardTransaction } from "@/lib/transactions";
+import {
+  deleteTransaction,
+  getInvoiceItems,
+  type DashboardTransaction,
+  type InvoiceItemsDetail,
+} from "@/lib/transactions";
 import AdminNav from "@/components/AdminNav";
 import RevenueBarChart, { BarDatum } from "@/components/RevenueBarChart";
 
 const PAGE_SIZE = 50;
+
+// Per-invoice item detail is fetched lazily when a row is expanded. Cache each
+// result by id so re-expanding is instant; the sentinel states drive the UI.
+type DetailState =
+  | { status: "loading" }
+  | { status: "error" }
+  | { status: "ready"; data: InvoiceItemsDetail };
 
 function rupiah(val: number): string {
   return "Rp" + (val || 0).toLocaleString("id-ID");
@@ -25,7 +37,6 @@ export default function DashboardClient({
 }: {
   transactions: DashboardTransaction[];
 }) {
-  const router = useRouter();
   // Seed the prop into local state so deleting a row updates the stats, chart,
   // and list in place — no full reload — and correctly drops duplicates from totals.
   const [rows, setRows] = useState<DashboardTransaction[]>(transactions);
@@ -33,6 +44,9 @@ export default function DashboardClient({
   const [search, setSearch] = useState("");
   const [from, setFrom] = useState("");
   const [to, setTo] = useState("");
+  // Which invoice's items are expanded, plus a per-id cache of the lazy fetch.
+  const [expandedId, setExpandedId] = useState<string | null>(null);
+  const [details, setDetails] = useState<Record<string, DetailState>>({});
   // Keep the input responsive: the expensive table filter reads the deferred
   // value so typing never blocks on re-filtering the full list (better INP).
   const deferredSearch = useDeferredValue(search);
@@ -51,6 +65,27 @@ export default function DashboardClient({
     } finally {
       setDeletingId(null);
     }
+  }
+
+  async function fetchDetail(id: string) {
+    setDetails((prev) => ({ ...prev, [id]: { status: "loading" } }));
+    const supabase = createClient();
+    try {
+      const data = await getInvoiceItems(supabase, id);
+      setDetails((prev) => ({ ...prev, [id]: { status: "ready", data } }));
+    } catch {
+      setDetails((prev) => ({ ...prev, [id]: { status: "error" } }));
+    }
+  }
+
+  function toggleExpand(id: string) {
+    if (expandedId === id) {
+      setExpandedId(null);
+      return;
+    }
+    setExpandedId(id);
+    // Fetch once per id; a prior error stays cached until an explicit retry.
+    if (!details[id]) fetchDetail(id);
   }
 
   const stats = useMemo(() => {
@@ -171,47 +206,73 @@ export default function DashboardClient({
           </div>
         </div>
 
-        {/* Transaction list */}
-        <div className="admin-panel rounded-2xl overflow-x-auto">
-          <table className="admin-table">
-            <thead>
-              <tr>
-                <th>Tanggal</th>
-                <th>No. Invoice</th>
-                <th>Customer</th>
-                <th>Kategori</th>
-                <th className="!text-right">Total</th>
-                <th></th>
-              </tr>
-            </thead>
-            <tbody>
-              {filtered.length === 0 ? (
-                <tr>
-                  <td colSpan={6} className="!text-center py-10 text-gray-400 italic">
-                    Tidak ada transaksi.
-                  </td>
-                </tr>
-              ) : (
-                pageRows.map((t) => (
-                  <tr
-                    key={t.id}
-                    onClick={() => router.push(`/admin/transactions/${t.id}`)}
-                    className="cursor-pointer"
-                  >
-                    <td className="text-gray-500">
-                      {t.created_at ? t.created_at.slice(0, 10) : t.invoice_date}
-                    </td>
-                    <td className="font-medium text-gray-800">{t.invoice_number}</td>
-                    <td className="text-gray-700">{t.customer?.name}</td>
-                    <td className="capitalize text-gray-500">
-                      {t.channel === "online" ? "Online Shop" : "Direct"}
-                    </td>
-                    <td className="!text-right font-semibold text-[#021d47]">{rupiah(t.total)}</td>
-                    <td className="!text-right" onClick={(e) => e.stopPropagation()}>
+        {/* Invoice list */}
+        <div className="flex items-center justify-between mb-3">
+          <p className="admin-panel-heading">Daftar Invoice</p>
+          <span className="text-xs text-gray-400">{filtered.length} invoice</span>
+        </div>
+        <div className="admin-panel rounded-2xl overflow-hidden">
+          {filtered.length === 0 ? (
+            <p className="text-center py-12 text-gray-400 italic">Tidak ada transaksi.</p>
+          ) : (
+            <ul className="divide-y divide-gray-100">
+              {pageRows.map((t) => {
+                const open = expandedId === t.id;
+                const online = t.channel === "online";
+                const detail = details[t.id];
+                return (
+                  <li key={t.id}>
+                    {/* Card header — click toggles the item detail */}
+                    <div
+                      onClick={() => toggleExpand(t.id)}
+                      className="flex items-center gap-3 px-4 py-3 cursor-pointer hover:bg-gray-50 transition-colors"
+                    >
+                      <ChevronDown
+                        size={16}
+                        className={`shrink-0 text-gray-400 transition-transform ${
+                          open ? "" : "-rotate-90"
+                        }`}
+                      />
+                      <div className="min-w-0 flex-1">
+                        <div className="flex items-center gap-2 flex-wrap">
+                          <Link
+                            href={`/admin/transactions/${t.id}`}
+                            onClick={(e) => e.stopPropagation()}
+                            className="font-semibold text-[#021d47] hover:underline"
+                            title="Buka invoice"
+                          >
+                            {t.invoice_number}
+                          </Link>
+                          <span
+                            className={`inline-flex items-center gap-1.5 rounded-full px-2 py-0.5 text-[0.65rem] font-medium ${
+                              online
+                                ? "bg-blue-50 text-blue-700"
+                                : "bg-slate-100 text-slate-600"
+                            }`}
+                          >
+                            <span
+                              className={`w-1.5 h-1.5 rounded-full ${
+                                online ? "bg-blue-500" : "bg-slate-400"
+                              }`}
+                            />
+                            {online ? "Online Shop" : "Direct"}
+                          </span>
+                        </div>
+                        <p className="text-xs text-gray-500 mt-0.5 truncate">
+                          {(t.created_at ? t.created_at.slice(0, 10) : t.invoice_date)} ·{" "}
+                          {t.customer?.name}
+                        </p>
+                      </div>
+                      <span className="font-semibold text-[#021d47] whitespace-nowrap">
+                        {rupiah(t.total)}
+                      </span>
                       <button
-                        onClick={() => handleDelete(t.id)}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleDelete(t.id);
+                        }}
                         disabled={deletingId === t.id}
-                        className="text-red-400 hover:text-red-600 transition-colors disabled:opacity-60"
+                        className="shrink-0 text-red-400 hover:text-red-600 transition-colors disabled:opacity-60"
                         title="Hapus transaksi"
                         aria-label="Hapus transaksi"
                       >
@@ -221,12 +282,74 @@ export default function DashboardClient({
                           <Trash2 size={15} />
                         )}
                       </button>
-                    </td>
-                  </tr>
-                ))
-              )}
-            </tbody>
-          </table>
+                    </div>
+
+                    {/* Expanded item detail (lazy-loaded) */}
+                    {open && (
+                      <div className="px-4 pb-4 pl-11 bg-gray-50/60">
+                        {(!detail || detail.status === "loading") && (
+                          <div className="flex items-center gap-2 py-3 text-sm text-gray-400">
+                            <span className="admin-spinner-xs" /> Memuat item…
+                          </div>
+                        )}
+                        {detail?.status === "error" && (
+                          <div className="py-3 text-sm text-red-500">
+                            Gagal memuat item.{" "}
+                            <button
+                              onClick={() => fetchDetail(t.id)}
+                              className="underline font-medium"
+                            >
+                              Coba lagi
+                            </button>
+                          </div>
+                        )}
+                        {detail?.status === "ready" && (
+                          <div className="pt-3">
+                            {detail.data.items.length === 0 ? (
+                              <p className="text-sm text-gray-400 italic">Tidak ada item.</p>
+                            ) : (
+                              <div className="space-y-1.5">
+                                {detail.data.items.map((it, i) => (
+                                  <div
+                                    key={i}
+                                    className="flex items-baseline gap-2 text-sm"
+                                  >
+                                    <span className="flex-1 text-gray-700 min-w-0 truncate">
+                                      {it.name}
+                                    </span>
+                                    <span className="text-gray-400 tabular-nums whitespace-nowrap">
+                                      {it.qty} × {rupiah(it.price)}
+                                    </span>
+                                    <span className="w-28 text-right font-medium text-gray-700 tabular-nums">
+                                      {rupiah(it.qty * it.price)}
+                                    </span>
+                                  </div>
+                                ))}
+                              </div>
+                            )}
+                            <div className="mt-2 pt-2 border-t border-gray-200 text-sm space-y-1">
+                              {detail.data.shipping > 0 && (
+                                <div className="flex justify-between text-gray-500">
+                                  <span>Ongkir</span>
+                                  <span className="tabular-nums">
+                                    {rupiah(detail.data.shipping)}
+                                  </span>
+                                </div>
+                              )}
+                              <div className="flex justify-between font-semibold text-[#021d47]">
+                                <span>Total</span>
+                                <span className="tabular-nums">{rupiah(detail.data.total)}</span>
+                              </div>
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    )}
+                  </li>
+                );
+              })}
+            </ul>
+          )}
           {filtered.length > PAGE_SIZE && (
             <div className="flex items-center justify-between gap-3 px-4 py-3 border-t border-gray-100">
               <span className="text-xs text-gray-400">
