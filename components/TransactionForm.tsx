@@ -244,8 +244,13 @@ export default function TransactionForm({
   function handleSelectCustomer(c: Customer | null) {
     setSelectedCustomerId(c?.id ?? null);
     if (c) {
+      // Marketplace customers (e.g. "Shopee Customer" / "Tokopedia Customer")
+      // are online sales, so default the channel from the picked customer's name.
+      const name = (c.name ?? "").toLowerCase();
+      const isOnline = name.includes("shopee") || name.includes("tokopedia");
       setInvoice((p) => ({
         ...p,
+        channel: isOnline ? "online" : "direct",
         customer: {
           name: c.name ?? "",
           address: c.address ?? "",
