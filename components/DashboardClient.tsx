@@ -2,7 +2,7 @@
 
 import { useDeferredValue, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
-import { ChevronDown, Trash2 } from "lucide-react";
+import { ChevronDown, SquarePen, Trash2 } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import {
   deleteTransaction,
@@ -343,6 +343,16 @@ export default function DashboardClient({
                             </div>
                           </div>
                         )}
+
+                        {/* Always available while expanded — open the full invoice to view/edit */}
+                        <div className="mt-3 flex justify-end">
+                          <Link
+                            href={`/admin/transactions/${t.id}`}
+                            className="inline-flex items-center gap-1.5 rounded-lg bg-[#021d47] px-3 py-1.5 text-xs font-semibold text-white hover:bg-[#0b2255] transition-colors"
+                          >
+                            <SquarePen size={13} /> Buka / Edit Invoice
+                          </Link>
+                        </div>
                       </div>
                     )}
                   </li>
