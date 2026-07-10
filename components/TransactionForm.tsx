@@ -637,7 +637,7 @@ export default function TransactionForm({
 
             {/* ── ADD ITEM FORM (no-print) ── */}
             <div
-              className="add-item-section no-print relative z-10 mb-6 rounded-xl p-5"
+              className="add-item-section no-print relative z-20 mb-6 rounded-xl p-5"
               style={{ background: "#f8fafc", border: "1.5px dashed rgba(2,29,71,0.14)" }}
             >
               <div className="flex items-center justify-between mb-3">
