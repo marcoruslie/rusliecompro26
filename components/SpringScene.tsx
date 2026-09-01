@@ -83,10 +83,10 @@ function Coil({
     [coilGeos, compGeos]
   );
 
-  const baseEmissive = useMemo(() => new THREE.Color("#0e1217"), []);
-  const hotEmissive = useMemo(() => new THREE.Color("#ff4d18"), []);
-  const baseColor = useMemo(() => new THREE.Color("#4b515b"), []);
-  const hotColor = useMemo(() => new THREE.Color("#b3361a"), []);
+  const baseEmissive = useMemo(() => new THREE.Color("#0b0d10"), []);
+  const hotEmissive = useMemo(() => new THREE.Color("#ff5a14"), []);
+  const baseColor = useMemo(() => new THREE.Color("#b6bec9"), []);
+  const hotColor = useMemo(() => new THREE.Color("#6d2409"), []);
   const tmp = useMemo(() => new THREE.Color(), []);
 
   useFrame((state) => {
@@ -116,8 +116,8 @@ function Coil({
       : smoothstep(0.5, 0.6, p) * (1 - smoothstep(0.62, 0.74, p));
     if (mat.current) {
       mat.current.emissive.copy(tmp.copy(baseEmissive).lerp(hotEmissive, heat));
-      mat.current.emissiveIntensity = 0.35 + heat * 1.9;
-      mat.current.color.copy(tmp.copy(baseColor).lerp(hotColor, heat * 0.6));
+      mat.current.emissiveIntensity = 0.12 + heat * 1.7;
+      mat.current.color.copy(tmp.copy(baseColor).lerp(hotColor, heat));
     }
 
     // Orientation: gentle 3D read + a forming spin while it coils.
@@ -134,11 +134,11 @@ function Coil({
     <mesh ref={mesh} geometry={coilGeos[0]}>
       <meshStandardMaterial
         ref={mat}
-        color="#4b515b"
-        metalness={0.9}
-        roughness={0.42}
-        emissive="#0e1217"
-        emissiveIntensity={0.35}
+        color="#b6bec9"
+        metalness={0.25}
+        roughness={0.38}
+        emissive="#0b0d10"
+        emissiveIntensity={0.12}
       />
     </mesh>
   );
@@ -160,11 +160,11 @@ export default function SpringScene({
       dpr={[1, 1.8]}
       style={{ width: "100%", height: "100%" }}
     >
-      <ambientLight intensity={0.45} />
-      <directionalLight position={[4, 6, 5]} intensity={3} />
-      <pointLight position={[3, 2, 4]} color="#ffffff" intensity={28} distance={32} />
-      {/* faint cyan rim — brand edge accent */}
-      <pointLight position={[-3, 1, -6]} color="#22d3ee" intensity={16} distance={26} />
+      <ambientLight intensity={1.15} />
+      <directionalLight position={[4, 6, 5]} intensity={3.4} />
+      <pointLight position={[3, 2, 4]} color="#ffffff" intensity={26} distance={32} />
+      {/* brand-navy rim, just enough to separate the coil from the ground */}
+      <pointLight position={[-3, 1, -6]} color="#3b5b96" intensity={14} distance={26} />
       <Coil progress={progress} reduce={reduce} />
     </Canvas>
   );

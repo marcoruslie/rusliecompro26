@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { Analytics } from "@vercel/analytics/next";
 import { SpeedInsights } from "@vercel/speed-insights/next";
-import { Playfair_Display, DM_Sans, IBM_Plex_Mono } from "next/font/google";
+import { Archivo, Playfair_Display, DM_Sans, IBM_Plex_Mono } from "next/font/google";
 import "./globals.css";
 import { SITE_URL, SEO } from "@/lib/seo";
 
@@ -11,6 +11,15 @@ import { SITE_URL, SEO } from "@/lib/seo";
 // Weights/styles are trimmed to what the codebase actually uses (audited via
 // grep for font-* classes and inline fontWeight) — every extra variant here is
 // another preloaded woff2 on every page.
+// Marketing display face — a grotesque drawn for high-performance printing.
+const archivo = Archivo({
+  subsets: ["latin"],
+  weight: ["500", "600", "700", "800"],
+  variable: "--font-archivo",
+  display: "swap",
+  fallback: ["system-ui", "sans-serif"],
+});
+// Playfair is admin/invoice only (.admin-title, invoice documents).
 const playfair = Playfair_Display({
   subsets: ["latin"],
   weight: ["400", "600", "700"],
@@ -32,8 +41,6 @@ const ibmPlexMono = IBM_Plex_Mono({
   display: "swap",
   fallback: ["ui-monospace", "SFMono-Regular", "Menlo", "monospace"],
 });
-// Chakra Petch (--font-chakra / font-tech) is marketing-only, so it's loaded in
-// app/[locale]/page.tsx instead of here — admin pages shouldn't preload it.
 
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
@@ -57,7 +64,7 @@ export default function RootLayout({
   return (
     <html
       lang="en"
-      className={`scroll-smooth ${playfair.variable} ${dmSans.variable} ${ibmPlexMono.variable}`}
+      className={`scroll-smooth ${archivo.variable} ${playfair.variable} ${dmSans.variable} ${ibmPlexMono.variable}`}
     >
       <body>
         {children}

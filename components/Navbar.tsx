@@ -9,13 +9,13 @@ import { useLanguage } from "@/lib/i18n";
 import LanguageSwitcher from "./LanguageSwitcher";
 import { useScrollStage } from "@/lib/scrollStage";
 
-const NAV_META = [
-  { href: "#about", n: "01" },
-  { href: "#process", n: "02" },
-  { href: "#products", n: "03" },
-  { href: "#capabilities", n: "04" },
-  { href: "#gallery", n: "05" },
-  { href: "#contact", n: "06" },
+const NAV_HREFS = [
+  "#about",
+  "#process",
+  "#products",
+  "#capabilities",
+  "#gallery",
+  "#contact",
 ];
 
 export default function Navbar() {
@@ -31,8 +31,8 @@ export default function Navbar() {
       goTo(i);
     }
   };
-  const navLinks = NAV_META.map((meta, i) => ({
-    ...meta,
+  const navLinks = NAV_HREFS.map((href, i) => ({
+    href,
     label: t.nav.links[i],
   }));
   const [scrolled, setScrolled] = useState(false);
@@ -54,18 +54,15 @@ export default function Navbar() {
 
   return (
     <>
-      <motion.nav
-        initial={{ y: -90 }}
-        animate={{ y: 0 }}
-        transition={{ duration: 0.7, ease: "easeOut" }}
-        className={`fixed top-0 left-0 right-0 z-50 transition-colors duration-500 ${
+      <nav
+        className={`fixed left-0 right-0 top-0 z-50 transition-colors duration-300 ${
           scrolled
-            ? "bg-graphite/85 backdrop-blur-xl border-b border-white/[0.06]"
-            : "bg-transparent border-b border-transparent"
+            ? "border-b border-rule bg-ground/90 backdrop-blur-md"
+            : "border-b border-transparent bg-transparent"
         }`}
       >
-        <div className="max-w-7xl mx-auto px-6 lg:px-10 flex items-center justify-between h-[68px]">
-          <Link href="/" className="flex items-center gap-3 group">
+        <div className="mx-auto flex h-[68px] max-w-7xl items-center justify-between px-6 lg:px-10">
+          <Link href="/" className="flex items-center gap-3">
             {/* next/image serves a ~96px WebP instead of the 128KB 1024px source PNG */}
             <Image
               src="/Logo_Ruslie_Spring.png"
@@ -78,35 +75,32 @@ export default function Navbar() {
           </Link>
 
           {/* Desktop nav */}
-          <div className="hidden md:flex items-center gap-7">
+          <div className="hidden items-center gap-8 md:flex">
             {navLinks.map((link) => (
               <a
                 key={link.href}
                 href={link.href}
                 onClick={onNavClick(link.href)}
-                className="group relative font-mono text-[0.74rem] tracking-[0.18em] uppercase text-hud-silver/55 hover:text-cyan transition-colors duration-200"
+                className="group relative font-mono text-[0.72rem] uppercase tracking-[0.16em] text-ink-soft transition-colors duration-200 hover:text-navy"
               >
-                <span className="text-cyan/40 mr-1.5 text-[0.62rem] align-top">
-                  {link.n}
-                </span>
                 {link.label}
-                <span className="absolute -bottom-1.5 left-0 h-px w-0 bg-cyan transition-all duration-300 group-hover:w-full" />
+                <span className="absolute -bottom-1.5 left-0 h-px w-0 bg-navy transition-all duration-300 group-hover:w-full" />
               </a>
             ))}
             <LanguageSwitcher />
             <a
               href="#contact"
               onClick={onNavClick("#contact")}
-              className="relative font-mono text-[0.74rem] font-medium tracking-[0.16em] uppercase text-graphite bg-cyan px-4 py-2 rounded hover:shadow-cyan-glow transition-shadow duration-300"
+              className="rounded-plate bg-navy px-4 py-2 font-mono text-[0.72rem] font-medium uppercase tracking-[0.16em] text-white transition-colors duration-200 hover:bg-navy-hover"
             >
               {t.nav.getQuote}
             </a>
           </div>
 
-          <div className="md:hidden flex items-center gap-4">
+          <div className="flex items-center gap-4 md:hidden">
             <LanguageSwitcher />
             <button
-              className="text-hud-silver p-1"
+              className="p-1 text-ink"
               onClick={() => setMenuOpen(!menuOpen)}
               aria-label="Toggle menu"
             >
@@ -119,20 +113,20 @@ export default function Navbar() {
         <motion.div
           aria-hidden
           style={{ scaleX: barProgress }}
-          className="origin-left h-px w-full bg-gradient-to-r from-cyan via-cyan/70 to-transparent"
+          className="h-px w-full origin-left bg-navy"
         />
-      </motion.nav>
+      </nav>
 
       <AnimatePresence>
         {menuOpen && (
           <motion.div
-            initial={{ opacity: 0, y: -20 }}
+            initial={{ opacity: 0, y: -12 }}
             animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -20 }}
-            transition={{ duration: 0.25 }}
-            className="fixed top-[69px] left-0 right-0 z-40 bg-graphite/97 backdrop-blur-xl border-b border-white/10 md:hidden"
+            exit={{ opacity: 0, y: -12 }}
+            transition={{ duration: 0.22 }}
+            className="fixed left-0 right-0 top-[69px] z-40 border-b border-rule bg-ground md:hidden"
           >
-            <div className="flex flex-col px-6 py-6 gap-5">
+            <div className="flex flex-col gap-5 px-6 py-6">
               {navLinks.map((link) => (
                 <a
                   key={link.href}
@@ -141,9 +135,8 @@ export default function Navbar() {
                     onNavClick(link.href)(e);
                     setMenuOpen(false);
                   }}
-                  className="font-mono text-sm tracking-[0.16em] uppercase text-hud-silver/70 hover:text-cyan transition-colors"
+                  className="font-mono text-sm uppercase tracking-[0.16em] text-ink-soft transition-colors hover:text-navy"
                 >
-                  <span className="text-cyan/40 mr-2 text-xs">{link.n}</span>
                   {link.label}
                 </a>
               ))}
@@ -153,7 +146,7 @@ export default function Navbar() {
                   onNavClick("#contact")(e);
                   setMenuOpen(false);
                 }}
-                className="bg-cyan text-graphite text-center py-3 rounded font-mono font-medium text-sm tracking-[0.16em] uppercase mt-2"
+                className="mt-2 rounded-plate bg-navy py-3 text-center font-mono text-sm font-medium uppercase tracking-[0.16em] text-white"
               >
                 {t.nav.getQuote}
               </a>

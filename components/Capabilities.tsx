@@ -1,68 +1,18 @@
 "use client";
 
 import { useRef, useState } from "react";
-import { motion, useInView, useTransform, useMotionValueEvent } from "framer-motion";
-import { SectionIndex, TiltSpotlightCard, type CardEntrance } from "./hud";
+import { motion, useInView, useMotionValueEvent } from "framer-motion";
+import { Depth, SectionLabel, depthGrid } from "./industrial";
 import { useLanguage } from "@/lib/i18n";
 import { useSectionScrub, useScrollStage } from "@/lib/scrollStage";
 
-const PARALLAX = [30, 54, 20, 44];
-
-// Each spec card animates in a way that mirrors what it measures.
+// The four numbers that decide whether a part is quotable here.
 // `label` is filled from the translation dictionary by index.
-const CAPS: {
-  value: string;
-  unit: string;
-  entrance: CardEntrance;
-}[] = [
-  {
-    value: "0.1 – 50",
-    unit: "mm",
-    // Caliper close: clamps shut horizontally from the left.
-    entrance: {
-      origin: "left center",
-      initial: { opacity: 0, scaleX: 0.12, x: -46 },
-      animate: { opacity: [0, 1, 1], scaleX: [0.12, 1.06, 1], x: [-46, 4, 0] },
-      transition: { duration: 0.85, ease: [0.22, 1, 0.36, 1] },
-    },
-  },
-  {
-    value: "1 – 500",
-    unit: "mm",
-    // Aperture: irises open from the center with a slight twist.
-    entrance: {
-      origin: "center",
-      initial: { opacity: 0, scale: 0.32, rotate: -10 },
-      animate: { opacity: [0, 1, 1], scale: [0.32, 1.07, 1], rotate: [-10, 3, 0] },
-      transition: { duration: 0.9, ease: [0.22, 1, 0.36, 1] },
-    },
-  },
-  {
-    value: "≤ 1500",
-    unit: "mm",
-    // Elongate: extends upward like a measured length.
-    entrance: {
-      origin: "bottom center",
-      initial: { opacity: 0, scaleY: 0.06, y: 32 },
-      animate: { opacity: [0, 1, 1], scaleY: [0.06, 1.05, 1], y: [32, -4, 0] },
-      transition: { duration: 0.95, ease: [0.22, 1, 0.36, 1] },
-    },
-  },
-  {
-    value: "± 0.01",
-    unit: "mm",
-    // Precision snap: overshoots then jitters into an exact lock.
-    entrance: {
-      origin: "center",
-      initial: { opacity: 0, scale: 1.32 },
-      animate: {
-        opacity: [0, 1, 1, 1, 1],
-        scale: [1.32, 0.97, 1.01, 0.997, 1],
-        x: [0, -3, 3, -1, 0],
-      },
-      transition: { duration: 0.7, ease: [0.5, 0, 0.2, 1] },
-    },
-  },
+const CAPS = [
+  { value: "0.1 – 50", unit: "mm" },
+  { value: "1 – 500", unit: "mm" },
+  { value: "≤ 1500", unit: "mm" },
+  { value: "± 0.01", unit: "mm" },
 ];
 
 export default function Capabilities() {
@@ -78,82 +28,80 @@ export default function Capabilities() {
     if (v > 0.1) setScrubReveal(true);
   });
   const inView = stageEnabled ? scrubReveal : nativeInView;
-  const headerY = useTransform(progress, [0, 1], [60, -60]);
 
   return (
     <section
       id="capabilities"
       ref={ref}
-      className={`relative bg-graphite px-6 lg:px-10 border-t border-white/[0.06] overflow-hidden ${
-        stageEnabled ? "h-screen flex items-center py-20" : "py-[120px]"
+      className={`relative overflow-hidden border-t border-rule bg-ground px-6 lg:px-10 ${
+        stageEnabled ? "flex h-screen items-center py-20" : "py-[110px]"
       }`}
     >
-      <div className="max-w-7xl mx-auto">
-        <motion.div style={{ y: headerY }} className="mb-12">
-          <motion.div
-            initial={{ opacity: 0, y: 24 }}
-            animate={inView ? { opacity: 1, y: 0 } : {}}
-            transition={{ duration: 0.6 }}
-          >
-            <SectionIndex index="04" label={t.capabilities.label} className="mb-6" />
-            <h2 className="font-tech font-bold text-[clamp(2rem,3.6vw,3rem)] text-hud-silver">
-              {t.capabilities.heading[0]}{" "}
-              <span className="text-cyan hud-glow-cyan">{t.capabilities.heading[1]}</span>
-            </h2>
-          </motion.div>
+      <div className="mx-auto max-w-7xl">
+        <motion.div
+          initial={{ opacity: 0, y: 18 }}
+          animate={inView ? { opacity: 1, y: 0 } : undefined}
+          transition={{ duration: 0.55 }}
+          className="mb-12"
+        >
+          <SectionLabel label={t.capabilities.label} className="mb-6" />
+          <h2 className="font-display text-[clamp(1.9rem,3.4vw,2.9rem)] font-bold uppercase tracking-[-0.022em] text-ink">
+            {t.capabilities.heading[0]}{" "}
+            <span className="text-navy">{t.capabilities.heading[1]}</span>
+          </h2>
         </motion.div>
 
-        {/* Instrument readout */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-16">
+        {/* Capability plates */}
+        <div style={depthGrid} className="mb-16 grid grid-cols-1 gap-px border border-rule bg-rule sm:grid-cols-2 lg:grid-cols-4">
           {caps.map((c, i) => (
-            <TiltSpotlightCard
+            <Depth
               key={c.label}
               index={i}
-              parallax={PARALLAX[i % PARALLAX.length]}
-              entrance={c.entrance}
-              cardClassName="rounded-xl border border-white/[0.08] bg-carbon px-6 py-7"
+              depth={110}
+              tilt={6}
+              cardClassName="h-full bg-surface px-6 py-8 transition-colors duration-200 hover:bg-sunk"
             >
-              <div className="font-mono text-[0.66rem] tracking-[0.18em] uppercase text-hud-mute mb-4 group-hover:text-cyan/70 transition-colors">
+              <div className="mb-5 font-mono text-[0.62rem] uppercase tracking-[0.2em] text-ink-faint">
                 {c.label}
               </div>
               <div className="flex items-baseline gap-1.5">
-                <span className="font-tech text-[1.9rem] font-bold text-hud-silver leading-none">
+                <span className="font-display text-[1.85rem] font-bold leading-none tracking-[-0.025em] text-ink">
                   {c.value}
                 </span>
-                <span className="font-mono text-sm text-cyan">{c.unit}</span>
+                <span className="font-mono text-sm text-ink-faint">{c.unit}</span>
               </div>
-              {/* readout bar */}
-              <div className="mt-5 h-px w-full bg-white/8 overflow-hidden">
-                <motion.div
-                  initial={{ scaleX: 0 }}
-                  whileInView={{ scaleX: 1 }}
-                  viewport={{ once: true, margin: "-12% 0px" }}
-                  transition={{ duration: 1, delay: 0.2 + i * 0.08, ease: [0.22, 1, 0.36, 1] }}
-                  className="h-full bg-cyan/70 origin-left"
-                />
-              </div>
-            </TiltSpotlightCard>
+              <motion.div
+                initial={{ scaleX: 0 }}
+                whileInView={{ scaleX: 1 }}
+                viewport={{ once: true, margin: "-12% 0px" }}
+                transition={{
+                  duration: 0.8,
+                  delay: 0.15 + i * 0.07,
+                  ease: [0.22, 1, 0.36, 1],
+                }}
+                className="mt-6 h-0.5 w-full origin-left bg-navy"
+              />
+            </Depth>
           ))}
         </div>
 
-        {/* Industries */}
+        {/* Industries served */}
         <motion.div
-          initial={{ opacity: 0, y: 22 }}
-          animate={inView ? { opacity: 1, y: 0 } : {}}
-          transition={{ duration: 0.6, delay: 0.4 }}
+          initial={{ opacity: 0, y: 16 }}
+          animate={inView ? { opacity: 1, y: 0 } : undefined}
+          transition={{ duration: 0.55, delay: 0.3 }}
         >
-          <p className="font-mono text-[0.66rem] text-hud-mute tracking-[0.2em] uppercase mb-5">
+          <p className="mb-5 font-mono text-[0.62rem] uppercase tracking-[0.2em] text-ink-faint">
             {t.capabilities.industriesTitle}
           </p>
-          <div className="flex flex-wrap gap-2.5">
+          <div className="flex flex-wrap gap-2">
             {industries.map((ind, i) => (
               <motion.span
                 key={ind}
-                initial={{ opacity: 0, scale: 0.9 }}
-                animate={inView ? { opacity: 1, scale: 1 } : {}}
-                transition={{ delay: 0.5 + i * 0.04 }}
-                whileHover={{ y: -2 }}
-                className="font-mono text-[0.74rem] tracking-[0.08em] text-hud-silver/70 border border-white/12 rounded-full px-4 py-2 cursor-default bg-white/[0.02] hover:border-cyan/50 hover:text-cyan transition-colors duration-200"
+                initial={{ opacity: 0 }}
+                animate={inView ? { opacity: 1 } : undefined}
+                transition={{ delay: 0.4 + i * 0.035, duration: 0.35 }}
+                className="rounded-plate border border-rule bg-surface px-4 py-2 font-mono text-[0.72rem] tracking-[0.06em] text-ink-soft transition-colors duration-200 hover:border-navy hover:text-navy"
               >
                 {ind}
               </motion.span>

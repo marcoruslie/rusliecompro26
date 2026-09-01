@@ -3,12 +3,7 @@
 import { useRef, useState } from "react";
 import { motion, useInView, useMotionValueEvent } from "framer-motion";
 import { Factory, MapPin, Cog, ShieldCheck } from "lucide-react";
-import {
-  ScanReveal,
-  SectionIndex,
-  CornerBrackets,
-  Counter,
-} from "./hud";
+import { Reveal, SectionLabel, Counter } from "./industrial";
 import { useLanguage } from "@/lib/i18n";
 import { useSectionScrub, useScrollStage } from "@/lib/scrollStage";
 
@@ -37,49 +32,50 @@ export default function About() {
     if (v > 0.12) setScrubReveal(true);
   });
   const inView = stageEnabled ? scrubReveal : nativeInView;
+
   return (
     <section
       id="about"
       ref={ref}
-      className={`relative bg-carbon px-6 lg:px-10 border-t border-white/[0.06] ${
-        stageEnabled ? "h-screen flex items-center py-20" : "py-[120px]"
+      className={`relative border-t border-rule bg-surface px-6 lg:px-10 ${
+        stageEnabled ? "flex h-screen items-center py-20" : "py-[110px]"
       }`}
     >
-      <div className="relative z-10 max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-2 gap-16 lg:gap-24 items-start">
+      <div className="relative z-10 mx-auto grid max-w-7xl grid-cols-1 items-start gap-14 lg:grid-cols-2 lg:gap-24">
         {/* Left */}
         <div>
-          <ScanReveal>
-            <SectionIndex index="01" label={t.about.label} className="mb-6" />
-            <h2 className="font-tech font-bold text-[clamp(1.9rem,3.6vw,3rem)] leading-[1.08] text-hud-silver mb-7">
+          <Reveal>
+            <SectionLabel label={t.about.label} className="mb-6" />
+            <h2 className="mb-7 font-display text-[clamp(1.8rem,3.4vw,2.9rem)] font-bold uppercase leading-[1.05] tracking-[-0.022em] text-ink">
               {t.about.heading[0]}
               <br />
-              <span className="text-cyan hud-glow-cyan">{t.about.heading[1]}</span>
+              <span className="text-navy">{t.about.heading[1]}</span>
             </h2>
-          </ScanReveal>
+          </Reveal>
 
-          <ScanReveal delay={0.1} scan={false}>
-            <p className="font-body text-[1rem] text-hud-silver/55 leading-[1.9] mb-5">
+          <Reveal delay={0.08}>
+            <p className="mb-5 font-body text-[0.98rem] leading-[1.85] text-ink-soft">
               {t.about.p1}
             </p>
-            <p className="font-body text-[1rem] text-hud-silver/55 leading-[1.9] mb-10">
+            <p className="mb-10 font-body text-[0.98rem] leading-[1.85] text-ink-soft">
               {t.about.p2}
             </p>
-          </ScanReveal>
+          </Reveal>
 
           {/* Stats */}
           <div className="grid grid-cols-3 gap-6">
             {stats.map((s, i) => (
               <motion.div
                 key={s.label}
-                initial={{ opacity: 0, y: 18 }}
-                animate={inView ? { opacity: 1, y: 0 } : {}}
-                transition={{ delay: 0.3 + i * 0.1 }}
-                className="border-l-2 border-cyan/60 pl-4"
+                initial={{ opacity: 0, y: 14 }}
+                animate={inView ? { opacity: 1, y: 0 } : undefined}
+                transition={{ delay: 0.25 + i * 0.08, duration: 0.5 }}
+                className="border-t-2 border-navy pt-4"
               >
-                <div className="font-tech text-[1.9rem] font-bold text-hud-silver leading-none">
+                <div className="font-display text-[1.85rem] font-bold leading-none tracking-[-0.02em] text-ink">
                   <Counter to={s.to} suffix={s.suffix} />
                 </div>
-                <div className="font-mono text-[0.62rem] text-hud-mute uppercase tracking-[0.14em] mt-2 leading-tight">
+                <div className="mt-2 font-mono text-[0.6rem] uppercase leading-tight tracking-[0.14em] text-ink-faint">
                   {s.label}
                 </div>
               </motion.div>
@@ -87,31 +83,28 @@ export default function About() {
           </div>
         </div>
 
-        {/* Right — feature cards */}
-        <div className="flex flex-col gap-4">
+        {/* Right — feature plates, stacked as one ruled block */}
+        <div className="divide-y divide-rule border border-rule bg-ground">
           {features.map((item, i) => {
             const Icon = item.icon;
             return (
               <motion.div
                 key={item.title}
-                initial={{ opacity: 0, y: 20 }}
-                animate={inView ? { opacity: 1, y: 0 } : {}}
-                transition={{ delay: 0.2 + i * 0.12, duration: 0.6 }}
-                whileHover={{ y: -3 }}
-                className="group relative flex gap-4 p-5 rounded-xl border border-white/[0.07] bg-steel-700/40 hover:border-cyan/30 transition-colors duration-300"
+                initial={{ opacity: 0, y: 14 }}
+                animate={inView ? { opacity: 1, y: 0 } : undefined}
+                transition={{ delay: 0.15 + i * 0.09, duration: 0.55 }}
+                className="group flex gap-5 px-6 py-6 transition-colors duration-200 hover:bg-surface"
               >
-                <CornerBrackets color="rgba(34,211,238,0)" />
-                <div className="absolute inset-0 rounded-xl opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none">
-                  <CornerBrackets />
-                </div>
-                <div className="w-11 h-11 rounded-lg bg-cyan/10 border border-cyan/25 flex items-center justify-center flex-shrink-0">
-                  <Icon size={20} className="text-cyan" />
-                </div>
+                <Icon
+                  size={20}
+                  strokeWidth={1.6}
+                  className="mt-0.5 flex-shrink-0 text-navy"
+                />
                 <div>
-                  <div className="font-tech font-semibold text-hud-silver text-[0.96rem] mb-1.5">
+                  <div className="mb-1.5 font-display text-[0.95rem] font-semibold tracking-[-0.01em] text-ink">
                     {item.title}
                   </div>
-                  <div className="font-body text-[0.84rem] text-hud-silver/50 leading-[1.65]">
+                  <div className="font-body text-[0.85rem] leading-[1.7] text-ink-soft">
                     {item.text}
                   </div>
                 </div>

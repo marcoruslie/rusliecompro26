@@ -9,7 +9,7 @@ import {
   useMotionValueEvent,
 } from "framer-motion";
 import dynamic from "next/dynamic";
-import { BlueprintGrid, SectionIndex } from "./hud";
+import { SectionLabel, GridTexture } from "./industrial";
 import { useLanguage } from "@/lib/i18n";
 import { useSectionScrub, useScrollStage } from "@/lib/scrollStage";
 
@@ -17,10 +17,10 @@ import { useSectionScrub, useScrollStage } from "@/lib/scrollStage";
 const SpringScene = dynamic(() => import("./SpringScene"), { ssr: false });
 
 const STEP_META = [
-  { n: "01", key: "wire", compress: 0, coils: 8 },
-  { n: "02", key: "coil", compress: 0.16, coils: 9 },
-  { n: "03", key: "heat", compress: 0.42, coils: 9 },
-  { n: "04", key: "qc", compress: 0.24, coils: 8 },
+  { n: "01", key: "wire" },
+  { n: "02", key: "coil" },
+  { n: "03", key: "heat" },
+  { n: "04", key: "qc" },
 ];
 
 export default function Process() {
@@ -61,18 +61,14 @@ export default function Process() {
     setActive(idx < 0 ? 0 : idx);
   });
 
-  // Smoothed scroll value drives the spring for buttery, lag-free motion.
+  // Smoothed scroll value drives the spring for lag-free motion.
   const smooth = useSpring(scrollYProgress, {
     stiffness: 80,
     damping: 20,
     restDelta: 0.001,
   });
 
-  const railWidth = useTransform(
-    scrollYProgress,
-    [0, 1],
-    ["0%", "100%"]
-  );
+  const railWidth = useTransform(scrollYProgress, [0, 1], ["0%", "100%"]);
 
   const step = STEPS[active];
 
@@ -80,44 +76,42 @@ export default function Process() {
     <section
       id="process"
       ref={ref}
-      className="relative bg-graphite"
+      className="relative border-t border-rule bg-sunk"
       style={{ height: stageEnabled ? "100vh" : `${STEPS.length * 90}vh` }}
     >
-      <div className={`${stageEnabled ? "" : "sticky top-0"} h-screen overflow-hidden flex flex-col`}>
-        <BlueprintGrid fade={false} />
-        <div
-          className="absolute inset-0 pointer-events-none"
-          style={{
-            background:
-              "radial-gradient(70% 55% at 70% 45%, rgba(34,211,238,0.08), transparent 70%)",
-          }}
-        />
+      <div
+        className={`${
+          stageEnabled ? "" : "sticky top-0"
+        } flex h-screen flex-col overflow-hidden`}
+      >
+        <GridTexture fade={false} opacity={0.5} />
 
-        <div className="relative z-10 flex-1 max-w-7xl w-full mx-auto px-6 lg:px-10 grid grid-cols-1 lg:grid-cols-2 items-center gap-10">
-          {/* Left — morphing copy */}
+        <div className="relative z-10 mx-auto grid w-full max-w-7xl flex-1 grid-cols-1 items-center gap-10 px-6 lg:grid-cols-2 lg:px-10">
+          {/* Left — the step */}
           <div className="pt-24 lg:pt-0">
-            <SectionIndex index="02" label={t.process.label} className="mb-8" />
-            <div className="font-mono text-[0.72rem] tracking-[0.2em] text-cyan/70 mb-4">
-              {t.process.step} {step.n} / {String(STEPS.length).padStart(2, "0")}
+            <SectionLabel label={t.process.label} className="mb-8" />
+
+            <div className="mb-5 font-mono text-[0.68rem] tracking-[0.2em] text-ink-faint">
+              {t.process.step} {step.n} /{" "}
+              {String(STEPS.length).padStart(2, "0")}
             </div>
 
             <div className="relative min-h-[230px]">
               <AnimatePresence mode="wait">
                 <motion.div
                   key={step.key}
-                  initial={{ opacity: 0, y: 22 }}
+                  initial={{ opacity: 0, y: 16 }}
                   animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: -22 }}
-                  transition={{ duration: 0.45, ease: [0.22, 1, 0.36, 1] }}
+                  exit={{ opacity: 0, y: -16 }}
+                  transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
                 >
-                  <h3 className="font-tech font-bold text-[clamp(1.8rem,3.4vw,2.9rem)] leading-[1.05] text-hud-silver mb-5">
+                  <h3 className="mb-5 font-display text-[clamp(1.7rem,3.2vw,2.8rem)] font-bold uppercase leading-[1.05] tracking-[-0.022em] text-ink">
                     {step.title}
                   </h3>
-                  <p className="font-body text-[1.02rem] text-hud-silver/55 leading-[1.85] max-w-[460px] mb-6">
+                  <p className="mb-6 max-w-[46ch] font-body text-[0.98rem] leading-[1.8] text-ink-soft">
                     {step.text}
                   </p>
-                  <span className="inline-flex items-center gap-2 font-mono text-[0.74rem] tracking-[0.12em] uppercase text-cyan border border-cyan/35 bg-cyan/5 rounded px-3 py-1.5">
-                    <span className="w-1.5 h-1.5 rounded-full bg-cyan" />
+                  <span className="inline-flex items-center rounded-plate border border-rule bg-surface px-3 py-1.5 font-mono text-[0.72rem] uppercase tracking-[0.12em] text-ink">
                     {step.spec}
                   </span>
                 </motion.div>
@@ -125,38 +119,34 @@ export default function Process() {
             </div>
           </div>
 
-          {/* Right — scroll-reactive 3D spring */}
+          {/* Right — the coil, formed by scroll */}
           <div
             ref={sceneRef}
-            className="relative hidden lg:flex justify-center items-center h-[62vh]"
+            className="relative hidden h-[62vh] items-center justify-center lg:flex"
           >
             {nearScene && <SpringScene progress={smooth} />}
           </div>
         </div>
 
         {/* Bottom progress rail */}
-        <div className="relative z-10 max-w-7xl w-full mx-auto px-6 lg:px-10 pb-10">
-          <div className="relative h-px w-full bg-white/10">
+        <div className="relative z-10 mx-auto w-full max-w-7xl px-6 pb-10 lg:px-10">
+          <div className="relative h-px w-full bg-rule-strong">
             <motion.div
               style={{ width: railWidth }}
-              className="absolute left-0 top-0 h-px bg-cyan shadow-[0_0_10px_rgba(34,211,238,0.8)]"
+              className="absolute left-0 top-0 h-px bg-navy"
             />
           </div>
           <div className="mt-4 grid grid-cols-4 gap-4">
             {STEPS.map((s, i) => (
               <div
                 key={s.key}
-                className={`flex items-center gap-2 font-mono text-[0.66rem] tracking-[0.14em] uppercase transition-colors duration-300 ${
-                  i <= active ? "text-cyan" : "text-hud-mute/60"
+                className={`flex items-center gap-2 font-mono text-[0.64rem] uppercase tracking-[0.14em] transition-colors duration-300 ${
+                  i <= active ? "text-navy" : "text-ink-faint"
                 }`}
               >
                 <span
-                  className={`w-2 h-2 rounded-full transition-all duration-300 ${
-                    i === active
-                      ? "bg-cyan shadow-[0_0_10px_rgba(34,211,238,0.9)]"
-                      : i < active
-                      ? "bg-cyan/60"
-                      : "bg-white/15"
+                  className={`h-1.5 w-1.5 transition-colors duration-300 ${
+                    i <= active ? "bg-navy" : "bg-rule-strong"
                   }`}
                 />
                 <span className="hidden sm:inline">{s.title.split(" ")[0]}</span>

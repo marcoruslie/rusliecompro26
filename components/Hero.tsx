@@ -1,15 +1,10 @@
 "use client";
 
 import { useRef } from "react";
-import {
-  motion,
-  useTransform,
-  useReducedMotion,
-} from "framer-motion";
+import { motion, useTransform, useReducedMotion } from "framer-motion";
 import Image from "next/image";
 import { useSectionScrub } from "@/lib/scrollStage";
-import HeroSpring from "./HeroSpring";
-import { BlueprintGrid, MagneticButton, Counter, SpecTag } from "./hud";
+import { Action, Counter, GridTexture } from "./industrial";
 import { useLanguage } from "@/lib/i18n";
 
 const STAT_VALUES = [
@@ -18,10 +13,11 @@ const STAT_VALUES = [
   { to: 80, suffix: "+" },
 ];
 
-const FLOAT_SPECS = [
-  { text: "Ø 0.1 – 50 mm", className: "top-[22%] left-[2%]" },
-  { text: "± 0.01 mm", className: "top-[58%] left-[6%]" },
-  { text: "OD ≤ 500 mm", className: "bottom-[16%] right-[6%]" },
+// The capability plate: the numbers a buyer actually checks first.
+const SPEC_PLATE = [
+  { k: "Wire Ø", v: "0.1 – 50 mm" },
+  { k: "Outside Ø", v: "1 – 500 mm" },
+  { k: "Tolerance", v: "± 0.01 mm" },
 ];
 
 export default function Hero() {
@@ -30,95 +26,44 @@ export default function Hero() {
   const ref = useRef<HTMLElement>(null);
   const reduce = useReducedMotion();
   const scrollYProgress = useSectionScrub("hero", ref);
-  const contentY = useTransform(scrollYProgress, [0, 1], ["0%", "26%"]);
-  const contentOpacity = useTransform(scrollYProgress, [0, 0.85], [1, 0]);
-  const springY = useTransform(scrollYProgress, [0, 1], [0, 130]);
+  const photoY = useTransform(scrollYProgress, [0, 1], [0, reduce ? 0 : -60]);
 
   return (
     <section
       id="hero"
       ref={ref}
-      className="relative min-h-screen flex items-center overflow-hidden bg-graphite"
+      className="relative flex min-h-screen items-center overflow-hidden bg-ground"
     >
-      {/* Atmospheric photo, heavily graded into graphite */}
-      <div className="absolute inset-0 z-0">
-        {/* priority: this is the LCP backdrop — preload it instead of waiting for hydration */}
-        <Image
-          src="/banner/banner2.jpg"
-          alt="Ruslie Spring manufacturing facility"
-          fill
-          priority
-          sizes="100vw"
-          className="object-cover object-center opacity-[0.16]"
-          style={{ filter: "grayscale(1) contrast(1.1)" }}
-        />
-        <div
-          className="absolute inset-0"
-          style={{
-            background:
-              "linear-gradient(115deg, #0a0e14 0%, rgba(10,14,20,0.86) 42%, rgba(17,22,31,0.78) 100%)",
-          }}
-        />
-      </div>
+      <GridTexture opacity={0.5} />
 
-      <BlueprintGrid />
-
-      {/* Cyan ambient glow */}
-      <motion.div
-        animate={
-          reduce ? undefined : { opacity: [0.16, 0.32, 0.16], scale: [1, 1.12, 1] }
-        }
-        transition={{ duration: 9, repeat: Infinity, ease: "easeInOut" }}
-        className="absolute right-[4%] top-[12%] w-[520px] h-[520px] rounded-full z-[1] pointer-events-none"
-        style={{
-          background:
-            "radial-gradient(circle, rgba(34,211,238,0.16) 0%, transparent 68%)",
-        }}
-      />
-
-      {/* Floating spec annotations */}
-      {FLOAT_SPECS.map((s, i) => (
-        <motion.div
-          key={s.text}
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ delay: 1 + i * 0.2, duration: 0.8 }}
-          className={`absolute z-[2] hidden lg:block ${s.className}`}
-        >
-          <SpecTag>{s.text}</SpecTag>
-        </motion.div>
-      ))}
-
-      <motion.div
-        style={{ y: contentY, opacity: contentOpacity }}
-        className="relative z-10 w-full max-w-7xl mx-auto px-6 lg:px-10 flex items-center justify-between gap-10 pt-[68px]"
-      >
-        {/* Left content */}
-        <div className="max-w-[640px]">
+      <div className="relative z-10 mx-auto grid w-full max-w-7xl grid-cols-1 items-center gap-14 px-6 pb-16 pt-[124px] lg:grid-cols-[1.05fr_1fr] lg:gap-20 lg:px-10 lg:pb-24">
+        {/* ── Left: the claim ── */}
+        <div>
           <motion.div
-            initial={{ opacity: 0, x: -24 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ duration: 0.7, delay: 0.15 }}
-            className="mb-7"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ duration: 0.6, delay: 0.1 }}
+            className="mb-8 flex items-center gap-3 font-mono text-[0.66rem] uppercase tracking-[0.28em] text-ink-faint"
           >
-            <SpecTag active>{t.hero.badge}</SpecTag>
+            <span className="h-px w-6 bg-navy" />
+            {t.hero.badge}
           </motion.div>
 
-          {/* Kinetic split-text headline */}
-          <h1 className="font-tech font-bold text-[clamp(3rem,6vw,5.4rem)] leading-[0.98] tracking-tight text-hud-silver mb-6">
+          <h1 className="mb-7 font-display text-[clamp(2.6rem,5.4vw,4.6rem)] font-extrabold uppercase leading-[0.95] tracking-[-0.025em] text-ink">
             {t.hero.headline.map((word, i) => (
-              <span key={i} className="inline-block overflow-hidden align-bottom mr-[0.28em]">
+              <span
+                key={i}
+                className="mr-[0.26em] inline-block overflow-hidden align-bottom"
+              >
                 <motion.span
-                  initial={{ y: "110%" }}
-                  animate={{ y: 0 }}
+                  initial={reduce ? { opacity: 0 } : { y: "108%" }}
+                  animate={reduce ? { opacity: 1 } : { y: 0 }}
                   transition={{
-                    duration: 0.85,
-                    delay: 0.3 + i * 0.12,
+                    duration: 0.8,
+                    delay: 0.2 + i * 0.09,
                     ease: [0.22, 1, 0.36, 1],
                   }}
-                  className={`inline-block ${
-                    i === t.hero.headline.length - 1 ? "text-cyan hud-glow-cyan" : ""
-                  }`}
+                  className="inline-block"
                 >
                   {word}
                 </motion.span>
@@ -127,39 +72,39 @@ export default function Hero() {
           </h1>
 
           <motion.p
-            initial={{ opacity: 0, y: 18 }}
+            initial={{ opacity: 0, y: 14 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.8, delay: 0.7 }}
-            className="font-body text-[1.05rem] text-hud-silver/55 leading-[1.8] max-w-[470px] mb-9"
+            transition={{ duration: 0.7, delay: 0.55 }}
+            className="mb-9 max-w-[46ch] font-body text-[1.02rem] leading-[1.8] text-ink-soft"
           >
             {t.hero.paragraph}
           </motion.p>
 
           <motion.div
-            initial={{ opacity: 0, y: 18 }}
+            initial={{ opacity: 0, y: 14 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.7, delay: 0.85 }}
-            className="flex gap-4 flex-wrap mb-12"
+            transition={{ duration: 0.6, delay: 0.68 }}
+            className="mb-14 flex flex-wrap gap-3"
           >
-            <MagneticButton href="#products">{t.hero.ctaProducts}</MagneticButton>
-            <MagneticButton href="#process" variant="ghost">
+            <Action href="#products">{t.hero.ctaProducts}</Action>
+            <Action href="#process" variant="ghost">
               {t.hero.ctaProcess}
-            </MagneticButton>
+            </Action>
           </motion.div>
 
-          {/* Trust counters */}
+          {/* Trust counters, set on a drawn rule */}
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
-            transition={{ duration: 0.8, delay: 1 }}
-            className="flex gap-8 sm:gap-12"
+            transition={{ duration: 0.7, delay: 0.8 }}
+            className="grid max-w-[520px] grid-cols-3 border-t border-rule pt-6"
           >
             {stats.map((s) => (
               <div key={s.label}>
-                <div className="font-tech text-[2rem] font-bold text-hud-silver leading-none">
+                <div className="font-display text-[2.1rem] font-bold leading-none tracking-[-0.02em] text-ink">
                   <Counter to={s.to} suffix={s.suffix} />
                 </div>
-                <div className="font-mono text-[0.62rem] tracking-[0.16em] uppercase text-hud-mute mt-2">
+                <div className="mt-2 font-mono text-[0.6rem] uppercase leading-tight tracking-[0.16em] text-ink-faint">
                   {s.label}
                 </div>
               </div>
@@ -167,29 +112,53 @@ export default function Hero() {
           </motion.div>
         </div>
 
-        {/* Spring illustration — parallax on scroll */}
+        {/* ── Right: the shop floor, plus the plate that specifies it ── */}
         <motion.div
-          initial={{ opacity: 0, x: 40 }}
-          animate={{ opacity: 1, x: 0 }}
-          transition={{ duration: 1, delay: 0.4 }}
-          style={{ y: springY }}
-          className="hidden lg:block w-[210px] h-[440px] flex-shrink-0"
+          initial={{ opacity: 0, y: 24 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.9, delay: 0.35, ease: [0.22, 1, 0.36, 1] }}
+          style={{ y: photoY }}
+          className="relative"
         >
-          <HeroSpring className="w-full h-full" coils={8} progress={scrollYProgress} />
-        </motion.div>
-      </motion.div>
+          <div className="relative aspect-square w-full overflow-hidden rounded-plate border border-rule bg-sunk shadow-plate">
+            {/* priority: this is the LCP image — preload it instead of waiting for hydration */}
+            <Image
+              src="/banner/banner2.jpg"
+              alt="Ruslie Spring manufacturing facility"
+              fill
+              priority
+              sizes="(max-width: 1024px) 100vw, 45vw"
+              className="object-cover object-center"
+            />
+          </div>
 
-      {/* Scroll indicator */}
-      <motion.div
-        animate={reduce ? undefined : { y: [0, 9, 0] }}
-        transition={{ duration: 2.2, repeat: Infinity }}
-        className="absolute bottom-7 left-1/2 -translate-x-1/2 flex flex-col items-center gap-2 z-20"
-      >
-        <span className="font-mono text-[0.6rem] text-hud-mute tracking-[0.3em] uppercase">
+          <dl className="mt-px divide-y divide-rule border border-t-0 border-rule bg-surface">
+            {SPEC_PLATE.map((row) => (
+              <div
+                key={row.k}
+                className="flex items-baseline justify-between px-4 py-2.5"
+              >
+                <dt className="font-mono text-[0.62rem] uppercase tracking-[0.2em] text-ink-faint">
+                  {row.k}
+                </dt>
+                <dd className="font-mono text-[0.78rem] text-ink">{row.v}</dd>
+              </div>
+            ))}
+          </dl>
+        </motion.div>
+      </div>
+
+      {/* Scroll cue */}
+      <div className="absolute bottom-7 left-1/2 z-20 hidden -translate-x-1/2 flex-col items-center gap-2 lg:flex">
+        <span className="font-mono text-[0.58rem] uppercase tracking-[0.3em] text-ink-faint">
           {t.hero.scroll}
         </span>
-        <div className="w-px h-9 bg-gradient-to-b from-cyan/70 to-transparent" />
-      </motion.div>
+        <motion.div
+          animate={reduce ? undefined : { scaleY: [0.3, 1, 0.3] }}
+          transition={{ duration: 2.4, repeat: Infinity, ease: "easeInOut" }}
+          className="h-9 w-px origin-top bg-navy/50"
+        />
+      </div>
     </section>
   );
 }

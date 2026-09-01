@@ -9,20 +9,16 @@ export default function Footer() {
   return (
     <footer
       id="footer"
-      className={`relative bg-graphite border-t border-white/[0.06] overflow-hidden ${
-        stageEnabled ? "h-screen flex items-center justify-center" : ""
+      className={`relative border-t border-rule bg-ground ${
+        stageEnabled ? "flex h-screen items-center justify-center" : ""
       }`}
     >
-      <div
-        className="absolute inset-x-0 bottom-0 h-16 hud-blueprint pointer-events-none"
-        style={{ opacity: 0.4 }}
-      />
-      <div className="relative max-w-7xl mx-auto px-6 lg:px-10 py-8 flex flex-col sm:flex-row justify-between items-center gap-3 flex-wrap w-full">
-        <span className="font-tech text-hud-silver/45 text-[0.88rem]">
-          © 2026{" "}
-          <span className="text-cyan">Ruslie Spring</span>. {t.footer.rights}
+      <div className="relative mx-auto flex w-full max-w-7xl flex-col flex-wrap items-center justify-between gap-3 px-6 py-8 sm:flex-row lg:px-10">
+        <span className="font-body text-[0.85rem] text-ink-soft">
+          © 2026 <span className="font-semibold text-ink">Ruslie Spring</span>.{" "}
+          {t.footer.rights}
         </span>
-        <span className="font-mono text-hud-mute text-[0.66rem] tracking-[0.22em] uppercase">
+        <span className="font-mono text-[0.64rem] uppercase tracking-[0.22em] text-ink-faint">
           {t.footer.tagline}
         </span>
       </div>

@@ -4,17 +4,11 @@ import { useRef, useState } from "react";
 import {
   motion,
   useInView,
-  useScroll,
   useReducedMotion,
-  useMotionValue,
-  useSpring,
   useTransform,
-  useMotionTemplate,
   useMotionValueEvent,
   type MotionProps,
 } from "framer-motion";
-
-const PARALLAX = [30, 56, 22, 44];
 import {
   ArrowDownUp,
   MoveVertical,
@@ -22,15 +16,16 @@ import {
   Spline,
   Activity,
   BatteryCharging,
-  ArrowUpRight,
   type LucideIcon,
 } from "lucide-react";
-import { SectionIndex, CornerBrackets, type CardEntrance } from "./hud";
+import { SectionLabel, type CardEntrance } from "./industrial";
 import { useLanguage } from "@/lib/i18n";
 import { useSectionScrub, usePanY, useScrollStage } from "@/lib/scrollStage";
 
 /* Each product enters with a motion that imitates how that spring
-   actually behaves mechanically — no two scroll reveals are alike. */
+   actually behaves under load — the one place on the page where
+   animation carries information rather than decoration. Amplitudes
+   are kept small so the grid still reads as a catalogue. */
 type VariantKey =
   | "compress"
   | "extend"
@@ -40,47 +35,47 @@ type VariantKey =
   | "charge";
 
 const VARIANTS: Record<VariantKey, CardEntrance> = {
-  // Compression: squashes down, then springs back up to rest.
+  // Compression: squashes down, then returns to free length.
   compress: {
     origin: "bottom center",
-    initial: { opacity: 0, scaleY: 1.65, y: -46 },
-    animate: { opacity: [0, 1, 1, 1], scaleY: [1.65, 0.7, 1.08, 1], y: [-46, 6, 0, 0] },
-    transition: { duration: 0.95, ease: [0.22, 1, 0.36, 1] },
+    initial: { opacity: 0, scaleY: 1.28, y: -20 },
+    animate: { opacity: [0, 1, 1], scaleY: [1.28, 0.88, 1], y: [-20, 3, 0] },
+    transition: { duration: 0.7, ease: [0.22, 1, 0.36, 1] },
   },
-  // Extension: pulls out of a compressed coil, stretching to length.
+  // Extension: pulls out of a closed coil to working length.
   extend: {
     origin: "top center",
-    initial: { opacity: 0, scaleY: 0.25, y: 34 },
-    animate: { opacity: [0, 1, 1, 1], scaleY: [0.25, 1.18, 0.95, 1], y: [34, -6, 0, 0] },
-    transition: { duration: 1.0, ease: [0.22, 1, 0.36, 1] },
+    initial: { opacity: 0, scaleY: 0.62, y: 16 },
+    animate: { opacity: [0, 1, 1], scaleY: [0.62, 1.06, 1], y: [16, -3, 0] },
+    transition: { duration: 0.72, ease: [0.22, 1, 0.36, 1] },
   },
-  // Torsion: winds in with a rotational twist before settling.
+  // Torsion: winds in through its working angle.
   torsion: {
     origin: "center",
-    initial: { opacity: 0, rotate: -140, scale: 0.5 },
-    animate: { opacity: [0, 1, 1], rotate: [-140, 16, 0], scale: [0.5, 1.07, 1] },
-    transition: { duration: 0.95, ease: [0.22, 1, 0.36, 1] },
+    initial: { opacity: 0, rotate: -22, scale: 0.9 },
+    animate: { opacity: [0, 1, 1], rotate: [-22, 4, 0], scale: [0.9, 1.02, 1] },
+    transition: { duration: 0.7, ease: [0.22, 1, 0.36, 1] },
   },
-  // Wire form: unspools left-to-right, un-skewing as it draws in.
+  // Wire form: unspools left to right off the coiler.
   unspool: {
     origin: "left center",
-    initial: { opacity: 0, clipPath: "inset(0 100% 0 0)", skewX: -12, x: -26 },
-    animate: { opacity: 1, clipPath: "inset(0 0% 0 0)", skewX: 0, x: 0 },
-    transition: { duration: 0.9, ease: [0.22, 1, 0.36, 1] },
+    initial: { opacity: 0, clipPath: "inset(0 100% 0 0)" },
+    animate: { opacity: 1, clipPath: "inset(0 0% 0 0)" },
+    transition: { duration: 0.75, ease: [0.22, 1, 0.36, 1] },
   },
-  // Zigzag: oscillates sideways like a flexing seat spring.
+  // Zigzag: flexes sideways like a seat spring taking weight.
   zigzag: {
     origin: "center",
-    initial: { opacity: 0, x: -58, rotate: -5 },
-    animate: { opacity: [0, 1, 1, 1, 1], x: [-58, 36, -22, 10, 0], rotate: [-5, 4, -3, 1, 0] },
-    transition: { duration: 1.05, ease: "easeOut" },
+    initial: { opacity: 0, x: -26 },
+    animate: { opacity: [0, 1, 1, 1], x: [-26, 10, -4, 0] },
+    transition: { duration: 0.75, ease: "easeOut" },
   },
-  // Battery: rises into contact (paired with a charge sweep overlay).
+  // Battery contact: rises into contact.
   charge: {
     origin: "bottom center",
-    initial: { opacity: 0, scaleY: 0.55, y: 28 },
-    animate: { opacity: [0, 1, 1], scaleY: [0.55, 1.05, 1], y: [28, 0, 0] },
-    transition: { duration: 0.85, ease: [0.22, 1, 0.36, 1] },
+    initial: { opacity: 0, scaleY: 0.8, y: 14 },
+    animate: { opacity: [0, 1, 1], scaleY: [0.8, 1.02, 1], y: [14, 0, 0] },
+    transition: { duration: 0.65, ease: [0.22, 1, 0.36, 1] },
   },
 };
 
@@ -104,47 +99,11 @@ const PRODUCT_META: { icon: LucideIcon; span: string; variant: VariantKey }[] = 
 ];
 
 function ProductCard({ p, index }: { p: Product; index: number }) {
-  const { t } = useLanguage();
-  const { stageEnabled } = useScrollStage();
   const ref = useRef<HTMLDivElement>(null);
   const reduce = useReducedMotion();
-  const inView = useInView(ref, { once: true, margin: "-12% 0px" });
+  const inView = useInView(ref, { once: true, margin: "-10% 0px" });
   const Icon = p.icon;
   const entrance = VARIANTS[p.variant];
-
-  // Continuous scroll-linked parallax drift (column-varied speed).
-  const { scrollYProgress } = useScroll({
-    target: ref,
-    offset: ["start end", "end start"],
-  });
-  const mag = PARALLAX[index % PARALLAX.length];
-  const py = useTransform(scrollYProgress, [0, 1], [mag, -mag]);
-
-  // Pointer position (0..1) drives 3D tilt + the spotlight.
-  const mx = useMotionValue(0.5);
-  const my = useMotionValue(0.5);
-  const rotateX = useSpring(useTransform(my, [0, 1], [7, -7]), {
-    stiffness: 150,
-    damping: 16,
-  });
-  const rotateY = useSpring(useTransform(mx, [0, 1], [-7, 7]), {
-    stiffness: 150,
-    damping: 16,
-  });
-  const spotX = useTransform(mx, (v) => `${v * 100}%`);
-  const spotY = useTransform(my, (v) => `${v * 100}%`);
-  const spotlight = useMotionTemplate`radial-gradient(240px circle at ${spotX} ${spotY}, rgba(34,211,238,0.16), transparent 68%)`;
-
-  function onMove(e: React.MouseEvent) {
-    if (reduce || !ref.current) return;
-    const r = ref.current.getBoundingClientRect();
-    mx.set((e.clientX - r.left) / r.width);
-    my.set((e.clientY - r.top) / r.height);
-  }
-  function onLeave() {
-    mx.set(0.5);
-    my.set(0.5);
-  }
 
   const initialProp: MotionProps["initial"] = reduce
     ? { opacity: 0 }
@@ -155,85 +114,38 @@ function ProductCard({ p, index }: { p: Product; index: number }) {
       : entrance.animate
     : undefined;
   const transitionProp: MotionProps["transition"] = reduce
-    ? { duration: 0.5, delay: index * 0.07 }
-    : { ...entrance.transition, delay: index * 0.07 };
+    ? { duration: 0.4, delay: index * 0.05 }
+    : { ...entrance.transition, delay: index * 0.06 };
 
   return (
-    <motion.div
-      className={p.span}
-      style={{ perspective: 1000, y: reduce || stageEnabled ? 0 : py }}
-    >
+    <div className={p.span}>
       <motion.div
         ref={ref}
-        onMouseMove={onMove}
-        onMouseLeave={onLeave}
         initial={initialProp}
         animate={animateProp}
         transition={transitionProp}
-        style={{
-          rotateX,
-          rotateY,
-          transformStyle: "preserve-3d",
-          transformOrigin: entrance.origin ?? "center",
-        }}
-        className="group relative h-full min-h-[200px] rounded-xl border border-white/[0.08] bg-steel-700/30 p-7 overflow-hidden transition-colors duration-300 hover:border-cyan/40"
+        style={{ transformOrigin: entrance.origin ?? "center" }}
+        className="group relative flex h-full min-h-[200px] flex-col bg-surface p-7 transition-colors duration-200 hover:bg-sunk"
       >
-        {/* faint blueprint texture, brightens on hover */}
-        <div className="absolute inset-0 bg-dot-cyan [background-size:22px_22px] opacity-20 group-hover:opacity-40 transition-opacity duration-500 pointer-events-none" />
-        {/* cursor-follow spotlight */}
-        <motion.div
-          aria-hidden
-          style={{ background: spotlight }}
-          className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none"
-        />
-        {/* charge sweep — only the battery spring "powers up" on reveal */}
-        {p.variant === "charge" && !reduce && (
-          <motion.div
-            aria-hidden
-            initial={{ y: "100%", opacity: 0 }}
-            animate={inView ? { y: "-120%", opacity: [0, 0.9, 0] } : undefined}
-            transition={{ duration: 1.1, delay: index * 0.07 + 0.2, ease: "easeOut" }}
-            className="absolute inset-x-0 bottom-0 h-2/3 pointer-events-none"
-            style={{
-              background:
-                "linear-gradient(0deg, transparent, rgba(34,211,238,0.22), transparent)",
-            }}
-          />
-        )}
-        <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none">
-          <CornerBrackets />
-        </div>
-
-        <div className="relative flex items-start justify-between mb-5">
-          <div className="w-12 h-12 rounded-lg bg-cyan/10 border border-cyan/25 flex items-center justify-center transition-all duration-300 group-hover:bg-cyan/20 group-hover:scale-110 group-hover:-rotate-6">
-            <Icon size={22} className="text-cyan" />
-          </div>
-          <span className="font-mono text-[0.66rem] text-hud-mute tracking-[0.16em] border border-white/10 rounded px-2 py-1 group-hover:text-cyan group-hover:border-cyan/30 transition-colors">
+        <div className="mb-6 flex items-start justify-between">
+          <Icon size={22} strokeWidth={1.5} className="text-navy" />
+          <span className="rounded-plate border border-rule px-2 py-1 font-mono text-[0.62rem] tracking-[0.14em] text-ink-faint">
             {p.tag}
           </span>
         </div>
 
-        <h3 className="relative font-tech text-[1.1rem] font-semibold text-hud-silver mb-2.5">
+        <h3 className="mb-2.5 font-display text-[1.05rem] font-semibold tracking-[-0.012em] text-ink">
           {p.name}
         </h3>
-        <p className="relative font-body text-[0.86rem] text-hud-silver/50 leading-[1.7] max-w-[42ch]">
+        <p className="max-w-[44ch] font-body text-[0.85rem] leading-[1.7] text-ink-soft">
           {p.desc}
         </p>
 
-        <div className="relative mt-5 flex items-center justify-between">
-          <div className="h-0.5 w-8 bg-cyan/50 rounded-full transition-all duration-300 group-hover:w-16" />
-          <span className="flex items-center gap-1 font-mono text-[0.62rem] tracking-[0.16em] uppercase text-cyan opacity-0 translate-x-2 group-hover:opacity-100 group-hover:translate-x-0 transition-all duration-300">
-            {t.products.detail}
-            <ArrowUpRight size={13} />
-          </span>
+        <div className="mt-auto pt-6">
+          <div className="h-0.5 w-8 bg-navy transition-all duration-300 group-hover:w-16" />
         </div>
-
-        {/* index watermark */}
-        <span className="absolute bottom-4 right-5 font-tech font-bold text-[2.4rem] leading-none text-white/[0.03] group-hover:text-cyan/10 transition-colors duration-300 pointer-events-none select-none">
-          {String(index + 1).padStart(2, "0")}
-        </span>
       </motion.div>
-    </motion.div>
+    </div>
   );
 }
 
@@ -256,32 +168,35 @@ export default function Products() {
     if (v > 0.08) setScrubReveal(true);
   });
   const inView = stageEnabled ? scrubReveal : nativeInView;
-  const headerY = useTransform(progress, [0, 1], [60, -60]);
 
   return (
     <section
       id="products"
       ref={ref}
-      className={`relative bg-carbon px-6 lg:px-10 overflow-hidden border-t border-white/[0.06] ${
-        stageEnabled ? "h-screen py-20" : "py-[120px]"
+      className={`relative overflow-hidden border-t border-rule bg-ground px-6 lg:px-10 ${
+        stageEnabled ? "h-screen py-20" : "py-[110px]"
       }`}
     >
-      <motion.div ref={contentRef} style={{ y: panY }} className="relative z-10 max-w-7xl mx-auto">
-        <motion.div style={{ y: headerY }} className="mb-14">
-          <motion.div
-            initial={{ opacity: 0, y: 24 }}
-            animate={inView ? { opacity: 1, y: 0 } : {}}
-            transition={{ duration: 0.6 }}
-          >
-            <SectionIndex index="03" label={t.products.label} className="mb-6" />
-            <h2 className="font-tech font-bold text-[clamp(2rem,4vw,3rem)] text-hud-silver">
-              {t.products.heading[0]}{" "}
-              <span className="text-cyan hud-glow-cyan">{t.products.heading[1]}</span>
-            </h2>
-          </motion.div>
+      <motion.div
+        ref={contentRef}
+        style={{ y: panY }}
+        className="relative z-10 mx-auto max-w-7xl"
+      >
+        <motion.div
+          initial={{ opacity: 0, y: 18 }}
+          animate={inView ? { opacity: 1, y: 0 } : undefined}
+          transition={{ duration: 0.55 }}
+          className="mb-12"
+        >
+          <SectionLabel label={t.products.label} className="mb-6" />
+          <h2 className="font-display text-[clamp(1.9rem,3.6vw,2.9rem)] font-bold uppercase tracking-[-0.022em] text-ink">
+            {t.products.heading[0]}{" "}
+            <span className="text-navy">{t.products.heading[1]}</span>
+          </h2>
         </motion.div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        {/* One ruled block: gap-px over a rule-coloured ground draws the grid */}
+        <div className="grid grid-cols-1 gap-px border border-rule bg-rule sm:grid-cols-2 lg:grid-cols-4">
           {products.map((p, i) => (
             <ProductCard key={i} p={p} index={i} />
           ))}

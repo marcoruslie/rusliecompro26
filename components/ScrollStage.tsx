@@ -182,7 +182,7 @@ function StageEngine() {
   const exitTo = dirRef.current === 1 ? -56 : 56;
 
   return (
-    <div className="fixed inset-0 z-0 overflow-hidden bg-graphite">
+    <div className="fixed inset-0 z-0 overflow-hidden bg-ground">
       <AnimatePresence initial={false} mode="sync">
         <motion.div
           key={active.id}
@@ -212,14 +212,14 @@ function StageIndicator({ local }: { local: MotionValue<number> }) {
           aria-label={`Go to ${s.id}`}
           className={`pointer-events-auto h-2 w-2 rounded-full transition-all duration-300 ${
             i === activeIndex
-              ? "scale-125 bg-cyan shadow-[0_0_10px_rgba(34,211,238,0.9)]"
-              : "bg-white/20 hover:bg-cyan/60"
+              ? "scale-125 bg-navy"
+              : "bg-rule-strong hover:bg-navy/60"
           }`}
         />
       ))}
       <motion.div
         aria-hidden
-        className="mt-2 w-px bg-cyan/70 shadow-[0_0_8px_rgba(34,211,238,0.8)]"
+        className="mt-2 w-px bg-navy/70"
         style={{ height: 36, scaleY: local, originY: 0 }}
       />
     </div>

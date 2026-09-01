@@ -7,14 +7,15 @@
      --font-chakra) are defined by next/font on the <html> element in
      app/layout.tsx and inherited here. */
 
-  /* Engineering-HUD palette (marketing site) */
-  --graphite: #0a0e14;
-  --carbon: #11161f;
-  --steel-700: #1c2430;
-  --cyan: #22d3ee;
-  --cyan-dim: #0e7490;
-  --silver-hud: #c8d2e0;
-  --mute: #6b7689;
+  /* Light-industrial palette (marketing site) */
+  --ground: #f4f3f1;
+  --surface: #ffffff;
+  --sunk: #e8e6e1;
+  --ink: #16181c;
+  --ink-soft: #4a4f57;
+  --ink-faint: #8a9099;
+  --rule: #dcd9d3;
+  --brand: #021d47;
 }
 
 * {
@@ -412,50 +413,52 @@ select.admin-input option { background: #ffffff; color: #1e293b; }
 }
 
 /* ═══════════════════════════════════════════════════════════════
-   ENGINEERING-HUD — marketing site (graphite + electric cyan)
-   Scoped under .hud-root so admin/calculator/invoice are untouched.
+   LIGHT-INDUSTRIAL — marketing site
+   Mineral grounds, near-black ink, brand navy as the only accent.
+   Scoped under .ind-root so admin/calculator/invoice are untouched.
    ═══════════════════════════════════════════════════════════════ */
 
-.hud-root {
-  background: var(--graphite);
-  color: var(--silver-hud);
+.ind-root {
+  background: var(--ground);
+  color: var(--ink);
 }
-.hud-root ::selection {
-  background: rgba(34, 211, 238, 0.28);
-  color: #ffffff;
+.ind-root ::selection {
+  background: rgba(2, 29, 71, 0.16);
+  color: var(--ink);
 }
 
-/* Blueprint dot+line grid texture */
-.hud-blueprint {
+/* Machinist's grid: a fine 8mm ruling with a heavier 40mm major line,
+   the way a steel rule is graduated. Ink-toned, never coloured. */
+.ind-grid {
   background-image:
-    linear-gradient(rgba(34, 211, 238, 0.045) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(34, 211, 238, 0.045) 1px, transparent 1px),
-    radial-gradient(circle, rgba(200, 210, 224, 0.05) 1px, transparent 1px);
-  background-size: 96px 96px, 96px 96px, 24px 24px;
-  background-position: -1px -1px, -1px -1px, 0 0;
+    linear-gradient(rgba(22, 24, 28, 0.055) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(22, 24, 28, 0.055) 1px, transparent 1px),
+    linear-gradient(rgba(22, 24, 28, 0.028) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(22, 24, 28, 0.028) 1px, transparent 1px);
+  background-size: 120px 120px, 120px 120px, 24px 24px, 24px 24px;
+  background-position: -1px -1px;
 }
 
-/* Sweeping scan-line used by reveals */
-@keyframes hud-scan {
-  0% { transform: translateY(-100%); opacity: 0; }
-  35% { opacity: 1; }
-  100% { transform: translateY(220%); opacity: 0; }
+/* Hairline that reads as a drawn rule rather than a border */
+.ind-rule {
+  background: var(--rule);
 }
 
-/* Subtle accent text glow */
-.hud-glow-cyan {
-  text-shadow: 0 0 18px rgba(34, 211, 238, 0.45);
+/* Focus ring — visible, square, brand-toned */
+.ind-root :focus-visible {
+  outline: 2px solid var(--brand);
+  outline-offset: 2px;
 }
 
-/* Cyan-tinted scrollbar on the marketing page */
-.hud-root ::-webkit-scrollbar-track { background: var(--graphite); }
-.hud-root ::-webkit-scrollbar-thumb { background: #243042; }
-.hud-root ::-webkit-scrollbar-thumb:hover { background: var(--cyan-dim); }
+/* Scrollbar */
+.ind-root ::-webkit-scrollbar-track { background: var(--sunk); }
+.ind-root ::-webkit-scrollbar-thumb { background: #b9b5ad; border-radius: 0; }
+.ind-root ::-webkit-scrollbar-thumb:hover { background: var(--brand); }
 
 @media (prefers-reduced-motion: reduce) {
-  .hud-root *,
-  .hud-root *::before,
-  .hud-root *::after {
+  .ind-root *,
+  .ind-root *::before,
+  .ind-root *::after {
     animation-duration: 0.001ms !important;
     animation-iteration-count: 1 !important;
     transition-duration: 0.001ms !important;
