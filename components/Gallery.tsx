@@ -1,132 +1,29 @@
 "use client"
 
 import { useRef, useState } from "react"
-import { motion, useInView, AnimatePresence } from "framer-motion"
-import { X, Play, ChevronLeft, ChevronRight, Plus, ArrowRight } from "lucide-react"
-import Image from "next/image"
+import { motion, useInView } from "framer-motion"
+import { Play, ChevronLeft, ChevronRight, ArrowRight } from "lucide-react"
 import Link from "next/link"
 import { SectionLabel } from "./industrial"
+import { CatalogCard, CatalogLightbox } from "./CatalogGrid"
 import { useLanguage } from "@/lib/i18n"
+import { buildCatalog } from "@/lib/catalog"
 import { useSectionScrub, usePanY, useScrollStage } from "@/lib/scrollStage"
 
-// Image paths only; label/tag come from the translation dictionary by index.
-const GALLERY_IMAGES = [
-	"/spring/gallery1.jpg",
-	"/spring/item1.jpg",
-	"/spring/gallery2.jpg",
-	"/spring/gallery4.jpg",
-	"/spring/gallery3.jpg",
-	"/spring/item3.jpg",
-	"/spring/gallery5.jpg",
-	"/spring/gallery7.jpg",
-	"/spring/gallery8.jpg",
-	"/spring/item2.jpg",
-	"/spring/item4.jpg",
-	"/spring/item5.jpg",
-	"/spring/gallery6.jpg",
-	"/spring/item6.jpg",
-	"/spring/Mesin1.jpg",
-]
-
-// Stable category key per image index (tags are localized, so we can't group by
-// the tag string). Each category's localized heading comes from the first item's tag.
-const CATEGORY_OF_IMAGE = [
-	"compression", // 0  gallery1
-	"compression", // 1  item1
-	"tension", //     2  gallery2
-	"compression", // 3  gallery4
-	"battery", //     4  gallery3
-	"battery", //     5  item3
-	"compression", // 6  gallery5
-	"compression", // 7  gallery7
-	"compression", // 8  gallery8
-	"wireforming", // 9  item2
-	"wireforming", // 10 item4
-	"compression", // 11 item5
-	"wireforming", // 12 gallery6
-	"compression", // 13 item6
-	"production", //  14 Mesin1 — machine shot, excluded from the catalog grid
-] as const
-
-// Display order of the catalog sections (production is intentionally omitted).
-const CATEGORY_ORDER = ["compression", "battery", "tension", "wireforming"] as const
+// The homepage shows one row per spring type; the full set lives on /[locale]/katalog.
+const PREVIEW_PER_CATEGORY = 4
 
 const VIDEO_SRCS = ["/spring/Mesin1Vid.mp4", "/spring/Mesin2Vid.mp4"]
 
-type GalleryItem = { label: string; image: string; tag: string }
-type CatalogEntry = { item: GalleryItem; flatIndex: number }
-
-function CatalogCard({
-	item,
-	index,
-	flatIndex,
-	onOpen,
-}: {
-	item: GalleryItem
-	index: number
-	flatIndex: number
-	onOpen: () => void
-}) {
-	// Part codes are how a buyer refers back to a photo in an enquiry.
-	const code = `RS-${String(flatIndex + 1).padStart(3, "0")}`
-
-	return (
-		<motion.div
-			initial={{ opacity: 0, y: 14 }}
-			whileInView={{ opacity: 1, y: 0 }}
-			viewport={{ once: true, margin: "-8% 0px" }}
-			transition={{ duration: 0.5, delay: index * 0.05, ease: [0.22, 1, 0.36, 1] }}
-			className="h-full">
-			<button
-				onClick={onOpen}
-				aria-label={`${code} — ${item.label}`}
-				className="group flex h-full w-full flex-col bg-surface text-left transition-colors duration-200 hover:bg-sunk">
-				<div className="relative aspect-[4/3] overflow-hidden">
-					<Image
-						src={item.image}
-						alt={item.label}
-						fill
-						sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
-						className="object-cover object-center transition-transform duration-[600ms] group-hover:scale-[1.04]"
-					/>
-					<span className="absolute right-2 top-2 flex h-6 w-6 items-center justify-center bg-ground/0 text-ink opacity-0 transition-all duration-200 group-hover:bg-ground/90 group-hover:opacity-100">
-						<Plus size={13} />
-					</span>
-				</div>
-
-				{/* Datasheet caption */}
-				<div className="flex flex-1 flex-col gap-1.5 border-t border-rule px-3.5 py-3">
-					<span className="font-mono text-[0.58rem] tracking-[0.16em] text-navy">
-						{code}
-					</span>
-					<span className="line-clamp-2 font-display text-[0.86rem] font-semibold leading-[1.35] tracking-[-0.01em] text-ink">
-						{item.label}
-					</span>
-				</div>
-			</button>
-		</motion.div>
-	)
-}
-
 export default function Gallery() {
 	const { t, lang } = useLanguage()
-	const galleryItems: GalleryItem[] = GALLERY_IMAGES.map((image, i) => ({
-		image,
-		label: t.gallery.items[i].label,
-		tag: t.gallery.items[i].tag,
+	const catalog = buildCatalog(t.catalog).map((g) => ({
+		...g,
+		total: g.items.length,
+		items: g.items.slice(0, PREVIEW_PER_CATEGORY),
 	}))
-
-	// Group items into catalog sections by stable category key, in display order.
-	const catalog = CATEGORY_ORDER.map((key) => {
-		const entries: CatalogEntry[] = galleryItems
-			.map((item, flatIndex) => ({ item, flatIndex }))
-			.filter(({ flatIndex }) => CATEGORY_OF_IMAGE[flatIndex] === key)
-		return {
-			key,
-			heading: entries[0]?.item.tag ?? key,
-			entries,
-		}
-	}).filter((g) => g.entries.length > 0)
+	// Lightbox steps through the previewed photos only.
+	const previewItems = catalog.flatMap((g) => g.items)
 
 	const videoItems = VIDEO_SRCS.map((src, i) => ({
 		src,
@@ -208,22 +105,21 @@ export default function Gallery() {
 							{/* Category header — the count is the useful fact, not an ornament */}
 							<div className="mb-6 flex items-baseline gap-4 border-b border-rule pb-3">
 								<h3 className="font-display text-[1.15rem] font-bold uppercase leading-none tracking-[-0.015em] text-ink">
-									{group.heading}
+									{group.title}
 								</h3>
 								<span className="font-mono text-[0.64rem] tracking-[0.14em] text-ink-faint">
-									{String(group.entries.length).padStart(2, "0")} items
+									{String(group.total).padStart(2, "0")} {t.catalog.itemsUnit}
 								</span>
 							</div>
 
 							{/* Uniform card grid, drawn as one ruled block */}
 							<div className="grid grid-cols-2 gap-px border border-rule bg-rule sm:grid-cols-3 lg:grid-cols-4">
-								{group.entries.map(({ item, flatIndex }, i) => (
+								{group.items.map((item, i) => (
 									<CatalogCard
-										key={flatIndex}
+										key={item.code}
 										item={item}
 										index={i}
-										flatIndex={flatIndex}
-										onOpen={() => setLightbox(flatIndex)}
+										onOpen={() => setLightbox(previewItems.indexOf(item))}
 									/>
 								))}
 							</div>
@@ -340,56 +236,12 @@ export default function Gallery() {
 				</motion.div>
 			</motion.div>
 
-			{/* ── Lightbox ── */}
-			<AnimatePresence>
-				{lightbox !== null && (
-					<motion.div
-						initial={{ opacity: 0 }}
-						animate={{ opacity: 1 }}
-						exit={{ opacity: 0 }}
-						onClick={() => setLightbox(null)}
-						className="fixed inset-0 z-50 flex items-center justify-center bg-ink/80 p-6 backdrop-blur-sm">
-						<motion.div
-							initial={{ scale: 0.96, opacity: 0 }}
-							animate={{ scale: 1, opacity: 1 }}
-							exit={{ scale: 0.96, opacity: 0 }}
-							onClick={(e) => e.stopPropagation()}
-							className="relative w-full max-w-2xl overflow-hidden border border-rule bg-surface shadow-plate-lift">
-							<div className="relative w-full" style={{ minHeight: 300, maxHeight: "78vh" }}>
-								<Image
-									src={galleryItems[lightbox].image}
-									alt={galleryItems[lightbox].label}
-									fill
-									sizes="(max-width: 768px) 100vw, 672px"
-									className="object-contain"
-								/>
-							</div>
-
-							<div className="flex items-center justify-between border-t border-rule px-6 py-4">
-								<div>
-									<span className="mb-1 block font-mono text-[0.6rem] uppercase tracking-[0.16em] text-navy">
-										RS-{String(lightbox + 1).padStart(3, "0")} ·{" "}
-										{galleryItems[lightbox].tag}
-									</span>
-									<p className="font-display text-[0.98rem] font-semibold text-ink">
-										{galleryItems[lightbox].label}
-									</p>
-								</div>
-								<span className="font-mono text-sm text-ink-faint">
-									{lightbox + 1} / {galleryItems.length}
-								</span>
-							</div>
-
-							<button
-								onClick={() => setLightbox(null)}
-								aria-label="Close"
-								className="absolute right-3 top-3 flex h-9 w-9 items-center justify-center border border-rule bg-surface transition-colors hover:border-navy">
-								<X size={17} className="text-ink" />
-							</button>
-						</motion.div>
-					</motion.div>
-				)}
-			</AnimatePresence>
+			<CatalogLightbox
+				items={previewItems}
+				index={lightbox}
+				onChange={setLightbox}
+				labels={t.catalog}
+			/>
 		</section>
 	)
 }
