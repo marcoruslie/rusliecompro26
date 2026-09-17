@@ -9,6 +9,7 @@ const en = {
   nav: {
     // Order matches NAV_LINKS in components/Navbar.tsx
     links: ["About", "Process", "Products", "Capabilities", "Gallery", "Contact"],
+    catalog: "Catalog",
     getQuote: "Get Quote",
   },
   hero: {
@@ -169,6 +170,94 @@ const en = {
     sentTitle: "Message Sent",
     sentText: "Our team will get back to you within 24 hours.",
   },
+  catalog: {
+    label: "Product Catalog",
+    heading: ["Spring", "Catalog"],
+    intro:
+      "Springs from our recent production runs, grouped by type. Everything is made to order — send us a drawing, dimensions, or a sample and we'll build it.",
+    note: "Photos show past production. Size, wire, material, and finish are made to your specification.",
+    typesLabel: "Spring Types",
+    itemsUnit: "items",
+    viewFull: "View Full Catalog",
+    ctaTitle: "Don't see your spring?",
+    ctaText:
+      "We make springs from drawings, specifications, or physical samples. Tell us what you need and our team will send a quote.",
+    ctaButton: "Request a Quote",
+    ctaWhatsapp: "Chat on WhatsApp",
+    close: "Close",
+    prev: "Previous photo",
+    next: "Next photo",
+    // Keys match CATEGORY_KEYS in components/KatalogClient.tsx; `items` order matches its photo lists.
+    categories: {
+      heavy: {
+        title: "Heavy-Duty Compression Springs",
+        text: "Large-wire compression springs for machinery, vibrating equipment, and heavy industrial loads.",
+        items: [
+          "Heavy-Duty Compression Springs — Batch",
+          "Large-Wire Coil Springs",
+          "Heavy-Duty Coil Springs — Set of 4",
+          "Heavy-Duty Coil Springs, Closed Ends",
+          "Medium Compression Springs, Black Finish",
+        ],
+      },
+      compression: {
+        title: "Compression Springs",
+        text: "Precision compression springs in carbon and stainless steel, with open, closed, or ground ends.",
+        items: [
+          "Polished Stainless Compression Spring",
+          "Stainless Compression Spring, Open Ends",
+          "Stainless Compression Spring, Closed Ends",
+          "Stepped-Diameter Compression Spring",
+          "Stepped-Diameter Compression Spring, Dark Finish",
+        ],
+      },
+      conical: {
+        title: "Conical Springs",
+        text: "Tapered springs that compress nearly flat — for battery contacts, buttons, and short installed heights.",
+        items: [
+          "Stainless Conical Spring, Straight Ends",
+          "Long Conical Spring with Axial Legs",
+          "Battery Contact Springs",
+          "Small Conical Spring",
+        ],
+      },
+      extension: {
+        title: "Extension Springs",
+        text: "Tension springs with hook, loop, or custom ends — from small instrument springs to heavy-duty pulls.",
+        items: [
+          "Extension Springs, Full Loop Ends — Set",
+          "Extension Spring, Crossed Loop Ends",
+          "Extension Spring, Side Loop Ends",
+          "Stainless Extension Spring, Hook Ends",
+          "Zinc-Plated Extension Spring",
+          "Heavy Extension Spring, Long Hooks",
+          "Heavy Extension Springs, Double Loop Ends",
+          "Extension Springs, Hook Ends — Batch",
+        ],
+      },
+      torsion: {
+        title: "Torsion Springs",
+        text: "Torsion springs with straight, bent, or hooked legs, set to the angle and torque you need.",
+        items: [
+          "Stainless Torsion Spring",
+          "Torsion Spring, Bent Legs",
+          "Torsion Spring, Hooked Legs",
+          "Long-Leg Torsion Springs — Pair",
+          "Long-Leg Stainless Torsion Springs — Production Batch",
+        ],
+      },
+      wireform: {
+        title: "Wire Forms",
+        text: "Clips, ring clamps, and custom wire shapes bent to your drawing or sample.",
+        items: [
+          "Ring Clamp Spring with Loop Ends",
+          "Ring Clamp Spring, Dark Finish",
+          "Formed Wire Clip",
+          "Coil Spring with Straight Tangent Ends",
+        ],
+      },
+    },
+  },
   footer: {
     rights: "All rights reserved.",
     tagline: "Precision · Reliability · Innovation",
@@ -180,6 +269,7 @@ export type Dict = typeof en;
 const id: Dict = {
   nav: {
     links: ["Tentang", "Proses", "Produk", "Kemampuan", "Galeri", "Kontak"],
+    catalog: "Katalog",
     getQuote: "Minta Penawaran",
   },
   hero: {
@@ -340,6 +430,93 @@ const id: Dict = {
     sentTitle: "Pesan Terkirim",
     sentText: "Tim kami akan menghubungi Anda kembali dalam 24 jam.",
   },
+  catalog: {
+    label: "Katalog Produk",
+    heading: ["Katalog", "Pegas"],
+    intro:
+      "Contoh pegas dari hasil produksi kami, dikelompokkan per jenis. Semua dibuat sesuai pesanan — kirim gambar teknik, ukuran, atau sampel Anda dan kami akan membuatkannya.",
+    note: "Foto adalah hasil produksi sebelumnya. Ukuran, kawat, bahan, dan finishing dibuat sesuai spesifikasi Anda.",
+    typesLabel: "Jenis Pegas",
+    itemsUnit: "item",
+    viewFull: "Lihat Katalog Lengkap",
+    ctaTitle: "Tidak menemukan pegas yang Anda cari?",
+    ctaText:
+      "Kami membuat pegas dari gambar teknik, spesifikasi, atau sampel fisik. Sampaikan kebutuhan Anda dan tim kami akan mengirimkan penawaran.",
+    ctaButton: "Minta Penawaran",
+    ctaWhatsapp: "Chat WhatsApp",
+    close: "Tutup",
+    prev: "Foto sebelumnya",
+    next: "Foto berikutnya",
+    categories: {
+      heavy: {
+        title: "Per Tekan Heavy-Duty",
+        text: "Pegas tekan kawat besar untuk mesin, peralatan getar, dan beban industri berat.",
+        items: [
+          "Per Tekan Heavy-Duty — Satu Batch",
+          "Per Coil Kawat Tebal",
+          "Per Coil Heavy-Duty — Set 4 Pcs",
+          "Per Coil Heavy-Duty, Ujung Tertutup",
+          "Per Tekan Sedang, Finishing Hitam",
+        ],
+      },
+      compression: {
+        title: "Per Tekan",
+        text: "Pegas tekan presisi dari baja karbon dan stainless, dengan ujung terbuka, tertutup, atau digerinda.",
+        items: [
+          "Per Tekan Stainless Mengkilap",
+          "Per Tekan Stainless, Ujung Terbuka",
+          "Per Tekan Stainless, Ujung Tertutup",
+          "Per Tekan Diameter Bertingkat",
+          "Per Tekan Diameter Bertingkat, Finishing Gelap",
+        ],
+      },
+      conical: {
+        title: "Per Konis (Kerucut)",
+        text: "Pegas meruncing yang bisa hampir rata saat ditekan — untuk kontak baterai, tombol, dan ruang pasang yang pendek.",
+        items: [
+          "Per Konis Stainless, Kaki Lurus",
+          "Per Konis Panjang dengan Kaki Aksial",
+          "Per Kontak Baterai",
+          "Per Konis Kecil",
+        ],
+      },
+      extension: {
+        title: "Per Tarik",
+        text: "Pegas tarik dengan ujung kait, ring, atau bentuk khusus — dari ukuran kecil hingga heavy-duty.",
+        items: [
+          "Per Tarik Ujung Ring — Set",
+          "Per Tarik, Ujung Ring Silang",
+          "Per Tarik, Ujung Ring Samping",
+          "Per Tarik Stainless, Ujung Kait",
+          "Per Tarik Lapis Zinc",
+          "Per Tarik Besar, Kait Panjang",
+          "Per Tarik Besar, Ujung Ring Ganda",
+          "Per Tarik Ujung Kait — Satu Batch",
+        ],
+      },
+      torsion: {
+        title: "Per Puntir (Torsi)",
+        text: "Pegas puntir dengan kaki lurus, ditekuk, atau berkait sesuai sudut dan torsi yang dibutuhkan.",
+        items: [
+          "Per Torsi Stainless",
+          "Per Torsi, Kaki Ditekuk",
+          "Per Torsi, Kaki Berkait",
+          "Per Torsi Kaki Panjang — Sepasang",
+          "Per Torsi Stainless Kaki Panjang — Batch Produksi",
+        ],
+      },
+      wireform: {
+        title: "Kawat Bentuk (Wire Forming)",
+        text: "Klip, klem ring, dan bentuk kawat khusus sesuai gambar atau sampel.",
+        items: [
+          "Klem Ring dengan Ujung Kait",
+          "Klem Ring, Finishing Gelap",
+          "Klip Kawat Bentuk",
+          "Per Coil dengan Kaki Lurus",
+        ],
+      },
+    },
+  },
   footer: {
     rights: "Seluruh hak cipta dilindungi.",
     tagline: "Presisi · Keandalan · Inovasi",
@@ -349,6 +526,7 @@ const id: Dict = {
 const zh: Dict = {
   nav: {
     links: ["关于", "工艺", "产品", "能力", "图库", "联系"],
+    catalog: "产品目录",
     getQuote: "获取报价",
   },
   hero: {
@@ -507,6 +685,92 @@ const zh: Dict = {
     button: "请求报价",
     sentTitle: "消息已发送",
     sentText: "我们的团队将在 24 小时内与您联系。",
+  },
+  catalog: {
+    label: "产品目录",
+    heading: ["弹簧", "目录"],
+    intro:
+      "以下是我们近期生产的弹簧，按类型分类。所有产品均按需定制——请发送图纸、尺寸或样品，我们为您生产。",
+    note: "图片为以往生产批次。尺寸、线径、材料及表面处理均按您的规格定制。",
+    typesLabel: "弹簧类型",
+    itemsUnit: "件",
+    viewFull: "查看完整目录",
+    ctaTitle: "没有找到您需要的弹簧？",
+    ctaText: "我们可根据图纸、规格或实物样品生产弹簧。告诉我们您的需求，我们的团队将为您报价。",
+    ctaButton: "获取报价",
+    ctaWhatsapp: "WhatsApp 咨询",
+    close: "关闭",
+    prev: "上一张",
+    next: "下一张",
+    categories: {
+      heavy: {
+        title: "重型压缩弹簧",
+        text: "大线径压缩弹簧，适用于机械、振动设备及重工业载荷。",
+        items: [
+          "重型压缩弹簧——整批",
+          "大线径螺旋弹簧",
+          "重型螺旋弹簧——4 件套",
+          "重型螺旋弹簧，并紧端",
+          "中型压缩弹簧，黑色表面",
+        ],
+      },
+      compression: {
+        title: "压缩弹簧",
+        text: "碳钢及不锈钢精密压缩弹簧，可做开口端、并紧端或磨平端。",
+        items: [
+          "抛光不锈钢压缩弹簧",
+          "不锈钢压缩弹簧，开口端",
+          "不锈钢压缩弹簧，并紧端",
+          "变径压缩弹簧",
+          "变径压缩弹簧，深色表面",
+        ],
+      },
+      conical: {
+        title: "锥形弹簧",
+        text: "压缩后几乎可压平的锥形弹簧——适用于电池触点、按键及安装高度受限的场合。",
+        items: [
+          "不锈钢锥形弹簧，直脚",
+          "带轴向直脚的长锥形弹簧",
+          "电池触点弹簧",
+          "小型锥形弹簧",
+        ],
+      },
+      extension: {
+        title: "拉伸弹簧",
+        text: "带钩、圆环或定制端部的拉伸弹簧——从小型精密弹簧到重型拉簧。",
+        items: [
+          "圆环端拉伸弹簧——套装",
+          "拉伸弹簧，交叉圆环端",
+          "拉伸弹簧，侧向圆环端",
+          "不锈钢拉伸弹簧，钩端",
+          "镀锌拉伸弹簧",
+          "重型拉伸弹簧，长钩",
+          "重型拉伸弹簧，双圈圆环端",
+          "钩端拉伸弹簧——整批",
+        ],
+      },
+      torsion: {
+        title: "扭转弹簧",
+        text: "直脚、折弯脚或钩脚扭转弹簧，按所需角度与扭矩定制。",
+        items: [
+          "不锈钢扭转弹簧",
+          "扭转弹簧，折弯脚",
+          "扭转弹簧，钩脚",
+          "长脚扭转弹簧——一对",
+          "长脚不锈钢扭转弹簧——生产批次",
+        ],
+      },
+      wireform: {
+        title: "线成型件",
+        text: "卡子、环形卡箍及各类异形线材件，按图纸或样品加工。",
+        items: [
+          "带环端的环形卡箍弹簧",
+          "环形卡箍弹簧，深色表面",
+          "异形线卡",
+          "带切向直脚的螺旋弹簧",
+        ],
+      },
+    },
   },
   footer: {
     rights: "保留所有权利。",

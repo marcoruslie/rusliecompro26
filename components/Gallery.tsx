@@ -2,8 +2,9 @@
 
 import { useRef, useState } from "react"
 import { motion, useInView, AnimatePresence } from "framer-motion"
-import { X, Play, ChevronLeft, ChevronRight, Plus } from "lucide-react"
+import { X, Play, ChevronLeft, ChevronRight, Plus, ArrowRight } from "lucide-react"
 import Image from "next/image"
+import Link from "next/link"
 import { SectionLabel } from "./industrial"
 import { useLanguage } from "@/lib/i18n"
 import { useSectionScrub, usePanY, useScrollStage } from "@/lib/scrollStage"
@@ -108,7 +109,7 @@ function CatalogCard({
 }
 
 export default function Gallery() {
-	const { t } = useLanguage()
+	const { t, lang } = useLanguage()
 	const galleryItems: GalleryItem[] = GALLERY_IMAGES.map((image, i) => ({
 		image,
 		label: t.gallery.items[i].label,
@@ -181,9 +182,17 @@ export default function Gallery() {
 							{t.gallery.heading[0]}{" "}
 							<span className="text-navy">{t.gallery.heading[1]}</span>
 						</h2>
-						<p className="max-w-[38ch] font-body text-[0.88rem] leading-[1.7] text-ink-soft">
-							{t.gallery.description}
-						</p>
+						<div className="flex max-w-[38ch] flex-col items-start gap-4">
+							<p className="font-body text-[0.88rem] leading-[1.7] text-ink-soft">
+								{t.gallery.description}
+							</p>
+							<Link
+								href={`/${lang}/katalog`}
+								className="group inline-flex items-center gap-2 border-b border-navy pb-1 font-mono text-[0.7rem] uppercase tracking-[0.16em] text-navy">
+								{t.catalog.viewFull}
+								<ArrowRight size={13} className="transition-transform duration-200 group-hover:translate-x-1" />
+							</Link>
+						</div>
 					</div>
 				</motion.div>
 

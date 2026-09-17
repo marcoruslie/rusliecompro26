@@ -5,6 +5,7 @@ import { motion, AnimatePresence, useScroll, useSpring } from "framer-motion";
 import { Menu, X } from "lucide-react";
 import Link from "next/link";
 import Image from "next/image";
+import { usePathname } from "next/navigation";
 import { useLanguage } from "@/lib/i18n";
 import LanguageSwitcher from "./LanguageSwitcher";
 import { useScrollStage } from "@/lib/scrollStage";
@@ -19,7 +20,13 @@ const NAV_HREFS = [
 ];
 
 export default function Navbar() {
-  const { t } = useLanguage();
+  const { t, lang } = useLanguage();
+  const pathname = usePathname();
+  // Section hashes only resolve on the homepage; elsewhere (e.g. /katalog) link back to it.
+  const onHome = pathname === `/${lang}`;
+  const homeHref = (hash: string) => (onHome ? hash : `/${lang}${hash}`);
+  const catalogHref = `/${lang}/katalog`;
+  const onCatalog = pathname === catalogHref;
   const { stageEnabled, sections, goTo, globalProgress } = useScrollStage();
   const indexOf = (href: string) =>
     sections.findIndex((s) => `#${s.id}` === href);
@@ -32,7 +39,7 @@ export default function Navbar() {
     }
   };
   const navLinks = NAV_HREFS.map((href, i) => ({
-    href,
+    href: homeHref(href),
     label: t.nav.links[i],
   }));
   const [scrolled, setScrolled] = useState(false);
@@ -62,7 +69,7 @@ export default function Navbar() {
         }`}
       >
         <div className="mx-auto flex h-[68px] max-w-7xl items-center justify-between px-6 lg:px-10">
-          <Link href="/" className="flex items-center gap-3">
+          <Link href={`/${lang}`} className="flex items-center gap-3">
             {/* next/image serves a ~96px WebP instead of the 128KB 1024px source PNG */}
             <Image
               src="/Logo_Ruslie_Spring.png"
@@ -75,7 +82,7 @@ export default function Navbar() {
           </Link>
 
           {/* Desktop nav */}
-          <div className="hidden items-center gap-8 md:flex">
+          <div className="hidden items-center gap-5 lg:flex xl:gap-8">
             {navLinks.map((link) => (
               <a
                 key={link.href}
@@ -87,17 +94,31 @@ export default function Navbar() {
                 <span className="absolute -bottom-1.5 left-0 h-px w-0 bg-navy transition-all duration-300 group-hover:w-full" />
               </a>
             ))}
+            <Link
+              href={catalogHref}
+              aria-current={onCatalog ? "page" : undefined}
+              className={`group relative font-mono text-[0.72rem] uppercase tracking-[0.16em] transition-colors duration-200 hover:text-navy ${
+                onCatalog ? "text-navy" : "text-ink-soft"
+              }`}
+            >
+              {t.nav.catalog}
+              <span
+                className={`absolute -bottom-1.5 left-0 h-px bg-navy transition-all duration-300 group-hover:w-full ${
+                  onCatalog ? "w-full" : "w-0"
+                }`}
+              />
+            </Link>
             <LanguageSwitcher />
             <a
-              href="#contact"
+              href={homeHref("#contact")}
               onClick={onNavClick("#contact")}
-              className="rounded-plate bg-navy px-4 py-2 font-mono text-[0.72rem] font-medium uppercase tracking-[0.16em] text-white transition-colors duration-200 hover:bg-navy-hover"
+              className="whitespace-nowrap rounded-plate bg-navy px-4 py-2 font-mono text-[0.72rem] font-medium uppercase tracking-[0.16em] text-white transition-colors duration-200 hover:bg-navy-hover"
             >
               {t.nav.getQuote}
             </a>
           </div>
 
-          <div className="flex items-center gap-4 md:hidden">
+          <div className="flex items-center gap-4 lg:hidden">
             <LanguageSwitcher />
             <button
               className="p-1 text-ink"
@@ -124,7 +145,7 @@ export default function Navbar() {
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -12 }}
             transition={{ duration: 0.22 }}
-            className="fixed left-0 right-0 top-[69px] z-40 border-b border-rule bg-ground md:hidden"
+            className="fixed left-0 right-0 top-[69px] z-40 border-b border-rule bg-ground lg:hidden"
           >
             <div className="flex flex-col gap-5 px-6 py-6">
               {navLinks.map((link) => (
@@ -140,8 +161,17 @@ export default function Navbar() {
                   {link.label}
                 </a>
               ))}
+              <Link
+                href={catalogHref}
+                onClick={() => setMenuOpen(false)}
+                className={`font-mono text-sm uppercase tracking-[0.16em] transition-colors hover:text-navy ${
+                  onCatalog ? "text-navy" : "text-ink-soft"
+                }`}
+              >
+                {t.nav.catalog}
+              </Link>
               <a
-                href="#contact"
+                href={homeHref("#contact")}
                 onClick={(e) => {
                   onNavClick("#contact")(e);
                   setMenuOpen(false);

@@ -50,11 +50,31 @@ export const ORG_PHONE = "+6285104815151";
 export const ORG_EMAIL = "rusliespring@gmail.com";
 export const OG_IMAGE = "/banner/banner2.jpg";
 
-/** hreflang map (every locale + x-default) for metadata + sitemap alternates. */
-export function localeAlternates(): Record<string, string> {
+/** Catalog page (/[locale]/katalog) title + description. */
+export const CATALOG_SEO: Record<Lang, Pick<SeoEntry, "title" | "description">> = {
+  en: {
+    title: "Spring Catalog — Ruslie Spring | Custom Springs Surabaya",
+    description:
+      "Browse Ruslie Spring's catalog of custom springs made in Surabaya, Indonesia: heavy-duty and precision compression springs, conical, extension, and torsion springs, and wire forms.",
+  },
+  id: {
+    title: "Katalog Pegas — Ruslie Spring | Kustom Spring Surabaya",
+    description:
+      "Katalog pegas kustom Ruslie Spring, Surabaya: per tekan heavy-duty dan presisi, per konis, per tarik, per puntir, dan kawat bentuk — dibuat sesuai pesanan.",
+  },
+  zh: {
+    title: "弹簧产品目录 — Ruslie Spring | 泗水定制弹簧",
+    description:
+      "Ruslie Spring 印尼泗水定制弹簧产品目录：重型及精密压缩弹簧、锥形弹簧、拉伸弹簧、扭转弹簧及线成型件，均按需定制。",
+  },
+};
+
+/** hreflang map (every locale + x-default) for metadata + sitemap alternates.
+ *  `path` is the locale-relative sub-path, e.g. "/katalog". */
+export function localeAlternates(path = ""): Record<string, string> {
   const languages: Record<string, string> = {};
-  for (const l of LOCALES) languages[l] = `${SITE_URL}/${l}`;
-  languages["x-default"] = `${SITE_URL}/${DEFAULT_LOCALE}`;
+  for (const l of LOCALES) languages[l] = `${SITE_URL}/${l}${path}`;
+  languages["x-default"] = `${SITE_URL}/${DEFAULT_LOCALE}${path}`;
   return languages;
 }
 

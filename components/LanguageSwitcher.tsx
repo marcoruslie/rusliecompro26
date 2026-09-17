@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { Globe, Check } from "lucide-react";
-import { useRouter } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { useLanguage, LANGUAGES } from "@/lib/i18n";
 
 export default function LanguageSwitcher({
@@ -13,6 +13,7 @@ export default function LanguageSwitcher({
 }) {
   const { lang } = useLanguage();
   const router = useRouter();
+  const pathname = usePathname();
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
 
@@ -58,7 +59,9 @@ export default function LanguageSwitcher({
                 <li key={l.code} role="option" aria-selected={active}>
                   <button
                     onClick={() => {
-                      router.push(`/${l.code}`);
+                      // Swap only the locale segment so /en/katalog → /id/katalog.
+                      const rest = pathname.replace(/^\/(en|id|zh)(?=\/|$)/, "");
+                      router.push(`/${l.code}${rest}`);
                       setOpen(false);
                     }}
                     className={`flex w-full items-center justify-between gap-3 px-4 py-2 font-mono text-[0.72rem] tracking-[0.12em] uppercase transition-colors duration-150 ${
