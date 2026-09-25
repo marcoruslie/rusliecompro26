@@ -439,6 +439,12 @@ select.admin-input option { background: #ffffff; color: #1e293b; }
   background-position: -1px -1px;
 }
 
+/* Semi-condensed Archivo for headlines — the narrow, heavy cut you see
+   stamped on machine plates and wire-coil tags. */
+.font-condensed {
+  font-variation-settings: "wdth" 78;
+}
+
 /* Hairline that reads as a drawn rule rather than a border */
 .ind-rule {
   background: var(--rule);

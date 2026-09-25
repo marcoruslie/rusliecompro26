@@ -2,13 +2,17 @@
 
 import { useRef, useState } from "react";
 import { motion, useInView, useMotionValueEvent } from "framer-motion";
-import { MapPin, Phone, Mail, ArrowRight, Check } from "lucide-react";
-import { SectionLabel, GridTexture } from "./industrial";
+import { MapPin, Phone, Mail, ArrowRight, Check, MessageCircle } from "lucide-react";
+import { SectionLabel, Action } from "./industrial";
+import { ORG_PHONE } from "@/lib/seo";
 import { useLanguage } from "@/lib/i18n";
 import { useSectionScrub, useScrollStage } from "@/lib/scrollStage";
 
-const CONTACT_INFO = [
-  { icon: MapPin, text: "Jl. Sikatan 45, Manukan Wetan, Tandes" },
+export const WHATSAPP_URL = `https://wa.me/${ORG_PHONE.replace(/\D/g, "")}`;
+
+// Shared with the footer.
+export const CONTACT_INFO = [
+  { icon: MapPin, text: "Jl. Sikatan 45, Manukan Wetan, Tandes, Surabaya" },
   { icon: Phone, text: "+62851 0481 5151" },
   { icon: Mail, text: "rusliespring@gmail.com" },
 ];
@@ -27,40 +31,40 @@ export default function Contact() {
   const inView = stageEnabled ? scrubReveal : nativeInView;
 
   const fieldClass =
-    "w-full rounded-plate border border-rule bg-surface px-4 py-3 font-body text-[0.92rem] text-ink outline-none transition-colors duration-200 placeholder:text-ink-faint focus:border-navy";
+    "w-full rounded-plate border border-rule-strong bg-surface px-4 py-3.5 font-body text-[0.92rem] text-ink outline-none transition-colors duration-200 placeholder:text-ink-faint focus:border-navy";
 
   return (
     <section
       id="contact"
       ref={ref}
-      className={`relative overflow-hidden border-t border-rule bg-sunk px-6 lg:px-10 ${
-        stageEnabled ? "flex h-screen items-center py-20" : "py-[110px]"
+      className={`relative overflow-hidden border-t border-rule bg-ground px-6 lg:px-10 ${
+        stageEnabled ? "flex h-screen items-center py-20" : "py-[120px]"
       }`}
     >
-      <GridTexture fade={false} opacity={0.45} />
-
-      <div className="relative z-10 mx-auto grid max-w-6xl grid-cols-1 gap-14 lg:grid-cols-[1fr_1fr] lg:gap-20">
+      <div className="relative z-10 mx-auto grid max-w-7xl grid-cols-1 gap-14 lg:grid-cols-[1fr_1fr] lg:gap-20">
         {/* Left — the ask */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={inView ? { opacity: 1, y: 0 } : undefined}
           transition={{ duration: 0.6 }}
         >
-          <SectionLabel label={t.contact.label} className="mb-6" />
-          <h2 className="mb-5 font-display text-[clamp(1.9rem,3.8vw,3rem)] font-bold uppercase leading-[1.05] tracking-[-0.022em] text-ink">
-            {t.contact.heading[0]}
-            <br />
-            <span className="text-navy">{t.contact.heading[1]}</span>
+          <SectionLabel label={t.contact.label} className="mb-5" />
+          <h2 className="font-condensed mb-6 font-display text-[clamp(2.3rem,4.6vw,3.9rem)] font-extrabold leading-[0.98] tracking-[-0.02em] text-ink">
+            {t.contact.heading[0]} {t.contact.heading[1]}
           </h2>
-          <p className="mb-10 max-w-[46ch] font-body text-[0.98rem] leading-[1.8] text-ink-soft">
+          <p className="mb-8 max-w-[48ch] font-body text-[1.02rem] leading-[1.8] text-ink-soft">
             {t.contact.paragraph}
           </p>
+
+          <Action href={WHATSAPP_URL} variant="ghost" className="mb-10">
+            <MessageCircle size={16} /> {t.catalog.ctaWhatsapp}
+          </Action>
 
           <div className="divide-y divide-rule border-t border-rule">
             {CONTACT_INFO.map(({ icon: Icon, text }) => (
               <div key={text} className="flex items-center gap-3 py-4">
-                <Icon size={15} strokeWidth={1.7} className="flex-shrink-0 text-navy" />
-                <span className="font-mono text-[0.76rem] text-ink-soft">
+                <Icon size={17} strokeWidth={1.7} className="flex-shrink-0 text-navy" />
+                <span className="font-body text-[0.95rem] text-ink">
                   {text}
                 </span>
               </div>
@@ -73,7 +77,7 @@ export default function Contact() {
           initial={{ opacity: 0, y: 20 }}
           animate={inView ? { opacity: 1, y: 0 } : undefined}
           transition={{ duration: 0.6, delay: 0.12 }}
-          className="border border-rule bg-ground p-7 shadow-plate lg:p-9"
+          className="self-start rounded-plate border border-rule bg-surface p-7 shadow-plate lg:p-10"
         >
           {!sent ? (
             <div className="flex flex-col gap-3">
@@ -82,16 +86,17 @@ export default function Contact() {
                 t.contact.placeholders.company,
                 t.contact.placeholders.email,
               ].map((ph) => (
-                <input key={ph} placeholder={ph} className={fieldClass} />
+                <input key={ph} placeholder={ph} aria-label={ph} className={fieldClass} />
               ))}
               <textarea
                 placeholder={t.contact.placeholders.message}
+                aria-label={t.contact.placeholders.message}
                 rows={4}
                 className={`${fieldClass} resize-none`}
               />
               <button
                 onClick={() => setSent(true)}
-                className="mt-1 flex cursor-pointer items-center justify-center gap-2 rounded-plate bg-navy px-8 py-4 font-mono text-[0.78rem] font-medium uppercase tracking-[0.16em] text-white transition-colors duration-200 hover:bg-navy-hover"
+                className="mt-2 flex cursor-pointer items-center justify-center gap-2 rounded-plate bg-navy px-8 py-4 font-display text-[0.95rem] font-semibold text-white transition-colors duration-200 hover:bg-navy-hover"
               >
                 {t.contact.button}
                 <ArrowRight size={15} />

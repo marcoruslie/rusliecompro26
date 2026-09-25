@@ -55,15 +55,20 @@ export function GridTexture({
 export function SectionLabel({
   label,
   className = "",
+  tone = "light",
 }: {
   label: string;
   className?: string;
+  /** "dark" for labels sitting on a navy band. */
+  tone?: "light" | "dark";
 }) {
   return (
     <div
-      className={`flex items-center gap-3 font-mono text-[0.66rem] uppercase tracking-[0.28em] text-ink-faint ${className}`}
+      className={`flex items-center gap-3 font-display text-[0.9rem] font-semibold ${
+        tone === "dark" ? "text-silver" : "text-navy"
+      } ${className}`}
     >
-      <span className="h-px w-6 bg-navy" />
+      <span className={`h-[3px] w-5 ${tone === "dark" ? "bg-silver" : "bg-navy"}`} />
       {label}
     </div>
   );
@@ -135,19 +140,22 @@ export function Action({
   href?: string;
   children: ReactNode;
   className?: string;
-  variant?: "primary" | "ghost";
+  /** "inverse" / "outline" are the pair used on navy bands. */
+  variant?: "primary" | "ghost" | "inverse" | "outline";
   onClick?: () => void;
 }) {
-  const styles =
-    variant === "primary"
-      ? "bg-navy text-white hover:bg-navy-hover"
-      : "border border-rule-strong text-ink hover:border-navy hover:text-navy";
+  const styles = {
+    primary: "bg-navy text-white hover:bg-navy-hover",
+    ghost: "border border-rule-strong text-ink hover:border-navy hover:text-navy",
+    inverse: "bg-white text-navy hover:bg-silver-light",
+    outline: "border border-white/40 text-white hover:border-white hover:bg-white/10",
+  }[variant];
 
   return (
     <a
       href={href}
       onClick={onClick}
-      className={`inline-flex items-center justify-center gap-2 rounded-plate px-7 py-3.5 font-mono text-[0.74rem] font-medium uppercase tracking-[0.18em] no-underline transition-colors duration-200 ${styles} ${className}`}
+      className={`inline-flex items-center justify-center gap-2 rounded-plate px-6 py-3.5 font-display text-[0.92rem] font-semibold no-underline transition-colors duration-200 ${styles} ${className}`}
     >
       {children}
     </a>

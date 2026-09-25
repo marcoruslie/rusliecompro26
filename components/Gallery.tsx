@@ -1,247 +1,130 @@
 "use client"
 
 import { useRef, useState } from "react"
-import { motion, useInView } from "framer-motion"
-import { Play, ChevronLeft, ChevronRight, ArrowRight } from "lucide-react"
-import Link from "next/link"
-import { SectionLabel } from "./industrial"
-import { CatalogCard, CatalogLightbox } from "./CatalogGrid"
+import { ArrowRight, Plus } from "lucide-react"
+import Image from "next/image"
+import { Reveal, SectionLabel, Action } from "./industrial"
+import { CatalogLightbox } from "./CatalogGrid"
 import { useLanguage } from "@/lib/i18n"
 import { buildCatalog } from "@/lib/catalog"
-import { useSectionScrub, usePanY, useScrollStage } from "@/lib/scrollStage"
-
-// The homepage shows one row per spring type; the full set lives on /[locale]/katalog.
-const PREVIEW_PER_CATEGORY = 4
+import { useScrollStage } from "@/lib/scrollStage"
 
 const VIDEO_SRCS = ["/spring/Mesin1Vid.mp4", "/spring/Mesin2Vid.mp4"]
 
+// Mosaic placement for the production-run photos: the first is the large tile.
+const TILE_SPANS = [
+	"col-span-2 row-span-2",
+	"",
+	"",
+	"",
+	"",
+]
+
 export default function Gallery() {
 	const { t, lang } = useLanguage()
-	const catalog = buildCatalog(t.catalog).map((g) => ({
-		...g,
-		total: g.items.length,
-		items: g.items.slice(0, PREVIEW_PER_CATEGORY),
-	}))
-	// Lightbox steps through the previewed photos only.
-	const previewItems = catalog.flatMap((g) => g.items)
+	// The homepage shows the shop floor; the per-type photos live on /[locale]/katalog.
+	const production = buildCatalog(t.catalog).find((g) => g.key === "bulk")!
+	const photos = production.items
+	const videos = VIDEO_SRCS.map((src, i) => ({ src, label: t.gallery.videos[i] }))
 
-	const videoItems = VIDEO_SRCS.map((src, i) => ({
-		src,
-		label: t.gallery.videos[i],
-	}))
-	const [topIndex, setTopIndex] = useState(0)
-	const total = videoItems.length
-	const videoRefs = useRef<(HTMLVideoElement | null)[]>([])
-
-	const cycleNext = () => {
-		videoRefs.current.forEach((v) => {
-			if (v) {
-				v.pause()
-				v.currentTime = 0
-			}
-		})
-		setTopIndex((p) => (p + 1) % total)
-	}
-	const cyclePrev = () => {
-		videoRefs.current.forEach((v) => {
-			if (v) {
-				v.pause()
-				v.currentTime = 0
-			}
-		})
-		setTopIndex((p) => (p - 1 + total) % total)
-	}
 	const ref = useRef<HTMLElement>(null)
-	const contentRef = useRef<HTMLDivElement>(null)
 	const { stageEnabled } = useScrollStage()
-	const progress = useSectionScrub("gallery", ref)
-	const panY = usePanY(progress, contentRef, stageEnabled)
-	const inView = useInView(ref, { once: true, margin: "-80px" })
 	const [lightbox, setLightbox] = useState<number | null>(null)
 
 	return (
 		<section
 			id="gallery"
 			ref={ref}
-			className={`relative overflow-hidden border-t border-rule bg-surface px-6 lg:px-10 ${
-				stageEnabled ? "h-screen py-20" : "py-[110px]"
+			className={`relative border-t border-rule bg-surface px-6 lg:px-10 ${
+				stageEnabled ? "h-screen py-20" : "py-[120px]"
 			}`}>
-			<motion.div ref={contentRef} style={{ y: panY }} className="relative mx-auto max-w-7xl">
+			<div className="mx-auto max-w-7xl">
 				{/* ── Header ── */}
-				<motion.div
-					initial={{ opacity: 0, y: 18 }}
-					animate={inView ? { opacity: 1, y: 0 } : undefined}
-					transition={{ duration: 0.55 }}
-					className="mb-12">
-					<SectionLabel label={t.gallery.label} className="mb-6" />
-					<div className="flex flex-col justify-between gap-5 sm:flex-row sm:items-end">
-						<h2 className="font-display text-[clamp(1.9rem,3.4vw,2.9rem)] font-bold uppercase tracking-[-0.022em] text-ink">
-							{t.gallery.heading[0]}{" "}
-							<span className="text-navy">{t.gallery.heading[1]}</span>
+				<Reveal className="mb-12 flex flex-col justify-between gap-6 lg:flex-row lg:items-end">
+					<div>
+						<SectionLabel label={t.gallery.label} className="mb-5" />
+						<h2 className="font-condensed font-display text-[clamp(2.3rem,4.6vw,3.9rem)] font-extrabold leading-[0.98] tracking-[-0.02em] text-ink">
+							{production.title}
 						</h2>
-						<div className="flex max-w-[38ch] flex-col items-start gap-4">
-							<p className="font-body text-[0.88rem] leading-[1.7] text-ink-soft">
-								{t.gallery.description}
-							</p>
-							<Link
-								href={`/${lang}/katalog`}
-								className="group inline-flex items-center gap-2 border-b border-navy pb-1 font-mono text-[0.7rem] uppercase tracking-[0.16em] text-navy">
-								{t.catalog.viewFull}
-								<ArrowRight size={13} className="transition-transform duration-200 group-hover:translate-x-1" />
-							</Link>
-						</div>
 					</div>
-				</motion.div>
+					<p className="max-w-[46ch] font-body text-[1rem] leading-[1.75] text-ink-soft">{production.text}</p>
+				</Reveal>
 
-				{/* ── Catalog sections (one per category) ── */}
-				<div className="space-y-14">
-					{catalog.map((group) => (
-						<motion.div
-							key={group.key}
-							initial={{ opacity: 0, y: 18 }}
-							whileInView={{ opacity: 1, y: 0 }}
-							viewport={{ once: true, margin: "-12% 0px" }}
-							transition={{ duration: 0.55, ease: [0.22, 1, 0.36, 1] }}>
-							{/* Category header — the count is the useful fact, not an ornament */}
-							<div className="mb-6 flex items-baseline gap-4 border-b border-rule pb-3">
-								<h3 className="font-display text-[1.15rem] font-bold uppercase leading-none tracking-[-0.015em] text-ink">
-									{group.title}
-								</h3>
-								<span className="font-mono text-[0.64rem] tracking-[0.14em] text-ink-faint">
-									{String(group.total).padStart(2, "0")} {t.catalog.itemsUnit}
+				{/* ── Production mosaic ── */}
+				<div className="grid auto-rows-[160px] grid-cols-2 gap-3 sm:auto-rows-[220px] lg:grid-cols-4">
+					{photos.map((item, i) => (
+						<Reveal key={item.code} delay={i * 0.05} className={TILE_SPANS[i]}>
+							<button
+								onClick={() => setLightbox(i)}
+								aria-label={item.label}
+								className="group relative block h-full w-full overflow-hidden rounded-plate bg-sunk text-left">
+								<Image
+									src={item.image}
+									alt={item.label}
+									fill
+									sizes={i === 0 ? "(max-width: 1024px) 100vw, 50vw" : "(max-width: 1024px) 50vw, 25vw"}
+									className="object-cover transition-transform duration-[700ms] ease-out group-hover:scale-[1.04]"
+								/>
+								<span className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-navy-dark/85 to-transparent px-4 pb-3 pt-10 font-body text-[0.85rem] font-medium leading-snug text-white opacity-100 transition-opacity duration-200 lg:opacity-0 lg:group-hover:opacity-100">
+									{item.label}
 								</span>
-							</div>
-
-							{/* Uniform card grid, drawn as one ruled block */}
-							<div className="grid grid-cols-2 gap-px border border-rule bg-rule sm:grid-cols-3 lg:grid-cols-4">
-								{group.items.map((item, i) => (
-									<CatalogCard
-										key={item.code}
-										item={item}
-										index={i}
-										onOpen={() => setLightbox(previewItems.indexOf(item))}
-									/>
-								))}
-							</div>
-						</motion.div>
+								<span className="absolute right-3 top-3 flex h-8 w-8 items-center justify-center rounded-plate bg-white/90 text-navy opacity-0 transition-opacity duration-200 group-hover:opacity-100">
+									<Plus size={16} />
+								</span>
+							</button>
+						</Reveal>
 					))}
 				</div>
 
+				<div className="mt-8 flex justify-end">
+					<a
+						href={`/${lang}/katalog`}
+						className="group inline-flex items-center gap-2 font-display text-[0.95rem] font-semibold text-navy">
+						{t.catalog.viewFull}
+						<ArrowRight size={16} className="transition-transform duration-200 group-hover:translate-x-1" />
+					</a>
+				</div>
+
 				{/* ── Production videos ── */}
-				<motion.div
-					initial={{ opacity: 0, y: 18 }}
-					animate={inView ? { opacity: 1, y: 0 } : undefined}
-					transition={{ duration: 0.6, delay: 0.25 }}
-					className="mt-20">
-					<div className="mb-8 flex items-baseline gap-4 border-b border-rule pb-3">
-						<h3 className="font-display text-[1.15rem] font-bold uppercase leading-none tracking-[-0.015em] text-ink">
+				<div className="mt-20 grid grid-cols-1 gap-10 border-t border-rule pt-14 lg:grid-cols-[1fr_1.4fr] lg:gap-16">
+					<Reveal>
+						<h3 className="font-condensed mb-4 font-display text-[clamp(1.8rem,3vw,2.6rem)] font-extrabold leading-[1] tracking-[-0.015em] text-ink">
 							{t.gallery.productionVideos}
 						</h3>
-						<span className="font-mono text-[0.64rem] uppercase tracking-[0.14em] text-ink-faint">
-							{t.gallery.behindProcess}
-						</span>
-					</div>
+						<p className="mb-8 max-w-[40ch] font-body text-[1rem] leading-[1.75] text-ink-soft">
+							{t.gallery.description}
+						</p>
+						<Action href="#contact" variant="ghost">
+							{t.catalog.ctaButton}
+						</Action>
+					</Reveal>
 
-					<div className="flex flex-col items-center gap-6">
-						<div
-							className="relative"
-							style={{ width: "min(360px, 100%)", height: "min(64vh, 640px)" }}>
-							{videoItems.map((vid, i) => {
-								const offset = (((i - topIndex) % total) + total) % total
-								const isActive = offset === 0
-
-								return (
-									<motion.div
-										key={i}
-										animate={{
-											x: isActive ? 0 : offset * 16,
-											y: isActive ? 0 : offset * 8,
-											scale: isActive ? 1 : 1 - offset * 0.04,
-										}}
-										transition={{ type: "spring", stiffness: 280, damping: 26 }}
-										onClick={() => !isActive && setTopIndex(i)}
-										className="absolute inset-0 overflow-hidden border shadow-plate"
-										style={{
-											zIndex: total - offset,
-											borderColor: isActive ? "#021d47" : "#dcd9d3",
-											cursor: isActive ? "default" : "pointer",
-										}}>
-										{!isActive && (
-											<div className="absolute inset-0 z-10 flex items-center justify-center bg-ground/70">
-												<Play size={20} className="translate-x-[1px] text-navy" />
-											</div>
-										)}
-
+					<div className="grid grid-cols-2 gap-3 sm:gap-5">
+						{videos.map((vid, i) => (
+							<Reveal key={vid.src} delay={i * 0.08}>
+								<figure>
+									<div className="relative aspect-[9/16] overflow-hidden rounded-plate bg-navy-dark">
 										<video
-											ref={(el) => {
-												videoRefs.current[i] = el
-											}}
 											src={vid.src}
 											className="h-full w-full object-cover"
-											style={{ pointerEvents: isActive ? "auto" : "none" }}
-											controls={isActive}
+											controls
 											playsInline
+											muted
 											preload="metadata"
 											loop
-											onCanPlay={(e) => {
-												if (isActive) (e.target as HTMLVideoElement).play()
-											}}
 										/>
-									</motion.div>
-								)
-							})}
-						</div>
-
-						{/* Controls */}
-						<div className="flex items-center gap-4">
-							<button
-								onClick={cyclePrev}
-								aria-label="Previous video"
-								className="flex h-9 w-9 items-center justify-center rounded-plate border border-rule bg-surface transition-colors hover:border-navy">
-								<ChevronLeft size={17} className="text-ink" />
-							</button>
-
-							<div className="flex items-center gap-2">
-								{videoItems.map((_, i) => (
-									<button
-										key={i}
-										onClick={() => setTopIndex(i)}
-										aria-label={`Video ${i + 1}`}
-										className="h-1.5 transition-all duration-300"
-										style={{
-											width: i === topIndex ? 22 : 8,
-											background: i === topIndex ? "#021d47" : "#dcd9d3",
-										}}
-									/>
-								))}
-							</div>
-
-							<button
-								onClick={cycleNext}
-								aria-label="Next video"
-								className="flex h-9 w-9 items-center justify-center rounded-plate border border-rule bg-surface transition-colors hover:border-navy">
-								<ChevronRight size={17} className="text-ink" />
-							</button>
-						</div>
-
-						<div className="text-center">
-							<span className="mb-1 block font-mono text-[0.6rem] uppercase tracking-[0.15em] text-ink-faint">
-								{t.gallery.productionProcess} · {topIndex + 1} / {total}
-							</span>
-							<span className="font-display text-[0.98rem] font-semibold text-ink">
-								{videoItems[topIndex].label}
-							</span>
-						</div>
+									</div>
+									<figcaption className="mt-3 font-body text-[0.88rem] font-medium text-ink">
+										{vid.label}
+									</figcaption>
+								</figure>
+							</Reveal>
+						))}
 					</div>
-				</motion.div>
-			</motion.div>
+				</div>
+			</div>
 
-			<CatalogLightbox
-				items={previewItems}
-				index={lightbox}
-				onChange={setLightbox}
-				labels={t.catalog}
-			/>
+			<CatalogLightbox items={photos} index={lightbox} onChange={setLightbox} labels={t.catalog} />
 		</section>
 	)
 }

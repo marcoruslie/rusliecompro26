@@ -62,22 +62,21 @@ export default function Navbar() {
   return (
     <>
       <nav
-        className={`fixed left-0 right-0 top-0 z-50 transition-colors duration-300 ${
-          scrolled
-            ? "border-b border-rule bg-ground/90 backdrop-blur-md"
-            : "border-b border-transparent bg-transparent"
+        className={`fixed left-0 right-0 top-0 z-50 border-b border-rule bg-surface transition-shadow duration-300 ${
+          scrolled ? "shadow-plate" : ""
         }`}
       >
         <div className="mx-auto flex h-[68px] max-w-7xl items-center justify-between px-6 lg:px-10">
-          <Link href={`/${lang}`} className="flex items-center gap-3">
-            {/* next/image serves a ~96px WebP instead of the 128KB 1024px source PNG */}
+          <Link href={`/${lang}`} className="relative block h-11 w-[150px] overflow-hidden">
+            {/* The source PNG is a square with the wordmark in its middle ~57%,
+                so it is rendered oversized and cropped to the wordmark. */}
             <Image
               src="/Logo_Ruslie_Spring.png"
               alt="Ruslie Spring"
-              width={96}
-              height={96}
+              width={240}
+              height={240}
               priority
-              className="h-auto w-24 object-contain"
+              className="absolute left-1/2 top-1/2 h-[240px] w-[240px] max-w-none -translate-x-1/2 -translate-y-1/2"
             />
           </Link>
 
@@ -88,22 +87,22 @@ export default function Navbar() {
                 key={link.href}
                 href={link.href}
                 onClick={onNavClick(link.href)}
-                className="group relative font-mono text-[0.72rem] uppercase tracking-[0.16em] text-ink-soft transition-colors duration-200 hover:text-navy"
+                className="group relative font-display text-[0.9rem] font-medium text-ink-soft transition-colors duration-200 hover:text-navy"
               >
                 {link.label}
-                <span className="absolute -bottom-1.5 left-0 h-px w-0 bg-navy transition-all duration-300 group-hover:w-full" />
+                <span className="absolute -bottom-[23px] left-0 h-[3px] w-0 bg-navy transition-all duration-300 group-hover:w-full" />
               </a>
             ))}
             <Link
               href={catalogHref}
               aria-current={onCatalog ? "page" : undefined}
-              className={`group relative font-mono text-[0.72rem] uppercase tracking-[0.16em] transition-colors duration-200 hover:text-navy ${
+              className={`group relative font-display text-[0.9rem] font-medium transition-colors duration-200 hover:text-navy ${
                 onCatalog ? "text-navy" : "text-ink-soft"
               }`}
             >
               {t.nav.catalog}
               <span
-                className={`absolute -bottom-1.5 left-0 h-px bg-navy transition-all duration-300 group-hover:w-full ${
+                className={`absolute -bottom-[23px] left-0 h-[3px] bg-navy transition-all duration-300 group-hover:w-full ${
                   onCatalog ? "w-full" : "w-0"
                 }`}
               />
@@ -112,7 +111,7 @@ export default function Navbar() {
             <a
               href={homeHref("#contact")}
               onClick={onNavClick("#contact")}
-              className="whitespace-nowrap rounded-plate bg-navy px-4 py-2 font-mono text-[0.72rem] font-medium uppercase tracking-[0.16em] text-white transition-colors duration-200 hover:bg-navy-hover"
+              className="whitespace-nowrap rounded-plate bg-navy px-5 py-2.5 font-display text-[0.9rem] font-semibold text-white transition-colors duration-200 hover:bg-navy-hover"
             >
               {t.nav.getQuote}
             </a>
@@ -145,7 +144,7 @@ export default function Navbar() {
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -12 }}
             transition={{ duration: 0.22 }}
-            className="fixed left-0 right-0 top-[69px] z-40 border-b border-rule bg-ground lg:hidden"
+            className="fixed left-0 right-0 top-[69px] z-40 border-b border-rule bg-surface shadow-plate lg:hidden"
           >
             <div className="flex flex-col gap-5 px-6 py-6">
               {navLinks.map((link) => (
@@ -156,7 +155,7 @@ export default function Navbar() {
                     onNavClick(link.href)(e);
                     setMenuOpen(false);
                   }}
-                  className="font-mono text-sm uppercase tracking-[0.16em] text-ink-soft transition-colors hover:text-navy"
+                  className="font-display text-base font-medium text-ink-soft transition-colors hover:text-navy"
                 >
                   {link.label}
                 </a>
@@ -164,7 +163,7 @@ export default function Navbar() {
               <Link
                 href={catalogHref}
                 onClick={() => setMenuOpen(false)}
-                className={`font-mono text-sm uppercase tracking-[0.16em] transition-colors hover:text-navy ${
+                className={`font-display text-base font-medium transition-colors hover:text-navy ${
                   onCatalog ? "text-navy" : "text-ink-soft"
                 }`}
               >
@@ -176,7 +175,7 @@ export default function Navbar() {
                   onNavClick("#contact")(e);
                   setMenuOpen(false);
                 }}
-                className="mt-2 rounded-plate bg-navy py-3 text-center font-mono text-sm font-medium uppercase tracking-[0.16em] text-white"
+                className="mt-2 rounded-plate bg-navy py-3 text-center font-display text-base font-semibold text-white"
               >
                 {t.nav.getQuote}
               </a>

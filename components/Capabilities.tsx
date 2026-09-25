@@ -1,10 +1,10 @@
 "use client";
 
-import { useRef, useState } from "react";
-import { motion, useInView, useMotionValueEvent } from "framer-motion";
-import { Depth, SectionLabel, depthGrid } from "./industrial";
+import { useRef } from "react";
+import { motion } from "framer-motion";
+import { Reveal, SectionLabel } from "./industrial";
 import { useLanguage } from "@/lib/i18n";
-import { useSectionScrub, useScrollStage } from "@/lib/scrollStage";
+import { useScrollStage } from "@/lib/scrollStage";
 
 // The four numbers that decide whether a part is quotable here.
 // `label` is filled from the translation dictionary by index.
@@ -21,94 +21,65 @@ export default function Capabilities() {
   const industries = t.capabilities.industries;
   const ref = useRef<HTMLElement>(null);
   const { stageEnabled } = useScrollStage();
-  const progress = useSectionScrub("capabilities", ref);
-  const nativeInView = useInView(ref, { once: true, margin: "-80px" });
-  const [scrubReveal, setScrubReveal] = useState(false);
-  useMotionValueEvent(progress, "change", (v) => {
-    if (v > 0.1) setScrubReveal(true);
-  });
-  const inView = stageEnabled ? scrubReveal : nativeInView;
 
   return (
     <section
       id="capabilities"
       ref={ref}
-      className={`relative overflow-hidden border-t border-rule bg-ground px-6 lg:px-10 ${
-        stageEnabled ? "flex h-screen items-center py-20" : "py-[110px]"
+      className={`relative overflow-hidden bg-navy px-6 text-white lg:px-10 ${
+        stageEnabled ? "flex h-screen items-center py-20" : "py-[120px]"
       }`}
     >
-      <div className="mx-auto max-w-7xl">
-        <motion.div
-          initial={{ opacity: 0, y: 18 }}
-          animate={inView ? { opacity: 1, y: 0 } : undefined}
-          transition={{ duration: 0.55 }}
-          className="mb-12"
-        >
-          <SectionLabel label={t.capabilities.label} className="mb-6" />
-          <h2 className="font-display text-[clamp(1.9rem,3.4vw,2.9rem)] font-bold uppercase tracking-[-0.022em] text-ink">
-            {t.capabilities.heading[0]}{" "}
-            <span className="text-navy">{t.capabilities.heading[1]}</span>
+      <div className="mx-auto grid max-w-7xl grid-cols-1 gap-14 lg:grid-cols-[0.8fr_1.2fr] lg:gap-20">
+        <Reveal>
+          <SectionLabel label={t.capabilities.label} tone="dark" className="mb-5" />
+          <h2 className="font-condensed font-display text-[clamp(2.3rem,4.6vw,3.9rem)] font-extrabold leading-[0.98] tracking-[-0.02em]">
+            {t.capabilities.heading[0]} {t.capabilities.heading[1]}
           </h2>
-        </motion.div>
+        </Reveal>
 
-        {/* Capability plates */}
-        <div style={depthGrid} className="mb-16 grid grid-cols-1 gap-px border border-rule bg-rule sm:grid-cols-2 lg:grid-cols-4">
+        {/* Datasheet: label on the left, the figure set large on the right */}
+        <dl className="border-t border-white/20">
           {caps.map((c, i) => (
-            <Depth
+            <Reveal
               key={c.label}
-              index={i}
-              depth={110}
-              tilt={6}
-              cardClassName="h-full bg-surface px-6 py-8 transition-colors duration-200 hover:bg-sunk"
+              delay={i * 0.06}
+              className="relative flex items-baseline justify-between gap-6 border-b border-white/20 py-6"
             >
-              <div className="mb-5 font-mono text-[0.62rem] uppercase tracking-[0.2em] text-ink-faint">
-                {c.label}
-              </div>
-              <div className="flex items-baseline gap-1.5">
-                <span className="font-display text-[1.85rem] font-bold leading-none tracking-[-0.025em] text-ink">
-                  {c.value}
-                </span>
-                <span className="font-mono text-sm text-ink-faint">{c.unit}</span>
-              </div>
-              <motion.div
+              <dt className="font-body text-[1rem] text-silver">{c.label}</dt>
+              <dd className="font-condensed whitespace-nowrap font-display text-[clamp(2rem,4vw,3.2rem)] font-bold leading-none tabular-nums">
+                {c.value}{" "}
+                <span className="text-[0.5em] font-semibold text-silver">{c.unit}</span>
+              </dd>
+              <motion.span
+                aria-hidden
                 initial={{ scaleX: 0 }}
                 whileInView={{ scaleX: 1 }}
-                viewport={{ once: true, margin: "-12% 0px" }}
-                transition={{
-                  duration: 0.8,
-                  delay: 0.15 + i * 0.07,
-                  ease: [0.22, 1, 0.36, 1],
-                }}
-                className="mt-6 h-0.5 w-full origin-left bg-navy"
+                viewport={{ once: true, margin: "-10% 0px" }}
+                transition={{ duration: 0.9, delay: 0.15 + i * 0.08, ease: [0.22, 1, 0.36, 1] }}
+                className="absolute -bottom-px left-0 h-[2px] w-1/4 origin-left bg-white"
               />
-            </Depth>
+            </Reveal>
           ))}
-        </div>
-
-        {/* Industries served */}
-        <motion.div
-          initial={{ opacity: 0, y: 16 }}
-          animate={inView ? { opacity: 1, y: 0 } : undefined}
-          transition={{ duration: 0.55, delay: 0.3 }}
-        >
-          <p className="mb-5 font-mono text-[0.62rem] uppercase tracking-[0.2em] text-ink-faint">
-            {t.capabilities.industriesTitle}
-          </p>
-          <div className="flex flex-wrap gap-2">
-            {industries.map((ind, i) => (
-              <motion.span
-                key={ind}
-                initial={{ opacity: 0 }}
-                animate={inView ? { opacity: 1 } : undefined}
-                transition={{ delay: 0.4 + i * 0.035, duration: 0.35 }}
-                className="rounded-plate border border-rule bg-surface px-4 py-2 font-mono text-[0.72rem] tracking-[0.06em] text-ink-soft transition-colors duration-200 hover:border-navy hover:text-navy"
-              >
-                {ind}
-              </motion.span>
-            ))}
-          </div>
-        </motion.div>
+        </dl>
       </div>
+
+      {/* Industries served */}
+      <Reveal delay={0.1} className="mx-auto mt-20 max-w-7xl">
+        <h3 className="mb-6 font-display text-[1.05rem] font-bold text-white">
+          {t.capabilities.industriesTitle}
+        </h3>
+        <ul className="grid grid-cols-2 border-l border-t border-white/15 sm:grid-cols-3 lg:grid-cols-5">
+          {industries.map((ind) => (
+            <li
+              key={ind}
+              className="border-b border-r border-white/15 px-5 py-4 font-body text-[0.95rem] text-silver-light"
+            >
+              {ind}
+            </li>
+          ))}
+        </ul>
+      </Reveal>
     </section>
   );
 }

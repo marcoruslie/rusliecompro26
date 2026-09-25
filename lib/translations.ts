@@ -25,6 +25,7 @@ const en = {
   about: {
     label: "Who We Are",
     heading: ["Two Decades of", "Springmaking Mastery"],
+    photoCaption: "Wire feeding into the coiling head of one of our spring machines, Surabaya plant.",
     p1: "Ruslie Spring has grown from a small local workshop into a trusted Indonesian spring manufacturer. Today we support domestic industry with precision springs engineered to international standards.",
     p2: "We serve applications where failure is not an option — automotive, electronics, defense, and heavy engineering — holding the tightest tolerances with zero compromise.",
     stats: ["Years of Excellence", "Springs Daily", "Companies Served"],
@@ -49,7 +50,7 @@ const en = {
   },
   process: {
     label: "How It's Made",
-    step: "STEP",
+    step: "Step",
     steps: [
       {
         title: "Raw Wire Selection",
@@ -76,6 +77,8 @@ const en = {
   products: {
     label: "What We Make",
     heading: ["The", "Spring Catalog"],
+    intro:
+      "Six spring families, each made to order in carbon or stainless steel. Open a type to see photos from past production.",
     detail: "Detail",
     items: [
       {
@@ -239,11 +242,24 @@ const en = {
           "Coil Spring with Straight Tangent Ends",
         ],
       },
+      bulk: {
+        title: "Production Runs",
+        text: "Straight from the shop floor: volume orders as they come off our coilers, packed and bundled for delivery.",
+        items: [
+          "Compression Springs Coming Off the Coiler",
+          "Light-Wire Compression Springs — Bulk Lot",
+          "Light-Wire Compression Springs — Carton Lot",
+          "Long Close-Wound Springs, Bundled for Shipment",
+          "Short Compression Springs — Production Batch",
+        ],
+      },
     },
   },
   footer: {
     rights: "All rights reserved.",
     tagline: "Precision · Reliability · Innovation",
+    explore: "Explore",
+    contactTitle: "Contact",
   },
 };
 
@@ -268,6 +284,7 @@ const id: Dict = {
   about: {
     label: "Siapa Kami",
     heading: ["Dua Dekade", "Ahli Membuat Pegas"],
+    photoCaption: "Kawat masuk ke kepala coiling salah satu mesin pegas kami di pabrik Surabaya.",
     p1: "Ruslie Spring berawal dari bengkel kecil dan kini menjadi produsen pegas Indonesia yang tepercaya. Kami mendukung industri dalam negeri dengan pegas presisi berstandar internasional.",
     p2: "Kami melayani bidang yang tidak menoleransi kegagalan — otomotif, elektronik, pertahanan, hingga industri berat — dengan menjaga toleransi paling ketat tanpa kompromi.",
     stats: ["Tahun Pengalaman", "Pegas per Hari", "Perusahaan Dilayani"],
@@ -292,7 +309,7 @@ const id: Dict = {
   },
   process: {
     label: "Cara Pembuatannya",
-    step: "LANGKAH",
+    step: "Langkah",
     steps: [
       {
         title: "Pemilihan Bahan Kawat",
@@ -319,6 +336,8 @@ const id: Dict = {
   products: {
     label: "Apa yang Kami Buat",
     heading: ["Katalog", "Pegas"],
+    intro:
+      "Enam jenis pegas, semuanya dibuat sesuai pesanan dari baja karbon atau stainless. Buka salah satu jenis untuk melihat foto hasil produksi.",
     detail: "Detail",
     items: [
       {
@@ -481,11 +500,24 @@ const id: Dict = {
           "Per Coil dengan Kaki Lurus",
         ],
       },
+      bulk: {
+        title: "Hasil Produksi Massal",
+        text: "Langsung dari lantai produksi: pesanan volume besar yang baru keluar dari mesin coiling, siap dikemas dan dikirim.",
+        items: [
+          "Per Tekan Baru Keluar dari Mesin Coiling",
+          "Per Tekan Kawat Tipis — Lot Besar",
+          "Per Tekan Kawat Tipis — Satu Karton",
+          "Per Panjang Rapat, Diikat Siap Kirim",
+          "Per Tekan Pendek — Batch Produksi",
+        ],
+      },
     },
   },
   footer: {
     rights: "Seluruh hak cipta dilindungi.",
     tagline: "Presisi · Keandalan · Inovasi",
+    explore: "Jelajahi",
+    contactTitle: "Kontak",
   },
 };
 
@@ -508,6 +540,7 @@ const zh: Dict = {
   about: {
     label: "关于我们",
     heading: ["二十载", "制簧匠心"],
+    photoCaption: "钢丝进入卷簧机成形头 — 摄于我们的泗水工厂。",
     p1: "Ruslie Spring 从一家小型本地工坊成长为值得信赖的印尼弹簧制造商。如今我们以符合国际标准的精密弹簧支持国内工业。",
     p2: "我们服务于不容失败的领域 — 汽车、电子、国防与重型工程 — 以零妥协坚守最严苛的公差。",
     stats: ["卓越年数", "每日弹簧", "服务企业"],
@@ -559,6 +592,8 @@ const zh: Dict = {
   products: {
     label: "我们的产品",
     heading: ["弹簧", "目录"],
+    intro:
+      "六大弹簧类别，均可按订单以碳钢或不锈钢定制。点击类别查看以往生产照片。",
     detail: "详情",
     items: [
       {
@@ -719,11 +754,24 @@ const zh: Dict = {
           "带切向直脚的螺旋弹簧",
         ],
       },
+      bulk: {
+        title: "批量生产",
+        text: "来自生产车间：刚从卷簧机下线的批量订单，打包捆扎后即可发货。",
+        items: [
+          "刚下线的压缩弹簧",
+          "细线压缩弹簧 — 大批量",
+          "细线压缩弹簧 — 整箱",
+          "长密圈弹簧，捆扎待运",
+          "短压缩弹簧 — 生产批次",
+        ],
+      },
     },
   },
   footer: {
     rights: "保留所有权利。",
     tagline: "精密 · 可靠 · 创新",
+    explore: "浏览",
+    contactTitle: "联系方式",
   },
 };
 

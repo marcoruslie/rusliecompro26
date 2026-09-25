@@ -12,9 +12,11 @@ import { SITE_URL, SEO } from "@/lib/seo";
 // grep for font-* classes and inline fontWeight) — every extra variant here is
 // another preloaded woff2 on every page.
 // Marketing display face — a grotesque drawn for high-performance printing.
+// Loaded as the variable font so the width axis is available: marketing
+// headlines are set semi-condensed (see .font-condensed in globals.css).
 const archivo = Archivo({
   subsets: ["latin"],
-  weight: ["500", "600", "700", "800"],
+  axes: ["wdth"],
   variable: "--font-archivo",
   display: "swap",
   fallback: ["system-ui", "sans-serif"],

@@ -1,7 +1,6 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import Navbar from "@/components/Navbar";
-import CoilRail from "@/components/CoilRail";
 import Hero from "@/components/Hero";
 import About from "@/components/About";
 import Process from "@/components/Process";
@@ -93,7 +92,6 @@ export default function LocaleHome({ params }: { params: { locale: string } }) {
       <LanguageProvider initialLang={locale}>
         <ScrollStageProvider sections={SECTIONS}>
           <main className="ind-root">
-            <CoilRail />
             <Navbar />
             <Hero />
             <About />

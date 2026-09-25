@@ -11,7 +11,14 @@ export const CATALOG_CATEGORIES = [
   { key: "extension", prefix: "EX", count: 8 },
   { key: "torsion", prefix: "TR", count: 5 },
   { key: "wireform", prefix: "WF", count: 4 },
+  // Shop-floor volume shots rather than a spring type; excluded from type listings.
+  { key: "bulk", prefix: "PR", count: 5 },
 ] as const;
+
+/** Category keys that are actual spring types (everything except production shots). */
+export const SPRING_TYPE_KEYS = CATALOG_CATEGORIES.filter((c) => c.key !== "bulk").map(
+  (c) => c.key,
+);
 
 export type CategoryKey = (typeof CATALOG_CATEGORIES)[number]["key"];
 

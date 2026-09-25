@@ -91,7 +91,7 @@ export default function Process() {
           <div className="pt-24 lg:pt-0">
             <SectionLabel label={t.process.label} className="mb-8" />
 
-            <div className="mb-5 font-mono text-[0.68rem] tracking-[0.2em] text-ink-faint">
+            <div className="mb-4 font-display text-[0.95rem] font-semibold tabular-nums text-ink-faint">
               {t.process.step} {step.n} /{" "}
               {String(STEPS.length).padStart(2, "0")}
             </div>
@@ -105,10 +105,10 @@ export default function Process() {
                   exit={{ opacity: 0, y: -16 }}
                   transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
                 >
-                  <h3 className="mb-5 font-display text-[clamp(1.7rem,3.2vw,2.8rem)] font-bold uppercase leading-[1.05] tracking-[-0.022em] text-ink">
+                  <h3 className="font-condensed mb-5 font-display text-[clamp(2.2rem,4.2vw,3.6rem)] font-extrabold leading-[0.98] tracking-[-0.02em] text-ink">
                     {step.title}
                   </h3>
-                  <p className="mb-6 max-w-[46ch] font-body text-[0.98rem] leading-[1.8] text-ink-soft">
+                  <p className="mb-6 max-w-[48ch] font-body text-[1.02rem] leading-[1.8] text-ink-soft">
                     {step.text}
                   </p>
                   <span className="inline-flex items-center rounded-plate border border-rule bg-surface px-3 py-1.5 font-mono text-[0.72rem] uppercase tracking-[0.12em] text-ink">
@@ -140,7 +140,7 @@ export default function Process() {
             {STEPS.map((s, i) => (
               <div
                 key={s.key}
-                className={`flex items-center gap-2 font-mono text-[0.64rem] uppercase tracking-[0.14em] transition-colors duration-300 ${
+                className={`flex items-center gap-2 font-display text-[0.82rem] font-semibold transition-colors duration-300 ${
                   i <= active ? "text-navy" : "text-ink-faint"
                 }`}
               >
@@ -149,7 +149,7 @@ export default function Process() {
                     i <= active ? "bg-navy" : "bg-rule-strong"
                   }`}
                 />
-                <span className="hidden sm:inline">{s.title.split(" ")[0]}</span>
+                <span className="hidden sm:inline">{s.title}</span>
                 <span className="sm:hidden">{s.n}</span>
               </div>
             ))}
