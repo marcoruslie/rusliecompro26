@@ -85,6 +85,11 @@ textarea:focus {
   background: #eff3f9;
 }
 .admin-content { position: relative; z-index: 1; }
+/* Make room for the fixed 240px admin sidebar (components/AdminNav.tsx) on
+   desktop. Margin, not padding, so it never fights the pages' px-* utilities. */
+@media screen and (min-width: 1024px) {
+  .admin-shell { margin-left: 240px; }
+}
 
 /* ── Panel / card ── */
 .admin-panel {

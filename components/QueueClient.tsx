@@ -359,7 +359,7 @@ export default function QueueClient({
 
   return (
     <>
-    <div className="admin-shell px-6 pb-10 pt-[92px] queue-screen">
+    <div className="admin-shell px-6 pb-10 pt-[92px] lg:pt-10 queue-screen">
       <AdminNav active="queue" role={role} />
       <div className="admin-content max-w-5xl mx-auto">
         <div className="mb-8 admin-rise flex items-end justify-between gap-4">

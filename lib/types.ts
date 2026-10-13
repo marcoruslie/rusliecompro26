@@ -29,6 +29,11 @@ export interface TransactionItem {
   name: string;
   qty: number;
   price: number;
+  // Optional: the employee who made this line and their commission per pcs.
+  // `employee_name` is a snapshot so old invoices keep the name after edits.
+  employee_id?: string | null;
+  employee_name?: string | null;
+  commission_per_pcs?: number | null;
 }
 
 export interface Transaction {
@@ -84,5 +89,14 @@ export interface Item {
   cost_price: number;
   sale_price: number;
   reorder_level: number;
+  is_active: boolean;
+}
+
+export interface Employee {
+  id?: string;
+  created_at?: string;
+  deleted_at?: string | null;
+  name: string;
+  phone: string | null;
   is_active: boolean;
 }

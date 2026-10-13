@@ -147,7 +147,7 @@ export default function ItemsClient({
   }
 
   return (
-    <div className="admin-shell px-6 pb-10 pt-[92px]">
+    <div className="admin-shell px-6 pb-10 pt-[92px] lg:pt-10">
       <AdminNav active="items" />
       <div className="admin-content max-w-5xl mx-auto">
         <div className="mb-8 admin-rise">

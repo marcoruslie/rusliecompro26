@@ -140,7 +140,7 @@ export default function DashboardClient({
   const pageRows = filtered.slice(safePage * PAGE_SIZE, (safePage + 1) * PAGE_SIZE);
 
   return (
-    <div className="admin-shell px-6 pb-10 pt-[92px]">
+    <div className="admin-shell px-6 pb-10 pt-[92px] lg:pt-10">
       <AdminNav active="dashboard" />
       <div className="admin-content max-w-6xl mx-auto">
         <div className="mb-8 admin-rise">

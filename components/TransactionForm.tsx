@@ -4,7 +4,7 @@ import { useState, useEffect, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import Link from "next/link";
-import { Plus, Trash2, Printer, Save, Cable, Link2, Check } from "lucide-react";
+import { Plus, Trash2, Printer, Save, Cable, Link2, Check, UserCog } from "lucide-react";
 import AdminNav from "@/components/AdminNav";
 import { createClient } from "@/lib/supabase/client";
 import {
@@ -13,7 +13,7 @@ import {
   type ItemSuggestion,
 } from "@/lib/transactions";
 import { createCustomer } from "@/lib/customers";
-import type { Customer, Channel, Transaction, Wire, WireType } from "@/lib/types";
+import type { Customer, Channel, Employee, Transaction, Wire, WireType } from "@/lib/types";
 import CustomerSelect from "@/components/CustomerSelect";
 import WireSelect from "@/components/WireSelect";
 import InvoiceQrSeal from "@/components/InvoiceQrSeal";
@@ -25,6 +25,9 @@ interface InvoiceItem {
   name: string;
   qty: number;
   price: number;
+  employee_id?: string | null;
+  employee_name?: string | null;
+  commission_per_pcs?: number | null;
 }
 
 type CustomerFields = { name: string; address: string; city: string; phone: string };
@@ -119,6 +122,7 @@ export default function TransactionForm({
   initialCustomers,
   initialWires,
   initialWireTypes,
+  employees = [],
   existing,
   existingInvoiceNumbers,
   itemSuggestions = [],
@@ -126,6 +130,7 @@ export default function TransactionForm({
   initialCustomers: Customer[];
   initialWires: Wire[];
   initialWireTypes?: WireType[];
+  employees?: Employee[];
   existing?: Transaction;
   existingInvoiceNumbers?: string[];
   itemSuggestions?: ItemSuggestion[];
@@ -153,7 +158,11 @@ export default function TransactionForm({
     topNote: existing?.top_note ?? "",
   });
 
-  const [newItem, setNewItem] = useState<InvoiceItem>({ wire_id: "", name: "", qty: 0, price: 0 });
+  const emptyItem: InvoiceItem = {
+    wire_id: "", name: "", qty: 0, price: 0,
+    employee_id: null, employee_name: null, commission_per_pcs: null,
+  };
+  const [newItem, setNewItem] = useState<InvoiceItem>(emptyItem);
   const [itemError, setItemError] = useState("");
   const [showSuggestions, setShowSuggestions] = useState(false);
   const [activeSuggestion, setActiveSuggestion] = useState(0);
@@ -231,10 +240,36 @@ export default function TransactionForm({
     if (!newItem.name.trim()) { setItemError("Item name is required"); return; }
     if (!newItem.qty || newItem.qty <= 0) { setItemError("Qty must be > 0"); return; }
     if (!newItem.price || newItem.price <= 0) { setItemError("Price must be > 0"); return; }
+    if ((newItem.commission_per_pcs ?? 0) < 0) { setItemError("Komisi tidak boleh negatif"); return; }
     setInvoice((p) => ({ ...p, items: [...p.items, { ...newItem, uid: crypto.randomUUID() }] }));
-    setNewItem({ wire_id: "", name: "", qty: 0, price: 0 });
+    setNewItem(emptyItem);
     setSelectedWireId(null);
     setItemError("");
+  }
+
+  function updateItem(uid: string, patch: Partial<InvoiceItem>) {
+    setInvoice((p) => ({
+      ...p,
+      items: p.items.map((it) => (it.uid === uid ? { ...it, ...patch } : it)),
+    }));
+  }
+
+  // Picking "—" clears the employee and its commission together.
+  function employeePatch(id: string): Partial<InvoiceItem> {
+    if (!id) return { employee_id: null, employee_name: null, commission_per_pcs: null };
+    return { employee_id: id, employee_name: employees.find((e) => e.id === id)?.name ?? null };
+  }
+
+  // Active employees, plus any inactive/deleted one a line still points at so
+  // the select never silently shows "—" for an assigned line.
+  function employeeOptions(current?: string | null, currentName?: string | null) {
+    const opts = employees
+      .filter((e) => e.is_active || e.id === current)
+      .map((e) => ({ id: e.id ?? "", name: e.name }));
+    if (current && !opts.some((o) => o.id === current)) {
+      opts.push({ id: current, name: `${currentName ?? "?"} (terhapus)` });
+    }
+    return opts;
   }
 
   function removeItem(uid: string) {
@@ -300,7 +335,13 @@ export default function TransactionForm({
         channel: invoice.channel,
         customer_id: customerId,
         customer: invoice.customer,
-        items: invoice.items.map(({ uid, ...rest }) => rest),
+        // Lines without an employee drop the commission keys entirely.
+        items: invoice.items.map(
+          ({ uid, employee_id, employee_name, commission_per_pcs, ...rest }) =>
+            employee_id
+              ? { ...rest, employee_id, employee_name, commission_per_pcs: commission_per_pcs || 0 }
+              : rest
+        ),
         shipping: invoice.shipping || 0,
         payment_method: invoice.paymentMethod,
         top_note: invoice.topNote,
@@ -423,7 +464,7 @@ export default function TransactionForm({
       >
         {/* hero banner */}
         <header
-          className="admin-content no-print pt-[68px] pb-8 px-6 relative z-10"
+          className="admin-content no-print pt-[68px] lg:pt-0 pb-8 px-6 relative z-10"
           style={{ background: "linear-gradient(135deg, #021d47 0%, #0b2255 100%)" }}
         >
           <div className="max-w-3xl mx-auto pt-8">
@@ -767,6 +808,35 @@ export default function TransactionForm({
                   onKeyDown={(e) => e.key === "Enter" && addItem()}
                 />
               </div>
+              {/* Optional: employee who made it + commission per pcs (internal, never printed) */}
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 mt-2">
+                <select
+                  value={newItem.employee_id ?? ""}
+                  onChange={(e) => setNewItem((p) => ({ ...p, ...employeePatch(e.target.value) }))}
+                  className="col-span-2 border border-gray-200 rounded-lg px-3 py-2 text-sm text-gray-700 bg-white focus:outline-none focus:border-blue-400 transition-colors"
+                >
+                  <option value="">Karyawan (opsional)</option>
+                  {employeeOptions(newItem.employee_id).map((o) => (
+                    <option key={o.id} value={o.id}>{o.name}</option>
+                  ))}
+                </select>
+                <input
+                  value={newItem.commission_per_pcs || ""}
+                  onChange={(e) => setNewItem((p) => ({ ...p, commission_per_pcs: Number(e.target.value) }))}
+                  type="number"
+                  placeholder="Komisi/pcs (Rp)"
+                  min={0}
+                  disabled={!newItem.employee_id}
+                  className="border border-gray-200 rounded-lg px-3 py-2 text-sm text-gray-700 focus:outline-none focus:border-blue-400 transition-colors disabled:bg-gray-50 disabled:text-gray-300"
+                  onKeyDown={(e) => e.key === "Enter" && addItem()}
+                />
+                <Link
+                  href="/admin/employees"
+                  className="self-center text-[0.72rem] font-medium text-blue-600 hover:text-blue-800 flex items-center gap-1"
+                >
+                  <UserCog size={12} /> Kelola Karyawan
+                </Link>
+              </div>
               <AnimatePresence>
                 {itemError && (
                   <motion.p
@@ -830,7 +900,40 @@ export default function TransactionForm({
                           style={{ borderBottom: "1px solid #e5e7eb" }}
                         >
                           <td className="border border-gray-200 p-2.5 text-gray-500">{i + 1}</td>
-                          <td className="border border-gray-200 p-2.5 text-gray-800 font-medium">{item.name}</td>
+                          <td className="border border-gray-200 p-2.5 text-gray-800 font-medium">
+                            {item.name}
+                            <div className="no-print mt-1.5 flex flex-wrap items-center gap-1.5 font-normal">
+                              <select
+                                value={item.employee_id ?? ""}
+                                onChange={(e) => updateItem(item.uid ?? "", employeePatch(e.target.value))}
+                                className="border border-gray-200 rounded-md px-2 py-1 text-xs text-gray-600 bg-white focus:outline-none focus:border-blue-400"
+                                title="Karyawan"
+                              >
+                                <option value="">— Karyawan —</option>
+                                {employeeOptions(item.employee_id, item.employee_name).map((o) => (
+                                  <option key={o.id} value={o.id}>{o.name}</option>
+                                ))}
+                              </select>
+                              {item.employee_id && (
+                                <>
+                                  <input
+                                    type="number"
+                                    min={0}
+                                    value={item.commission_per_pcs || ""}
+                                    onChange={(e) =>
+                                      updateItem(item.uid ?? "", { commission_per_pcs: Math.max(0, Number(e.target.value)) })
+                                    }
+                                    placeholder="Komisi/pcs"
+                                    className="w-24 border border-gray-200 rounded-md px-2 py-1 text-xs text-gray-600 focus:outline-none focus:border-blue-400"
+                                    title="Komisi per pcs (Rp)"
+                                  />
+                                  <span className="text-xs text-gray-400">
+                                    = Rp{formatCurrency(item.qty * (item.commission_per_pcs || 0))}
+                                  </span>
+                                </>
+                              )}
+                            </div>
+                          </td>
                           <td className="border border-gray-200 p-2.5 text-right text-gray-700">{item.qty}</td>
                           <td className="border border-gray-200 p-2.5 text-right text-gray-700">
                             Rp{formatCurrency(item.price)}

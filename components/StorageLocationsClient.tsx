@@ -122,7 +122,7 @@ export default function StorageLocationsClient({
   const noWarehouses = warehouses.length === 0;
 
   return (
-    <div className="admin-shell px-6 pb-10 pt-[92px]">
+    <div className="admin-shell px-6 pb-10 pt-[92px] lg:pt-10">
       <AdminNav active="storage-locations" />
       <div className="admin-content max-w-4xl mx-auto">
         <div className="mb-8 admin-rise">
