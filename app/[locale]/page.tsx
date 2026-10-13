@@ -9,6 +9,7 @@ import Gallery from "@/components/Gallery";
 import Capabilities from "@/components/Capabilities";
 import Contact from "@/components/Contact";
 import Footer from "@/components/Footer";
+import ChatWidget from "@/components/ChatWidget";
 import { LanguageProvider } from "@/lib/i18n";
 import { ScrollStageProvider, type SectionDef } from "@/lib/scrollStage";
 import type { Lang } from "@/lib/translations";
@@ -102,6 +103,7 @@ export default function LocaleHome({ params }: { params: { locale: string } }) {
             <Contact />
             <Footer />
           </main>
+          <ChatWidget />
         </ScrollStageProvider>
       </LanguageProvider>
     </>

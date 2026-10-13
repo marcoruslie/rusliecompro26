@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import Navbar from "@/components/Navbar";
 import KatalogClient from "@/components/KatalogClient";
 import Footer from "@/components/Footer";
+import ChatWidget from "@/components/ChatWidget";
 import { LanguageProvider } from "@/lib/i18n";
 import { ScrollStageProvider, type SectionDef } from "@/lib/scrollStage";
 import type { Lang } from "@/lib/translations";
@@ -74,6 +75,7 @@ export default function KatalogPage({ params }: { params: { locale: string } }) 
           <KatalogClient />
           <Footer />
         </main>
+        <ChatWidget />
       </ScrollStageProvider>
     </LanguageProvider>
   );
