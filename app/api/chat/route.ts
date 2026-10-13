@@ -145,7 +145,9 @@ export async function POST(req: Request) {
   const result = streamText({
     model: openai(MODEL),
     instructions: instructions(lang && lang in LANG_NAME ? lang : "en", await wireTypes()),
-    messages: await convertToModelMessages(recent),
+    // A reply cut off mid tool call leaves calls without results in the client's
+    // history; drop them, otherwise every later message in that chat fails.
+    messages: await convertToModelMessages(recent, { ignoreIncompleteToolCalls: true }),
     tools: { estimate_price: estimatePrice },
     stopWhen: isStepCount(4),
     maxOutputTokens: 400,
