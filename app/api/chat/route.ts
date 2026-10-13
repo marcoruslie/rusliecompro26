@@ -12,7 +12,7 @@ import { z } from "zod";
 import { ORG_NAME, ORG_PHONE, ORG_EMAIL, SITE_URL } from "@/lib/seo";
 import { translations, type Lang } from "@/lib/translations";
 import { createAdminClient } from "@/lib/supabase/admin";
-import { estimateCompression, materialOf, quoteConstant, type Material } from "@/lib/springQuote";
+import { estimateCompression, materialOf, type Material } from "@/lib/springQuote";
 
 // OpenAI "Luna". Overridable so the model can be swapped without a code change.
 const MODEL = process.env.OPENAI_MODEL || "gpt-6-luna";
@@ -71,7 +71,10 @@ Price estimates:
 - Specs are usually written "wire x OD x length" in mm, e.g. "1.2x10x30" = 1.2 mm wire, 10 mm outer diameter, 30 mm free length.
 - If the customer doesn't say the spring type, assume compression. If they don't say the material, ask (or quote both).
 - If wire diameter, outer diameter or length is missing, ask for it before quoting.
-- Always present the result as an ESTIMATED price per piece, and say the final price (quantity, finishing, lead time) is confirmed via WhatsApp.
+- Quantity changes the price per piece (bigger orders are cheaper per piece). If the quantity is unknown, ask for it.
+- Minimum order is 1 piece, but orders under 5 pieces cost more per piece. When smallOrderSurcharge is true, mention that ordering 5 or more lowers the price per piece.
+- If the customer gives a coil count, pass it as coils.
+- Always present the result as an ESTIMATED price per piece (and total), and say the final price (finishing, lead time) is confirmed via WhatsApp.
 - Extension, torsion and wire-form springs: no estimate. Ask for specs/drawing and send them to WhatsApp for a quote.
 
 Availability:
@@ -81,6 +84,14 @@ Availability:
 Contact for quotes:
 - WhatsApp / phone: ${ORG_PHONE} (https://wa.me/${ORG_PHONE.replace(/\D/g, "")})
 - Email: ${ORG_EMAIL}
+
+Hand off to a human when a question is complicated. That includes:
+- custom designs, drawings or samples, or tolerances, load/force or spring-rate requirements
+- special materials, finishing/coating, or certification
+- bulk/contract pricing, negotiation, delivery or payment terms
+- anything you can't answer confidently from the information above
+In those cases don't guess. Give a short answer if you can, then tell them to contact our team directly and include BOTH:
+WhatsApp https://wa.me/${ORG_PHONE.replace(/\D/g, "")} and email ${ORG_EMAIL}. Suggest they send their specs or drawing there.
 
 Reply in ${LANG_NAME[lang]} unless the user writes in another language, then match theirs.
 Keep replies short (2-5 sentences), friendly, plain text. Format Rupiah like "Rp 1.250".`;
@@ -94,13 +105,25 @@ const estimatePrice = tool({
     outerDiameter: z.number().positive().max(500).describe("Spring outer diameter (OD) in mm"),
     length: z.number().positive().max(2000).describe("Free length in mm"),
     material: z.enum(["steel", "stainless"]).describe("steel = BAJA, stainless = SUS304"),
+    quantity: z.number().int().min(1).max(1_000_000).describe("Number of pieces ordered"),
+    coils: z.number().positive().max(500).optional().describe("Number of coils, only if the customer gave it"),
   }),
-  execute: async ({ wireDiameter, outerDiameter, length, material }) => {
-    const constant = quoteConstant(material);
-    if (!constant) return { ok: false, reason: "Online estimates unavailable; refer to WhatsApp." };
-    const est = estimateCompression({ wireDiameter, outerDiameter, length, material, constant });
-    if (!est) return { ok: false, reason: "Specs are not a valid compression spring (OD must exceed 2 × wire)." };
-    return { ok: true, estimatedPricePerPcsIDR: est.pricePerPcs, material, coils: est.coils };
+  execute: async (input) => {
+    const est = estimateCompression(input);
+    if (!est) {
+      return {
+        ok: false,
+        reason: "No online estimate for this spec (wire under 0.6 mm, or OD not larger than 2 × wire). Refer to WhatsApp.",
+      };
+    }
+    return {
+      ok: true,
+      estimatedPricePerPcsIDR: est.pricePerPcs,
+      estimatedTotalIDR: est.total,
+      quantity: input.quantity,
+      material: input.material,
+      smallOrderSurcharge: est.smallOrderSurcharge,
+    };
   },
 });
 

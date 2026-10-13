@@ -8,13 +8,17 @@ import { DefaultChatTransport } from "ai";
 import { useLanguage } from "@/lib/i18n";
 import type { Lang } from "@/lib/translations";
 
-const COPY: Record<Lang, { title: string; hint: string; placeholder: string; greeting: string; error: string }> = {
+const COPY: Record<
+  Lang,
+  { title: string; hint: string; placeholder: string; greeting: string; error: string; launcher: string }
+> = {
   en: {
     title: "Ask about price & availability",
     hint: "AI assistant · final quotes via WhatsApp",
     placeholder: "e.g. price for a stainless compression spring?",
     greeting: "Hi! Ask me about pricing or availability of our springs.",
     error: "Sorry, something went wrong. Please try again or contact us on WhatsApp.",
+    launcher: "Live chat",
   },
   id: {
     title: "Tanya harga & ketersediaan",
@@ -22,6 +26,7 @@ const COPY: Record<Lang, { title: string; hint: string; placeholder: string; gre
     placeholder: "mis. harga pegas tekan stainless?",
     greeting: "Halo! Tanyakan harga atau ketersediaan pegas kami.",
     error: "Maaf, terjadi kesalahan. Silakan coba lagi atau hubungi kami via WhatsApp.",
+    launcher: "Chat langsung",
   },
   zh: {
     title: "咨询价格与供货",
@@ -29,6 +34,7 @@ const COPY: Record<Lang, { title: string; hint: string; placeholder: string; gre
     placeholder: "例如：不锈钢压缩弹簧多少钱？",
     greeting: "您好！欢迎咨询我们弹簧的价格或供货情况。",
     error: "抱歉，出现错误。请重试或通过 WhatsApp 联系我们。",
+    launcher: "在线咨询",
   },
 };
 
@@ -83,7 +89,7 @@ export default function ChatWidget() {
               <Bubble role="assistant">{copy.greeting}</Bubble>
               {messages.map((m) => (
                 <Bubble key={m.id} role={m.role}>
-                  {m.parts.map((p, i) => (p.type === "text" ? <span key={i}>{p.text}</span> : null))}
+                  {m.parts.map((p, i) => (p.type === "text" ? <span key={i}>{linkify(p.text)}</span> : null))}
                 </Bubble>
               ))}
               {busy && !lastHasText && <Bubble role="assistant">…</Bubble>}
@@ -113,10 +119,24 @@ export default function ChatWidget() {
 
       <button
         onClick={() => setOpen((o) => !o)}
-        aria-label={copy.title}
-        className="ml-auto flex h-14 w-14 items-center justify-center rounded-full bg-navy text-white shadow-plate-lift transition-transform hover:scale-105"
+        aria-label={open ? "Close chat" : copy.title}
+        aria-expanded={open}
+        className={`ml-auto flex h-14 items-center justify-center gap-2 rounded-full bg-navy text-white shadow-plate-lift transition-transform hover:scale-105 ${
+          open ? "w-14" : "px-5"
+        }`}
       >
-        {open ? <X className="h-5 w-5" /> : <MessageCircle className="h-6 w-6" />}
+        {open ? (
+          <X className="h-5 w-5" />
+        ) : (
+          <>
+            <span className="relative flex h-2.5 w-2.5">
+              <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-green-400 opacity-75" />
+              <span className="relative inline-flex h-2.5 w-2.5 rounded-full bg-green-400" />
+            </span>
+            <MessageCircle className="h-5 w-5" />
+            <span className="text-[0.88rem] font-semibold">{copy.launcher}</span>
+          </>
+        )}
       </button>
     </div>
   );
@@ -135,4 +155,19 @@ function Bubble({ role, children }: { role: string; children: React.ReactNode })
       </div>
     </div>
   );
+}
+
+// Make the WhatsApp/email contacts the assistant hands out tappable.
+const LINK_RE = /(https?:\/\/[^\s)]+|[\w.+-]+@[\w-]+\.[\w.]+\w)/g;
+
+function linkify(text: string) {
+  return text.split(LINK_RE).map((part, i) => {
+    if (i % 2 === 0) return part;
+    const href = part.includes("@") && !part.startsWith("http") ? `mailto:${part}` : part;
+    return (
+      <a key={i} href={href} target="_blank" rel="noopener noreferrer" className="break-all font-semibold underline">
+        {part}
+      </a>
+    );
+  });
 }

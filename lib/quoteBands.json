@@ -1,0 +1,14 @@
+{
+  "_comment": "Calculator constants for AI price estimates, fitted from past invoices by `npm run calibrate:quote` (2026-10-13). Constant slides from `retail` at retailQty to `bulk` at bulkQty; under smallOrderQty pcs it is multiplied by smallOrderFactor for wire < smallOrderMaxWire mm. A null bulk keeps the retail rate.",
+  "minWire": 0.6,
+  "retailQty": 5,
+  "bulkQty": 100,
+  "smallOrderQty": 5,
+  "smallOrderFactor": 1.25,
+  "smallOrderMaxWire": 6,
+  "sizeBands": [
+    { "key": "small", "maxWire": 2, "retail": 19.27, "bulk": 6.12 },
+    { "key": "medium", "maxWire": 5, "retail": 9.16, "bulk": 5.43 },
+    { "key": "large", "maxWire": null, "retail": 4.42, "bulk": null }
+  ]
+}
