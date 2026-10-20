@@ -13,7 +13,16 @@ import {
   type ItemSuggestion,
 } from "@/lib/transactions";
 import { createCustomer } from "@/lib/customers";
-import type { Customer, Channel, Employee, Transaction, Wire, WireType } from "@/lib/types";
+import { isShopeeCustomer, computeShopeeFees, SHOPEE_FEE_LABELS } from "@/lib/marketplaceFees";
+import type {
+  Customer,
+  Channel,
+  Employee,
+  MarketplaceFeeRates,
+  Transaction,
+  Wire,
+  WireType,
+} from "@/lib/types";
 import CustomerSelect from "@/components/CustomerSelect";
 import WireSelect from "@/components/WireSelect";
 import InvoiceQrSeal from "@/components/InvoiceQrSeal";
@@ -123,6 +132,7 @@ export default function TransactionForm({
   initialWires,
   initialWireTypes,
   employees = [],
+  shopeeFeeRates = null,
   existing,
   existingInvoiceNumbers,
   itemSuggestions = [],
@@ -131,6 +141,7 @@ export default function TransactionForm({
   initialWires: Wire[];
   initialWireTypes?: WireType[];
   employees?: Employee[];
+  shopeeFeeRates?: MarketplaceFeeRates | null;
   existing?: Transaction;
   existingInvoiceNumbers?: string[];
   itemSuggestions?: ItemSuggestion[];
@@ -197,6 +208,14 @@ export default function TransactionForm({
   /* ── Derived ── */
   const subtotal = invoice.items.reduce((acc, i) => acc + i.qty * i.price, 0);
   const total = subtotal + (invoice.shipping || 0);
+  // Shopee orders: estimate Shopee's cut. A saved transaction keeps the rates it
+  // was saved with, so later rate changes don't rewrite old orders.
+  const feeRates = existing?.marketplace_fees?.rates ?? shopeeFeeRates;
+  const shopeeFees =
+    feeRates && isShopeeCustomer(invoice.customer.name)
+      ? computeShopeeFees(subtotal, feeRates)
+      : null;
+  const netTotal = total - (shopeeFees?.total ?? 0);
 
   /* ── Mutations ── */
   function setCustomer(key: keyof CustomerFields, val: string) {
@@ -347,6 +366,8 @@ export default function TransactionForm({
         top_note: invoice.topNote,
         subtotal,
         total,
+        marketplace_fee: shopeeFees?.total ?? 0,
+        marketplace_fees: shopeeFees,
         sender_name: senderName,
       };
 
@@ -995,6 +1016,33 @@ export default function TransactionForm({
                     Rp{formatCurrency(total)}
                   </span>
                 </div>
+
+                {/* Shopee fee deduction — internal only, never printed on the invoice */}
+                {shopeeFees && (
+                  <div
+                    className="no-print mt-3 rounded-lg px-3 py-2.5 text-xs"
+                    style={{ background: "#fff7ed", border: "1px solid #fed7aa" }}
+                  >
+                    <p className="font-semibold text-[#c2410c] mb-1.5">Potongan Shopee (estimasi)</p>
+                    {SHOPEE_FEE_LABELS.map(({ key, rate, label }) =>
+                      shopeeFees[key] > 0 ? (
+                        <div key={key} className="flex justify-between py-0.5 text-gray-600">
+                          <span>
+                            {label}
+                            {rate !== "order_fee" && (
+                              <span className="text-gray-400"> ({shopeeFees.rates[rate]}%)</span>
+                            )}
+                          </span>
+                          <span>−Rp{formatCurrency(shopeeFees[key])}</span>
+                        </div>
+                      ) : null
+                    )}
+                    <div className="flex justify-between pt-1.5 mt-1.5 border-t border-orange-200 font-bold text-[#021d47] text-sm">
+                      <span>Diterima Bersih</span>
+                      <span>Rp{formatCurrency(netTotal)}</span>
+                    </div>
+                  </div>
+                )}
               </div>
             </div>
 

@@ -13,6 +13,7 @@ import {
   MapPin,
   Package,
   UserCog,
+  Percent,
   Menu,
   X,
 } from "lucide-react";
@@ -28,7 +29,8 @@ export type AdminPage =
   | "warehouses"
   | "storage-locations"
   | "items"
-  | "employees";
+  | "employees"
+  | "marketplace-fees";
 
 const GROUPS = [
   {
@@ -49,6 +51,7 @@ const GROUPS = [
       { key: "employees", href: "/admin/employees", label: "Karyawan", Icon: UserCog },
       { key: "wires", href: "/admin/wires", label: "Wires", Icon: Cable },
       { key: "items", href: "/admin/items", label: "Items", Icon: Package },
+      { key: "marketplace-fees", href: "/admin/marketplace-fees", label: "Biaya Shopee", Icon: Percent },
     ],
   },
   {

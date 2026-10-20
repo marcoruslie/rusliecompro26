@@ -22,6 +22,11 @@ type DetailState =
   | { status: "error" }
   | { status: "ready"; data: InvoiceItemsDetail };
 
+// Revenue is what actually lands in the bank: Shopee orders minus Shopee's fees.
+function netTotal(t: { total: number; marketplace_fee?: number | null }): number {
+  return (Number(t.total) || 0) - (Number(t.marketplace_fee) || 0);
+}
+
 function rupiah(val: number): string {
   return "Rp" + (val || 0).toLocaleString("id-ID");
 }
@@ -89,16 +94,16 @@ export default function DashboardClient({
   }
 
   const stats = useMemo(() => {
-    const all = rows.reduce((s, t) => s + (t.total || 0), 0);
+    const all = rows.reduce((s, t) => s + netTotal(t), 0);
     const month = rows
       .filter((t) => t.created_at && monthKey(t.created_at) === thisMonthKey)
-      .reduce((s, t) => s + (t.total || 0), 0);
+      .reduce((s, t) => s + netTotal(t), 0);
     const online = rows
       .filter((t) => t.channel === "online")
-      .reduce((s, t) => s + (t.total || 0), 0);
+      .reduce((s, t) => s + netTotal(t), 0);
     const direct = rows
       .filter((t) => t.channel === "direct")
-      .reduce((s, t) => s + (t.total || 0), 0);
+      .reduce((s, t) => s + netTotal(t), 0);
     return { all, month, online, direct, count: rows.length };
   }, [rows, thisMonthKey]);
 
@@ -107,7 +112,7 @@ export default function DashboardClient({
     for (const t of rows) {
       if (!t.created_at) continue;
       const k = monthKey(t.created_at);
-      byMonth.set(k, (byMonth.get(k) ?? 0) + (t.total || 0));
+      byMonth.set(k, (byMonth.get(k) ?? 0) + netTotal(t));
     }
     return Array.from(byMonth.entries())
       .sort((a, b) => a[0].localeCompare(b[0]))
@@ -264,7 +269,7 @@ export default function DashboardClient({
                         </p>
                       </div>
                       <span className="font-semibold text-[#021d47] whitespace-nowrap">
-                        {rupiah(t.total)}
+                        {rupiah(netTotal(t))}
                       </span>
                       <button
                         onClick={(e) => {
@@ -340,6 +345,22 @@ export default function DashboardClient({
                                 <span>Total</span>
                                 <span className="tabular-nums">{rupiah(detail.data.total)}</span>
                               </div>
+                              {detail.data.marketplace_fee > 0 && (
+                                <>
+                                  <div className="flex justify-between text-[#c2410c]">
+                                    <span>Potongan Shopee</span>
+                                    <span className="tabular-nums">
+                                      −{rupiah(detail.data.marketplace_fee)}
+                                    </span>
+                                  </div>
+                                  <div className="flex justify-between font-semibold text-[#021d47]">
+                                    <span>Diterima Bersih</span>
+                                    <span className="tabular-nums">
+                                      {rupiah(netTotal(detail.data))}
+                                    </span>
+                                  </div>
+                                </>
+                              )}
                             </div>
                           </div>
                         )}

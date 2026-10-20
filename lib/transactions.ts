@@ -71,6 +71,7 @@ export interface DashboardTransaction {
   invoice_number: string;
   channel: Channel;
   total: number;
+  marketplace_fee: number;
   customer: { name: string };
 }
 
@@ -79,7 +80,7 @@ export async function listDashboardTransactions(
 ): Promise<DashboardTransaction[]> {
   const { data, error } = await supabase
     .from("transactions")
-    .select("id, created_at, invoice_date, invoice_number, channel, total, customer")
+    .select("id, created_at, invoice_date, invoice_number, channel, total, marketplace_fee, customer")
     .order("created_at", { ascending: false });
   if (error) throw error;
   return (data ?? []) as DashboardTransaction[];
@@ -93,6 +94,7 @@ export interface InvoiceItemsDetail {
   shipping: number;
   subtotal: number;
   total: number;
+  marketplace_fee: number;
 }
 
 export async function getInvoiceItems(
@@ -101,7 +103,7 @@ export async function getInvoiceItems(
 ): Promise<InvoiceItemsDetail> {
   const { data, error } = await supabase
     .from("transactions")
-    .select("items, shipping, subtotal, total")
+    .select("items, shipping, subtotal, total, marketplace_fee")
     .eq("id", id)
     .single();
   if (error) throw error;
@@ -111,6 +113,7 @@ export async function getInvoiceItems(
     shipping: row.shipping ?? 0,
     subtotal: row.subtotal ?? 0,
     total: row.total ?? 0,
+    marketplace_fee: Number(row.marketplace_fee) || 0,
   };
 }
 

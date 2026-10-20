@@ -51,9 +51,33 @@ export interface Transaction {
   subtotal: number;
   total: number;
   sender_name: string;
+  // Marketplace (Shopee) fees deducted from `total`; net received = total - marketplace_fee.
+  marketplace_fee?: number;
+  marketplace_fees?: MarketplaceFeeBreakdown | null;
   status?: OrderStatus;
   image_drive_id?: string | null;
   image_name?: string | null;
+}
+
+// Percentages are plain numbers (8.25 = 8.25%); order_fee is rupiah per order.
+export interface MarketplaceFeeRates {
+  admin_fee_pct: number;
+  ongkir_xtra_pct: number;
+  promo_xtra_pct: number;
+  order_fee: number;
+  pph22_pct: number;
+}
+
+// Snapshot stored on a transaction: the rates used plus each fee in rupiah.
+export interface MarketplaceFeeBreakdown {
+  marketplace: "shopee";
+  rates: MarketplaceFeeRates;
+  admin_fee: number;
+  ongkir_xtra: number;
+  promo_xtra: number;
+  order_fee: number;
+  pph22: number;
+  total: number;
 }
 
 export interface Warehouse {

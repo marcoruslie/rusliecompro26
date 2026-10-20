@@ -8,6 +8,7 @@ import {
 import { listCustomers } from "@/lib/customers";
 import { listWires, listWireTypes } from "@/lib/wires";
 import { listEmployees } from "@/lib/employees";
+import { getShopeeFeeRates } from "@/lib/marketplaceFees";
 import TransactionForm from "@/components/TransactionForm";
 
 export const metadata = { title: "Transaction — Ruslie Spring Admin" };
@@ -18,14 +19,16 @@ export default async function TransactionDetailPage({
   params: { id: string };
 }) {
   const supabase = createClient();
-  const [txn, customers, wires, wireTypes, transactions, employees] = await Promise.all([
-    getTransaction(supabase, params.id),
-    listCustomers(supabase),
-    listWires(supabase),
-    listWireTypes(supabase),
-    listTransactionItemHistory(supabase),
-    listEmployees(supabase),
-  ]);
+  const [txn, customers, wires, wireTypes, transactions, employees, shopeeFeeRates] =
+    await Promise.all([
+      getTransaction(supabase, params.id),
+      listCustomers(supabase),
+      listWires(supabase),
+      listWireTypes(supabase),
+      listTransactionItemHistory(supabase),
+      listEmployees(supabase),
+      getShopeeFeeRates(supabase),
+    ]);
   if (!txn) notFound();
   return (
     <TransactionForm
@@ -33,6 +36,7 @@ export default async function TransactionDetailPage({
       initialWires={wires}
       initialWireTypes={wireTypes}
       employees={employees}
+      shopeeFeeRates={shopeeFeeRates}
       existing={txn}
       itemSuggestions={buildItemSuggestions(transactions)}
     />
