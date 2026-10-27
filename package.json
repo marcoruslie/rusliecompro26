@@ -7,6 +7,7 @@
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
+    "tka:import": "node --env-file=.env.local --max-old-space-size=6000 scripts/tka-import.mjs ../PRG/PEER/DBF",
     "calibrate:quote": "node --env-file=.env.local --disable-warning=MODULE_TYPELESS_PACKAGE_JSON scripts/calibrate-quote.mjs"
   },
   "dependencies": {

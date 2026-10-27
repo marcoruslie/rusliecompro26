@@ -34,7 +34,7 @@ export default function AdminLoginClient() {
       return;
     }
 
-    router.replace("/admin/dashboard");
+    router.replace("/admin/home");
     router.refresh();
   }
 

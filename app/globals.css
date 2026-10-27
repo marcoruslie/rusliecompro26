@@ -497,3 +497,21 @@ select.admin-input option { background: #ffffff; color: #1e293b; }
   background: rgba(107, 114, 128, 0.1);
   border: 1px solid rgba(107, 114, 128, 0.2);
 }
+
+/* ═══════════════════════════════════════════════════════════════
+   TKA module — printouts (nota, surat jalan, bukti kas, laporan)
+   ═══════════════════════════════════════════════════════════════ */
+.tka-print { color: #000; }
+.tka-report td, .tka-report th { white-space: nowrap; }
+@media print {
+  body:has(.tka-print), body:has(.tka-report) { background: #fff !important; color: #000 !important; }
+  .tka-print .no-print, .admin-shell .no-print { display: none !important; }
+  .admin-shell:has(.tka-report) { margin-left: 0 !important; padding: 0 !important; background: #fff !important; }
+  .tka-report .admin-panel { box-shadow: none !important; border: none !important; }
+  .tka-report .admin-table thead th { background: #fff !important; color: #000 !important; border-bottom: 1px solid #000; }
+  .tka-report .admin-table { font-size: 9pt; }
+  .tka-report .admin-table tbody td { padding: 2px 6px; color: #000; }
+  .tka-sheet { padding: 8mm !important; max-width: none !important; }
+  .tka-print, .tka-report { page: tka; }
+  @page tka { size: A4; margin: 8mm; }
+}

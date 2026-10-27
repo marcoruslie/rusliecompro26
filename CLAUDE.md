@@ -49,3 +49,15 @@ Image references in components use plain `<img>` tags, not `next/image`. Match t
 ### Calculator domain logic
 
 `components/CalculatorClient.tsx` contains the spring price formula (`runCalculation`). It is a 1-to-1 port from a prior Vue implementation — preserve the exact math (steel density `7.89`, `pricePerKgSteel = 90`, `pricePerKgStainless = 180`, `Math.ceil` rounding points) when editing, since downstream quotes depend on it. The `pitch` and `coils` inputs are optional and have specific fallback rules (pitch defaults to wire diameter; coils defaults to `ceil(length / (2 * wireDiameter))` when both are blank).
+
+### Admin modules & TKA
+
+After login (`/admin`) users land on `/admin/home`, a chooser between **TKA** (`/admin/tka`) and **Ruslie Spring** (`/admin/dashboard`). Viewers still go straight to the Queue and cannot open TKA.
+
+TKA is a web rebuild of the legacy DOS/Clipper accounting program in `../PRG/PEER` (no source code survived; behaviour was reverse-engineered from its DBF files and verified by re-posting the imported documents).
+
+- Schema & logic: `supabase/migrations/0008_tka.sql`. Documents are generic (`tka_doc` + `tka_doc_line`, legacy fields kept in JSONB `h`/`d`); `tka_post()` turns a document into ledger lines (`tka_jurnal`), stock movements (`tka_mutasi`), invoice register (`tka_hp`/`tka_bayar`) and giro (`tka_giro`). Always save through the `tka_save_doc` RPC so postings stay in sync — never write `tka_doc_line` directly. Balances = yearly opening (`tka_saldo_awal`, `tka_stok_awal`) + postings; `tka_tutup_tahun` writes the next year's openings.
+- Costing: HPP and production value use the item's standard cost `tka_inv.hppmin`; imported lines carry the exact legacy cost in `d.hpp_val`/`d.hpp_qty`/`d.hpp` (see `tka_line_cost`).
+- Legacy ledger codes: 498 kas masuk, 499 bank masuk, 500 kas keluar, 501 bank keluar; voucher numbers use year/month letters (`KK/\A/0001` = Jan 2025, year letter = chr(65 + year − 1998)).
+- UI is config-driven: `lib/tka/docs.ts` (document types → list/form/print), `lib/tka/masters.ts` (master tables), `lib/tka/reports.ts` (reports). Components live in `components/tka/`.
+- Import: `npm run tka:import` (add `-- --reset` to wipe and re-import). Only live DBF records are imported; the Clipper program kept edited/deleted versions as deleted rows.
