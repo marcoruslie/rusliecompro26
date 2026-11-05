@@ -1,7 +1,8 @@
-import { redirect } from "next/navigation";
+import { permanentRedirect } from "next/navigation";
 import { DEFAULT_LOCALE } from "@/lib/seo";
 
 // The marketing site lives under /[locale]; send the bare root to the default.
+// Permanent (308), so search engines consolidate "/" onto the default locale.
 export default function RootPage() {
-  redirect(`/${DEFAULT_LOCALE}`);
+  permanentRedirect(`/${DEFAULT_LOCALE}`);
 }
