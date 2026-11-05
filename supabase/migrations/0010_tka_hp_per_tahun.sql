@@ -28,12 +28,17 @@ alter table public.tka_hp drop constraint if exists tka_hp_id_cs_nkey_tahun_key;
 alter table public.tka_hp add constraint tka_hp_id_cs_nkey_tahun_key unique (id_cs, nkey, tahun);
 
 alter table public.tka_bayar add column if not exists nota_tahun int;
+-- One set-based pass: a correlated subquery per payment row ran past the SQL
+-- Editor's time limit.
 update public.tka_bayar b
-   set nota_tahun = coalesce(
-         (select max(h.tahun) from public.tka_hp h
-           where h.id_cs = b.id_cs and h.nkey = b.nkey and h.tahun <= extract(year from b.tanggal)),
-         extract(year from b.tanggal)::int)
- where nota_tahun is null;
+   set nota_tahun = coalesce(x.th, extract(year from b.tanggal)::int)
+  from (select b2.id, max(h.tahun) as th
+          from public.tka_bayar b2
+          left join public.tka_hp h
+            on h.id_cs = b2.id_cs and h.nkey = b2.nkey and h.tahun <= extract(year from b2.tanggal)::int
+         where b2.nota_tahun is null
+         group by b2.id) x
+ where x.id = b.id;
 alter table public.tka_bayar alter column nota_tahun set not null;
 drop index if exists public.tka_bayar_key_idx;
 create index if not exists tka_bayar_key_idx on public.tka_bayar (id_cs, nkey, nota_tahun);
@@ -44,7 +49,7 @@ returns int language sql stable as $$
   select coalesce(
     extract(year from p_notadate)::int,
     (select max(h.tahun) from public.tka_hp h
-      where h.id_cs = p_id_cs and h.nkey = public.tka_nkey(p_nota) and h.tahun <= extract(year from p_tanggal)),
+      where h.id_cs = p_id_cs and h.nkey = public.tka_nkey(p_nota) and h.tahun <= extract(year from p_tanggal)::int),
     extract(year from p_tanggal)::int)
 $$;
 
