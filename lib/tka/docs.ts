@@ -74,6 +74,8 @@ const VOUCHER_COLS: LineCol[] = [
   { path: "acc", label: "Akun", type: "acc", width: "w-44" },
   { path: "rem", label: "Keterangan", type: "text", width: "min-w-[220px]" },
   { path: "nota", label: "No. Nota", type: "text", width: "w-28" },
+  // Which year's nota is paid: supplier faktur numbers restart every year.
+  { path: "d.notadate", label: "Tgl Nota", type: "date", width: "w-36", print: false },
   { path: "d.bg", label: "No. Cek/Giro", type: "text", width: "w-32" },
   { path: "d.bank", label: "Bank Giro", type: "text", width: "w-28", print: false },
   { path: "d.bgdue", label: "Jatuh Tempo", type: "date", width: "w-36", print: false },
