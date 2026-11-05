@@ -95,7 +95,7 @@ const WireGeometry = memo(function WireGeometry() {
           y1={s.y1}
           x2={s.x2}
           y2={s.y2}
-          stroke="#16181c"
+          stroke="#14213d"
           strokeOpacity={s.o}
           strokeWidth={s.w}
           strokeLinecap="round"
@@ -162,7 +162,7 @@ export default function CoilRail() {
     >
       <svg width={W} height={H} viewBox={`0 0 ${W} ${H}`} fill="none">
         {/* Graduated rule — the fixed reference the coil deflects against */}
-        <line x1={2} y1={TOP} x2={2} y2={BOT} stroke="#16181c" strokeOpacity={0.16} strokeWidth={1} />
+        <line x1={2} y1={TOP} x2={2} y2={BOT} stroke="#14213d" strokeOpacity={0.16} strokeWidth={1} />
         {Array.from({ length: 11 }).map((_, i) => {
           const y = TOP + (i / 10) * (BOT - TOP);
           const major = i % 5 === 0;
@@ -173,7 +173,7 @@ export default function CoilRail() {
               y1={y}
               x2={major ? 10 : 6}
               y2={y}
-              stroke="#16181c"
+              stroke="#14213d"
               strokeOpacity={major ? 0.28 : 0.14}
               strokeWidth={1}
             />
@@ -187,7 +187,7 @@ export default function CoilRail() {
             y1={TOP - 6}
             x2={CX + RADIUS + 5}
             y2={TOP - 6}
-            stroke="#021d47"
+            stroke="#14213d"
             strokeWidth={2.5}
             strokeLinecap="square"
           />
@@ -206,7 +206,7 @@ export default function CoilRail() {
           y1={BOT + 6}
           x2={CX + RADIUS + 5}
           y2={BOT + 6}
-          stroke="#16181c"
+          stroke="#14213d"
           strokeOpacity={0.5}
           strokeWidth={2.5}
           strokeLinecap="square"

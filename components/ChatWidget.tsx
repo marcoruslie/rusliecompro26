@@ -100,19 +100,19 @@ export default function ChatWidget() {
             transition={{ duration: 0.2 }}
             className="mb-3 flex h-[min(520px,75vh)] w-[min(360px,calc(100vw-2.5rem))] flex-col overflow-hidden rounded-plate border border-rule-strong bg-surface text-ink shadow-plate-lift"
           >
-            <div className="flex items-start justify-between gap-3 bg-navy px-4 py-3 text-white">
+            <div className="flex items-start justify-between gap-3 bg-navy px-4 py-3 text-cream">
               <div className="flex items-center gap-3">
-                <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-white/10">
+                <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-cream/10">
                   <Coily className="h-8 w-8" />
                 </span>
                 <div>
                   <p className="flex items-center gap-2 text-[0.92rem] font-semibold">
                     {copy.title} <AiBadge />
                   </p>
-                  <p className="text-[0.72rem] text-white/60">{copy.hint}</p>
+                  <p className="text-[0.72rem] text-cream/70">{copy.hint}</p>
                 </div>
               </div>
-              <button onClick={() => setOpen(false)} aria-label="Close chat" className="text-white/70 hover:text-white">
+              <button onClick={() => setOpen(false)} aria-label="Close chat" className="text-cream/70 hover:text-cream">
                 <X className="h-4 w-4" />
               </button>
             </div>
@@ -140,7 +140,7 @@ export default function ChatWidget() {
                 type="submit"
                 disabled={busy || !input.trim()}
                 aria-label="Send"
-                className="rounded-plate bg-navy px-3 text-white disabled:opacity-40"
+                className="rounded-plate bg-coral px-3 text-navy hover:bg-coral-hover disabled:opacity-40"
               >
                 <Send className="h-4 w-4" />
               </button>
@@ -192,7 +192,7 @@ export default function ChatWidget() {
           transition={{ delay: 0.8, type: "spring", stiffness: 220, damping: 14 }}
           whileHover={{ scale: 1.05 }}
           whileTap={{ scale: 0.95 }}
-          className={`relative flex h-14 items-center justify-center gap-2 rounded-full bg-navy text-white shadow-plate-lift ${
+          className={`relative flex h-14 items-center justify-center gap-2 rounded-full bg-navy text-cream shadow-plate-lift ${
             open ? "w-14" : "pl-1.5 pr-5"
           }`}
         >
@@ -200,7 +200,7 @@ export default function ChatWidget() {
             <X className="h-5 w-5" />
           ) : (
             <>
-              <span className="relative flex h-11 w-11 items-center justify-center rounded-full bg-white/10">
+              <span className="relative flex h-11 w-11 items-center justify-center rounded-full bg-cream/10">
                 <Coily className="h-9 w-9" animate={!reduceMotion} />
                 <span className="absolute -right-0.5 -top-0.5 flex h-3 w-3">
                   <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-green-400 opacity-75" />
@@ -208,7 +208,7 @@ export default function ChatWidget() {
                 </span>
               </span>
               <span className="text-[0.9rem] font-semibold">{copy.launcher}</span>
-              <Sparkles className="h-4 w-4 text-amber-300" />
+              <Sparkles className="h-4 w-4 text-coral" />
             </>
           )}
         </motion.button>
@@ -221,7 +221,7 @@ function AiBadge({ dark = false }: { dark?: boolean }) {
   return (
     <span
       className={`inline-flex items-center gap-0.5 rounded px-1.5 py-[1px] align-middle text-[0.62rem] font-bold tracking-wider ${
-        dark ? "bg-navy text-white" : "bg-white/15 text-white"
+        dark ? "bg-navy text-cream" : "bg-cream/15 text-cream"
       }`}
     >
       <Sparkles className="h-2.5 w-2.5" /> AI
@@ -240,22 +240,22 @@ function Coily({ className, animate = false }: { className?: string; animate?: b
       >
         {/* coils */}
         {[24, 29, 34].map((y) => (
-          <ellipse key={y} cx="20" cy={y} rx="11" ry="3" fill="none" stroke="#c9d3e2" strokeWidth="2.4" />
+          <ellipse key={y} cx="20" cy={y} rx="11" ry="3" fill="none" stroke="#d8cfbf" strokeWidth="2.4" />
         ))}
         {/* head */}
-        <circle cx="20" cy="13" r="9.5" fill="#ffffff" />
+        <circle cx="20" cy="13" r="9.5" fill="#f4ede0" />
         <motion.g
           style={{ originX: "50%", originY: "50%" }}
           animate={animate ? { scaleY: [1, 1, 0.1, 1] } : undefined}
           transition={{ duration: 3.2, repeat: Infinity, times: [0, 0.9, 0.95, 1] }}
         >
-          <circle cx="16.5" cy="12" r="1.7" fill="#021d47" />
-          <circle cx="23.5" cy="12" r="1.7" fill="#021d47" />
+          <circle cx="16.5" cy="12" r="1.7" fill="#14213d" />
+          <circle cx="23.5" cy="12" r="1.7" fill="#14213d" />
         </motion.g>
-        <path d="M16.5 16.2 Q20 19 23.5 16.2" fill="none" stroke="#021d47" strokeWidth="1.5" strokeLinecap="round" />
+        <path d="M16.5 16.2 Q20 19 23.5 16.2" fill="none" stroke="#14213d" strokeWidth="1.5" strokeLinecap="round" />
         {/* antenna — the "AI" tell */}
-        <line x1="20" y1="3.5" x2="20" y2="1.8" stroke="#ffffff" strokeWidth="1.4" />
-        <circle cx="20" cy="1.6" r="1.4" fill="#fbbf24" />
+        <line x1="20" y1="3.5" x2="20" y2="1.8" stroke="#f4ede0" strokeWidth="1.4" />
+        <circle cx="20" cy="1.6" r="1.4" fill="#ff6b5b" />
       </motion.g>
     </svg>
   );
@@ -267,7 +267,7 @@ function Bubble({ role, children }: { role: string; children: React.ReactNode })
     <div className={`flex ${mine ? "justify-end" : "justify-start"}`}>
       <div
         className={`max-w-[85%] whitespace-pre-wrap rounded-plate px-3 py-2 ${
-          mine ? "bg-navy text-white" : "bg-ground text-ink"
+          mine ? "bg-navy text-cream" : "bg-ground text-ink"
         }`}
       >
         {children}

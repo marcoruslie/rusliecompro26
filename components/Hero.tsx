@@ -30,7 +30,7 @@ export default function Hero() {
     <section
       id="hero"
       ref={ref}
-      className="relative flex min-h-[100svh] flex-col overflow-hidden bg-navy-dark text-white"
+      className="relative flex min-h-[100svh] flex-col overflow-hidden bg-navy-dark text-cream"
     >
       {/* Shop-floor photo, pushed back behind a navy wash so the type holds */}
       <motion.div style={{ y: photoY }} className="absolute inset-0 -bottom-[12%]">
@@ -49,13 +49,13 @@ export default function Hero() {
         className="absolute inset-0"
         style={{
           background:
-            "linear-gradient(90deg, rgba(1,14,36,0.95) 0%, rgba(1,14,36,0.86) 38%, rgba(2,29,71,0.55) 70%, rgba(2,29,71,0.35) 100%)",
+            "linear-gradient(90deg, rgba(12,21,40,0.95) 0%, rgba(12,21,40,0.86) 38%, rgba(20,33,61,0.55) 70%, rgba(20,33,61,0.35) 100%)",
         }}
       />
       <div
         aria-hidden
         className="absolute inset-x-0 bottom-0 h-1/3"
-        style={{ background: "linear-gradient(to top, rgba(1,14,36,0.9), transparent)" }}
+        style={{ background: "linear-gradient(to top, rgba(12,21,40,0.9), transparent)" }}
       />
 
       {/* ── The claim ── */}
@@ -67,7 +67,7 @@ export default function Hero() {
             transition={{ duration: 0.6, delay: 0.1 }}
             className="mb-7 flex items-center gap-3 font-display text-[0.95rem] font-semibold text-silver"
           >
-            <span className="h-[3px] w-5 bg-silver" />
+            <span className="h-[3px] w-5 bg-coral" />
             {t.hero.badge}
           </motion.p>
 
@@ -116,13 +116,13 @@ export default function Hero() {
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ duration: 0.8, delay: 0.9 }}
-        className="relative z-10 border-t border-white/15 bg-navy-dark/60 backdrop-blur-sm"
+        className="relative z-10 border-t border-cream/15 bg-navy-dark/60 backdrop-blur-sm"
       >
         <dl className="mx-auto grid max-w-7xl grid-cols-2 lg:grid-cols-4">
           {stats.map((s, i) => (
             <div
               key={s.label}
-              className={`flex flex-col-reverse gap-2 border-white/15 px-6 py-6 lg:px-10 lg:py-7 ${
+              className={`flex flex-col-reverse gap-2 border-cream/15 px-6 py-6 lg:px-10 lg:py-7 ${
                 i % 2 === 1 ? "border-l" : ""
               } ${i >= 2 ? "border-t lg:border-t-0" : ""} ${i === 2 ? "lg:border-l" : ""}`}
             >
@@ -132,7 +132,7 @@ export default function Hero() {
               </dd>
             </div>
           ))}
-          <div className="flex flex-col-reverse gap-2 border-l border-t border-white/15 px-6 py-6 lg:border-t-0 lg:px-10 lg:py-7">
+          <div className="flex flex-col-reverse gap-2 border-l border-t border-cream/15 px-6 py-6 lg:border-t-0 lg:px-10 lg:py-7">
             <dt className="font-body text-[0.85rem] text-silver">{t.capabilities.caps[3]}</dt>
             <dd className="font-condensed font-display text-[clamp(2rem,3.4vw,2.8rem)] font-bold leading-none">
               ± 0.01 <span className="text-[0.55em] font-semibold text-silver">mm</span>

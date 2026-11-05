@@ -84,7 +84,7 @@ function Coil({
   );
 
   const baseEmissive = useMemo(() => new THREE.Color("#0b0d10"), []);
-  const hotEmissive = useMemo(() => new THREE.Color("#ff5a14"), []);
+  const hotEmissive = useMemo(() => new THREE.Color("#ff6b5b"), []);
   const baseColor = useMemo(() => new THREE.Color("#b6bec9"), []);
   const hotColor = useMemo(() => new THREE.Color("#6d2409"), []);
   const tmp = useMemo(() => new THREE.Color(), []);

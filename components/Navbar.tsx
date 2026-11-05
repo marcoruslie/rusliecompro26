@@ -90,7 +90,7 @@ export default function Navbar() {
                 className="group relative font-display text-[0.9rem] font-medium text-ink-soft transition-colors duration-200 hover:text-navy"
               >
                 {link.label}
-                <span className="absolute -bottom-[23px] left-0 h-[3px] w-0 bg-navy transition-all duration-300 group-hover:w-full" />
+                <span className="absolute -bottom-[23px] left-0 h-[3px] w-0 bg-coral transition-all duration-300 group-hover:w-full" />
               </a>
             ))}
             <Link
@@ -102,7 +102,7 @@ export default function Navbar() {
             >
               {t.nav.catalog}
               <span
-                className={`absolute -bottom-[23px] left-0 h-[3px] bg-navy transition-all duration-300 group-hover:w-full ${
+                className={`absolute -bottom-[23px] left-0 h-[3px] bg-coral transition-all duration-300 group-hover:w-full ${
                   onCatalog ? "w-full" : "w-0"
                 }`}
               />
@@ -111,7 +111,7 @@ export default function Navbar() {
             <a
               href={homeHref("#contact")}
               onClick={onNavClick("#contact")}
-              className="whitespace-nowrap rounded-plate bg-navy px-5 py-2.5 font-display text-[0.9rem] font-semibold text-white transition-colors duration-200 hover:bg-navy-hover"
+              className="whitespace-nowrap rounded-plate bg-coral px-5 py-2.5 font-display text-[0.9rem] font-semibold text-navy transition-colors duration-200 hover:bg-coral-hover"
             >
               {t.nav.getQuote}
             </a>
@@ -133,7 +133,7 @@ export default function Navbar() {
         <motion.div
           aria-hidden
           style={{ scaleX: barProgress }}
-          className="h-px w-full origin-left bg-navy"
+          className="h-px w-full origin-left bg-coral"
         />
       </nav>
 
@@ -175,7 +175,7 @@ export default function Navbar() {
                   onNavClick("#contact")(e);
                   setMenuOpen(false);
                 }}
-                className="mt-2 rounded-plate bg-navy py-3 text-center font-display text-base font-semibold text-white"
+                className="mt-2 rounded-plate bg-coral py-3 text-center font-display text-base font-semibold text-navy"
               >
                 {t.nav.getQuote}
               </a>
