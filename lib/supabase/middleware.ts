@@ -46,7 +46,7 @@ export async function updateSession(request: NextRequest) {
 
   if (user && isLoginPage) {
     const url = request.nextUrl.clone();
-    url.pathname = role === "viewer" ? "/admin/queue" : "/admin/dashboard";
+    url.pathname = role === "viewer" ? "/admin/queue" : "/admin/home";
     return NextResponse.redirect(url);
   }
 

@@ -14,7 +14,7 @@ export default function Footer() {
   return (
     <footer
       id="footer"
-      className={`relative bg-navy-dark px-6 text-white lg:px-10 ${
+      className={`relative bg-navy-dark px-6 text-cream lg:px-10 ${
         stageEnabled ? "flex h-screen items-center justify-center" : ""
       }`}
     >
@@ -36,7 +36,7 @@ export default function Footer() {
                 <li key={hash}>
                   <Link
                     href={`/${lang}${hash}`}
-                    className="font-body text-[0.92rem] text-silver transition-colors hover:text-white"
+                    className="font-body text-[0.92rem] text-silver transition-colors hover:text-cream"
                   >
                     {t.nav.links[i]}
                   </Link>
@@ -45,7 +45,7 @@ export default function Footer() {
               <li>
                 <Link
                   href={`/${lang}/katalog`}
-                  className="font-body text-[0.92rem] text-silver transition-colors hover:text-white"
+                  className="font-body text-[0.92rem] text-silver transition-colors hover:text-cream"
                 >
                   {t.nav.catalog}
                 </Link>
@@ -66,7 +66,7 @@ export default function Footer() {
           </div>
         </div>
 
-        <div className="flex flex-col justify-between gap-2 border-t border-white/10 py-6 font-body text-[0.82rem] text-silver-muted sm:flex-row">
+        <div className="flex flex-col justify-between gap-2 border-t border-cream/10 py-6 font-body text-[0.82rem] text-silver-muted sm:flex-row">
           <span>
             © 2026 Ruslie Spring. {t.footer.rights}
           </span>

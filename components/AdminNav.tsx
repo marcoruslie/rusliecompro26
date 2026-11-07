@@ -14,6 +14,7 @@ import {
   Package,
   UserCog,
   Percent,
+  ArrowLeftRight,
   Menu,
   X,
 } from "lucide-react";
@@ -130,7 +131,16 @@ function SidebarBody({
         ))}
       </nav>
 
-      <div className="px-4 py-4 shrink-0" style={{ borderTop: "1px solid rgba(255,255,255,0.07)" }}>
+      <div className="px-4 py-4 shrink-0 flex flex-col gap-2" style={{ borderTop: "1px solid rgba(255,255,255,0.07)" }}>
+        {role !== "viewer" && (
+          <Link
+            href="/admin/home"
+            onClick={onNavigate}
+            className="flex items-center gap-2 rounded-lg px-3 py-2 text-[0.8rem] text-white/70 hover:text-white hover:bg-white/5"
+          >
+            <ArrowLeftRight size={14} /> Ganti Modul
+          </Link>
+        )}
         <AdminSignOutButton />
       </div>
     </div>

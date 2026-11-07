@@ -26,7 +26,7 @@ export default function Capabilities() {
     <section
       id="capabilities"
       ref={ref}
-      className={`relative overflow-hidden bg-navy px-6 text-white lg:px-10 ${
+      className={`relative overflow-hidden bg-navy px-6 text-cream lg:px-10 ${
         stageEnabled ? "flex h-screen items-center py-20" : "py-[120px]"
       }`}
     >
@@ -39,12 +39,12 @@ export default function Capabilities() {
         </Reveal>
 
         {/* Datasheet: label on the left, the figure set large on the right */}
-        <dl className="border-t border-white/20">
+        <dl className="border-t border-cream/20">
           {caps.map((c, i) => (
             <Reveal
               key={c.label}
               delay={i * 0.06}
-              className="relative flex items-baseline justify-between gap-6 border-b border-white/20 py-6"
+              className="relative flex items-baseline justify-between gap-6 border-b border-cream/20 py-6"
             >
               <dt className="font-body text-[1rem] text-silver">{c.label}</dt>
               <dd className="font-condensed whitespace-nowrap font-display text-[clamp(2rem,4vw,3.2rem)] font-bold leading-none tabular-nums">
@@ -57,7 +57,7 @@ export default function Capabilities() {
                 whileInView={{ scaleX: 1 }}
                 viewport={{ once: true, margin: "-10% 0px" }}
                 transition={{ duration: 0.9, delay: 0.15 + i * 0.08, ease: [0.22, 1, 0.36, 1] }}
-                className="absolute -bottom-px left-0 h-[2px] w-1/4 origin-left bg-white"
+                className="absolute -bottom-px left-0 h-[2px] w-1/4 origin-left bg-coral"
               />
             </Reveal>
           ))}
@@ -66,14 +66,14 @@ export default function Capabilities() {
 
       {/* Industries served */}
       <Reveal delay={0.1} className="mx-auto mt-20 max-w-7xl">
-        <h3 className="mb-6 font-display text-[1.05rem] font-bold text-white">
+        <h3 className="mb-6 font-display text-[1.05rem] font-bold text-cream">
           {t.capabilities.industriesTitle}
         </h3>
-        <ul className="grid grid-cols-2 border-l border-t border-white/15 sm:grid-cols-3 lg:grid-cols-5">
+        <ul className="grid grid-cols-2 border-l border-t border-cream/15 sm:grid-cols-3 lg:grid-cols-5">
           {industries.map((ind) => (
             <li
               key={ind}
-              className="border-b border-r border-white/15 px-5 py-4 font-body text-[0.95rem] text-silver-light"
+              className="border-b border-r border-cream/15 px-5 py-4 font-body text-[0.95rem] text-silver-light"
             >
               {ind}
             </li>

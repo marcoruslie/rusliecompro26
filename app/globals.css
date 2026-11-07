@@ -7,15 +7,17 @@
      --font-chakra) are defined by next/font on the <html> element in
      app/layout.tsx and inherited here. */
 
-  /* Light-industrial palette (marketing site) */
-  --ground: #f4f3f1;
-  --surface: #ffffff;
-  --sunk: #e8e6e1;
-  --ink: #16181c;
-  --ink-soft: #4a4f57;
-  --ink-faint: #8a9099;
-  --rule: #dcd9d3;
-  --brand: #021d47;
+  /* Marketing palette — navy, cream, coral (mirrors tailwind.config.ts) */
+  --ground: #f4ede0;
+  --surface: #fbf8f2;
+  --sunk: #ebe2d2;
+  --ink: #14213d;
+  --ink-soft: #465066;
+  --ink-faint: #5a6173;
+  --rule: #dccfba;
+  --rule-strong: #c7b69b;
+  --brand: #14213d;
+  --coral: #ff6b5b;
 }
 
 * {
@@ -418,8 +420,8 @@ select.admin-input option { background: #ffffff; color: #1e293b; }
 }
 
 /* ═══════════════════════════════════════════════════════════════
-   LIGHT-INDUSTRIAL — marketing site
-   Mineral grounds, near-black ink, brand navy as the only accent.
+   MARKETING SITE — navy, cream, coral
+   Cream grounds, navy ink and bands, coral as the single accent.
    Scoped under .ind-root so admin/calculator/invoice are untouched.
    ═══════════════════════════════════════════════════════════════ */
 
@@ -428,7 +430,7 @@ select.admin-input option { background: #ffffff; color: #1e293b; }
   color: var(--ink);
 }
 .ind-root ::selection {
-  background: rgba(2, 29, 71, 0.16);
+  background: rgba(255, 107, 91, 0.32);
   color: var(--ink);
 }
 
@@ -436,10 +438,10 @@ select.admin-input option { background: #ffffff; color: #1e293b; }
    the way a steel rule is graduated. Ink-toned, never coloured. */
 .ind-grid {
   background-image:
-    linear-gradient(rgba(22, 24, 28, 0.055) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(22, 24, 28, 0.055) 1px, transparent 1px),
-    linear-gradient(rgba(22, 24, 28, 0.028) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(22, 24, 28, 0.028) 1px, transparent 1px);
+    linear-gradient(rgba(20, 33, 61, 0.06) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(20, 33, 61, 0.06) 1px, transparent 1px),
+    linear-gradient(rgba(20, 33, 61, 0.03) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(20, 33, 61, 0.03) 1px, transparent 1px);
   background-size: 120px 120px, 120px 120px, 24px 24px, 24px 24px;
   background-position: -1px -1px;
 }
@@ -455,15 +457,20 @@ select.admin-input option { background: #ffffff; color: #1e293b; }
   background: var(--rule);
 }
 
-/* Focus ring — visible, square, brand-toned */
+/* Focus ring — visible, square: navy on cream, coral on navy bands
+   (coral on cream is only 2.4:1). */
 .ind-root :focus-visible {
   outline: 2px solid var(--brand);
   outline-offset: 2px;
 }
+.ind-root .bg-navy :focus-visible,
+.ind-root .bg-navy-dark :focus-visible {
+  outline-color: var(--coral);
+}
 
 /* Scrollbar */
 .ind-root ::-webkit-scrollbar-track { background: var(--sunk); }
-.ind-root ::-webkit-scrollbar-thumb { background: #b9b5ad; border-radius: 0; }
+.ind-root ::-webkit-scrollbar-thumb { background: var(--rule-strong); border-radius: 0; }
 .ind-root ::-webkit-scrollbar-thumb:hover { background: var(--brand); }
 
 @media (prefers-reduced-motion: reduce) {
@@ -496,4 +503,22 @@ select.admin-input option { background: #ffffff; color: #1e293b; }
   color: #6b7280;
   background: rgba(107, 114, 128, 0.1);
   border: 1px solid rgba(107, 114, 128, 0.2);
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   TKA module — printouts (nota, surat jalan, bukti kas, laporan)
+   ═══════════════════════════════════════════════════════════════ */
+.tka-print { color: #000; }
+.tka-report td, .tka-report th { white-space: nowrap; }
+@media print {
+  body:has(.tka-print), body:has(.tka-report) { background: #fff !important; color: #000 !important; }
+  .tka-print .no-print, .admin-shell .no-print { display: none !important; }
+  .admin-shell:has(.tka-report) { margin-left: 0 !important; padding: 0 !important; background: #fff !important; }
+  .tka-report .admin-panel { box-shadow: none !important; border: none !important; }
+  .tka-report .admin-table thead th { background: #fff !important; color: #000 !important; border-bottom: 1px solid #000; }
+  .tka-report .admin-table { font-size: 9pt; }
+  .tka-report .admin-table tbody td { padding: 2px 6px; color: #000; }
+  .tka-sheet { padding: 8mm !important; max-width: none !important; }
+  .tka-print, .tka-report { page: tka; }
+  @page tka { size: A4; margin: 8mm; }
 }

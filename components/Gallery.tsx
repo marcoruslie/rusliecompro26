@@ -65,10 +65,10 @@ export default function Gallery() {
 									sizes={i === 0 ? "(max-width: 1024px) 100vw, 50vw" : "(max-width: 1024px) 50vw, 25vw"}
 									className="object-cover transition-transform duration-[700ms] ease-out group-hover:scale-[1.04]"
 								/>
-								<span className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-navy-dark/85 to-transparent px-4 pb-3 pt-10 font-body text-[0.85rem] font-medium leading-snug text-white opacity-100 transition-opacity duration-200 lg:opacity-0 lg:group-hover:opacity-100">
+								<span className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-navy-dark/85 to-transparent px-4 pb-3 pt-10 font-body text-[0.85rem] font-medium leading-snug text-cream opacity-100 transition-opacity duration-200 lg:opacity-0 lg:group-hover:opacity-100">
 									{item.label}
 								</span>
-								<span className="absolute right-3 top-3 flex h-8 w-8 items-center justify-center rounded-plate bg-white/90 text-navy opacity-0 transition-opacity duration-200 group-hover:opacity-100">
+								<span className="absolute right-3 top-3 flex h-8 w-8 items-center justify-center rounded-plate bg-cream/90 text-navy opacity-0 transition-opacity duration-200 group-hover:opacity-100">
 									<Plus size={16} />
 								</span>
 							</button>

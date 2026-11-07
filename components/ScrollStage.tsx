@@ -212,7 +212,7 @@ function StageIndicator({ local }: { local: MotionValue<number> }) {
           aria-label={`Go to ${s.id}`}
           className={`pointer-events-auto h-2 w-2 rounded-full transition-all duration-300 ${
             i === activeIndex
-              ? "scale-125 bg-navy"
+              ? "scale-125 bg-coral"
               : "bg-rule-strong hover:bg-navy/60"
           }`}
         />

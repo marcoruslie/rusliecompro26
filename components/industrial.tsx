@@ -68,7 +68,7 @@ export function SectionLabel({
         tone === "dark" ? "text-silver" : "text-navy"
       } ${className}`}
     >
-      <span className={`h-[3px] w-5 ${tone === "dark" ? "bg-silver" : "bg-navy"}`} />
+      <span className="h-[3px] w-5 bg-coral" />
       {label}
     </div>
   );
@@ -129,7 +129,7 @@ export function Reveal({
   );
 }
 
-/* ── Action: primary is a solid navy plate, ghost is a hairline ── */
+/* ── Action: primary is a solid coral plate with navy type, ghost is a hairline ── */
 export function Action({
   href,
   children,
@@ -145,10 +145,10 @@ export function Action({
   onClick?: () => void;
 }) {
   const styles = {
-    primary: "bg-navy text-white hover:bg-navy-hover",
+    primary: "bg-coral text-navy hover:bg-coral-hover",
     ghost: "border border-rule-strong text-ink hover:border-navy hover:text-navy",
-    inverse: "bg-white text-navy hover:bg-silver-light",
-    outline: "border border-white/40 text-white hover:border-white hover:bg-white/10",
+    inverse: "bg-coral text-navy hover:bg-coral-hover",
+    outline: "border border-cream/40 text-cream hover:border-cream hover:bg-cream/10",
   }[variant];
 
   return (

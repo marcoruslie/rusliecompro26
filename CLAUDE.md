@@ -19,7 +19,7 @@ Next.js 14 (App Router) + TypeScript + Tailwind CSS + Framer Motion + lucide-rea
 
 ### Routes
 
-- `app/page.tsx` — single-page marketing site composed by stacking section components from `components/` (`Navbar`, `Hero`, `About`, `Products`, `Gallery`, `Capabilities`, `Contact`, `Footer`). All in-page nav uses `#section-id` hash links.
+- `app/[locale]/page.tsx` (`en`, `id`, `zh`) — single-page marketing site composed by stacking section components from `components/` (`Navbar`, `Hero`, `About`, `Process`, `Products`, `Capabilities`, `Gallery`, `Contact`, `Footer`); `app/[locale]/katalog` is the catalog. `app/page.tsx` permanently redirects `/` to the default locale. All in-page nav uses `#section-id` hash links.
 - `app/calculator/page.tsx` — server component that renders `CalculatorClient` (spring weight + IDR price estimator, Indonesian-language UI).
 - `app/invoice/page.tsx` — server component that renders `InvoiceClient` (printable invoice generator, Indonesian-language UI).
 
@@ -33,7 +33,8 @@ The marketing nav (`components/Navbar.tsx`) does not currently link to `/calcula
 
 ### Styling
 
-- Tailwind config (`tailwind.config.ts`) defines the brand palette as named colors: `navy` (default `#021d47`), `silver`, `steel`, plus `bg-dot-white` / `bg-dot-navy` radial-dot backgrounds used for section textures.
+- Marketing palette (the `/[locale]` site, scoped under `.ind-root`): navy `#14213d`, cream `#f4ede0`, coral `#ff6b5b`. Tailwind tokens: `ground`/`surface`/`sunk` (cream grounds), `ink` (navy text), `rule` (hairlines), `navy` (bands), `cream` (text on navy), `coral` (the single accent: primary buttons, section markers, progress). Use navy text on coral; never coral text on cream (2.4:1). The same values are mirrored as CSS variables in `app/globals.css`. Admin, calculator and invoice pages use their own hard-coded `#021d47` navy and are not part of this palette.
+- `lib/seo.ts` `SITE_URL` must be the host production actually serves (`https://www.rusliespring.com`; the bare domain redirects to www), since canonical, hreflang and sitemap URLs are built from it.
 - Fonts (`Playfair Display` for `font-display`, `DM Sans` for `font-body`) are loaded via `@import` in `app/globals.css` and exposed as CSS variables `--font-playfair` / `--font-dm-sans`. Do not re-import Google Fonts in components — `CalculatorClient` currently does this redundantly inside a `useEffect`.
 - `globals.css` sets the default `body` background to navy `#021d47` and text to white. Light-themed pages/sections must override this on their own root element.
 
@@ -49,3 +50,17 @@ Image references in components use plain `<img>` tags, not `next/image`. Match t
 ### Calculator domain logic
 
 `components/CalculatorClient.tsx` contains the spring price formula (`runCalculation`). It is a 1-to-1 port from a prior Vue implementation — preserve the exact math (steel density `7.89`, `pricePerKgSteel = 90`, `pricePerKgStainless = 180`, `Math.ceil` rounding points) when editing, since downstream quotes depend on it. The `pitch` and `coils` inputs are optional and have specific fallback rules (pitch defaults to wire diameter; coils defaults to `ceil(length / (2 * wireDiameter))` when both are blank).
+
+### Admin modules & TKA
+
+After login (`/admin`) users land on `/admin/home`, a chooser between **TKA** (`/admin/tka`) and **Ruslie Spring** (`/admin/dashboard`). Viewers still go straight to the Queue and cannot open TKA.
+
+TKA is a web rebuild of the legacy DOS/Clipper accounting program in `../PRG/PEER` (no source code survived; behaviour was reverse-engineered from its DBF files and verified by re-posting the imported documents).
+
+- Schema & logic: `supabase/migrations/0008_tka.sql`. Documents are generic (`tka_doc` + `tka_doc_line`, legacy fields kept in JSONB `h`/`d`); `tka_post()` turns a document into ledger lines (`tka_jurnal`), stock movements (`tka_mutasi`), invoice register (`tka_hp`/`tka_bayar`) and giro (`tka_giro`). Always save through the `tka_save_doc` RPC so postings stay in sync — never write `tka_doc_line` directly. Balances = yearly opening (`tka_saldo_awal`, `tka_stok_awal`) + postings; `tka_tutup_tahun` writes the next year's openings.
+- Costing: HPP and production value use the item's standard cost `tka_inv.hppmin`; imported lines carry the exact legacy cost in `d.hpp_val`/`d.hpp_qty`/`d.hpp` (see `tka_line_cost`).
+- Legacy ledger codes: 498 kas masuk, 499 bank masuk, 500 kas keluar, 501 bank keluar; voucher numbers use year/month letters (`KK/\A/0001` = Jan 2025, year letter = chr(65 + year − 1998)).
+- UI is config-driven: `lib/tka/docs.ts` (document types → list/form/print), `lib/tka/masters.ts` (master tables), `lib/tka/reports.ts` (reports). Components live in `components/tka/`.
+- Invoice register (`0010_tka_hp_per_tahun.sql`): `tka_hp` is unique on `(id_cs, nkey, tahun)` because supplier faktur numbers (BLI `001`…) restart every year; each `tka_bayar` row records `nota_tahun`, the year of the invoice it settles (from the voucher line's `d.notadate` — the "Tgl Nota" column — else the latest invoice with that number not after the payment). Join register and payments on all three columns.
+- Lost legacy year: the DOS program's 2024 posting files (`RACC/RHPP/RHP/RGR__24`) hold only a few dozen rows. The importer detects such years (ledger rows < half the document count), skips their ledger/stock fragments and rebuilds them with `tka_posting_ulang(tahun)` plus the year's giro-clearing list (`BMG`, via `tka_cairkan_giro_legacy`). 2024 HPP therefore uses standard cost, not the exact legacy cost.
+- Import: `npm run tka:import` (add `-- --reset` to wipe and re-import). Only live DBF records are imported; the Clipper program kept edited/deleted versions as deleted rows. Requires migrations 0008–0010; the importer refuses to start without 0010.

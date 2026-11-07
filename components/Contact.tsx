@@ -96,7 +96,7 @@ export default function Contact() {
               />
               <button
                 onClick={() => setSent(true)}
-                className="mt-2 flex cursor-pointer items-center justify-center gap-2 rounded-plate bg-navy px-8 py-4 font-display text-[0.95rem] font-semibold text-white transition-colors duration-200 hover:bg-navy-hover"
+                className="mt-2 flex cursor-pointer items-center justify-center gap-2 rounded-plate bg-coral px-8 py-4 font-display text-[0.95rem] font-semibold text-navy transition-colors duration-200 hover:bg-coral-hover"
               >
                 {t.contact.button}
                 <ArrowRight size={15} />

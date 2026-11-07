@@ -1,0 +1,624 @@
+// Import the legacy DOS program's DBF files (PRG/PEER/DBF) into the tka_* tables.
+//
+//   node --env-file=.env.local scripts/tka-import.mjs ../PRG/PEER/DBF [--reset]
+//
+// Only live records are imported: the Clipper program kept every edited or
+// deleted version of a record as a "deleted" row. Ids are assigned here so lines
+// and postings can reference their document without a round trip; the sequences
+// are moved past them at the end (tka_fix_sequences).
+import fs from "node:fs";
+import path from "node:path";
+import { pathToFileURL } from "node:url";
+
+// ───────────────────────── DBF reader ─────────────────────────
+
+const CP437 =
+  "ÇüéâäàåçêëèïîìÄÅÉæÆôöòûùÿÖÜ¢£¥₧ƒáíóúñÑªº¿⌐¬½¼¡«»░▒▓│┤╡╢╖╕╣║╗╝╜╛┐└┴┬├─┼╞╟╚╔╩╦╠═╬╧╨╤╥╙╘╒╓╫╪┘┌█▄▌▐▀αßΓπΣσµτΦΘΩδ∞φε∩≡±≥≤⌠⌡÷≈°∙·√ⁿ²■ ";
+
+function decodeText(buf) {
+  let s = "";
+  for (const b of buf) {
+    if (b < 0x20) continue; // NUL / control bytes from corrupted records
+    s += b < 0x80 ? String.fromCharCode(b) : CP437[b - 0x80];
+  }
+  return s.trim();
+}
+
+export function readDbf(file) {
+  const b = fs.readFileSync(file);
+  const n = b.readUInt32LE(4);
+  const headerLen = b.readUInt16LE(8);
+  const recLen = b.readUInt16LE(10);
+  const fields = [];
+  for (let o = 32; b[o] !== 0x0d && o < headerLen; o += 32) {
+    let name = b.toString("latin1", o, o + 11).split("\0")[0].toLowerCase();
+    if (fields.some((f) => f.name === name)) name += "_2"; // TKA.DBF has two ACC columns
+    fields.push({ name, type: String.fromCharCode(b[o + 11]), len: b[o + 16], dec: b[o + 17] });
+  }
+  const rows = [];
+  for (let i = 0; i < n; i++) {
+    const start = headerLen + i * recLen;
+    if (start + recLen > b.length) break;
+    if (b[start] === 0x2a) continue; // '*' = deleted
+    const rec = {};
+    let p = start + 1;
+    for (const f of fields) {
+      const raw = b.subarray(p, p + f.len);
+      p += f.len;
+      rec[f.name] = parseValue(f, raw);
+    }
+    rows.push(rec);
+  }
+  return { fields, rows };
+}
+
+const stats = { badNumber: 0, badDate: 0 };
+
+function parseValue(f, raw) {
+  if (f.type === "N" || f.type === "F") {
+    const s = raw.toString("latin1").replace(/\0/g, "").trim(); // NUL-filled = blank
+    if (s === "") return 0;
+    const v = Number(s);
+    if (!Number.isFinite(v)) {
+      stats.badNumber++;
+      return 0;
+    }
+    return v;
+  }
+  if (f.type === "D") return parseDate(raw.toString("latin1").replace(/\0/g, "").trim());
+  if (f.type === "L") return /^[TtYy]/.test(raw.toString("latin1"));
+  return decodeText(raw);
+}
+
+function parseDate(s) {
+  if (!/^\d{8}$/.test(s)) {
+    if (s.replace(/0/g, "") !== "") stats.badDate++;
+    return null;
+  }
+  const y = +s.slice(0, 4), m = +s.slice(4, 6), d = +s.slice(6, 8);
+  const dt = new Date(Date.UTC(y, m - 1, d));
+  if (y < 1980 || y > 2100 || dt.getUTCMonth() !== m - 1 || dt.getUTCDate() !== d) {
+    stats.badDate++;
+    return null;
+  }
+  return `${s.slice(0, 4)}-${s.slice(4, 6)}-${s.slice(6, 8)}`;
+}
+
+// ───────────────────────── helpers ─────────────────────────
+
+const str = (v) => (v == null ? "" : String(v));
+const num = (v) => (typeof v === "number" ? v : Number(v) || 0);
+const round2 = (v) => Math.round(v * 100) / 100;
+
+// Same rule as SQL tka_nkey(): 'MK0170' == 'MK170'.
+export function nkey(s) {
+  return str(s).replace(/\s/g, "").toUpperCase().replace(/(^|[^0-9])0+([0-9])/g, "$1$2");
+}
+
+function compact(obj, skip) {
+  const out = {};
+  for (const [k, v] of Object.entries(obj)) {
+    if (skip.has(k)) continue;
+    if (v === "" || v === null || v === 0 || v === false) continue;
+    out[k] = v;
+  }
+  return out;
+}
+
+// legacy year file suffix -> year
+function yearFiles(dir, base) {
+  const re = new RegExp(`^${base}_*(\\d\\d)\\.DBF$`, "i");
+  return fs
+    .readdirSync(dir)
+    .map((f) => ({ f, m: f.match(re) }))
+    .filter((x) => x.m)
+    .map((x) => ({ file: path.join(dir, x.f), tahun: 2000 + Number(x.m[1]) }))
+    .sort((a, b) => a.tahun - b.tahun);
+}
+
+// Document types: our code -> legacy header / line tables.
+export const DOC_TYPES = [
+  { jnl: "POP", head: "POH1", line: "POD1" },
+  { jnl: "POE", head: "POH2", line: "POD2" },
+  { jnl: "JLH", head: "JLH", line: "JLD" },
+  { jnl: "RJL", head: "NRJL", line: "NRJD" },
+  { jnl: "BPB", head: "BPB", line: "BPD" },
+  { jnl: "BLI", head: "BLI", line: "BLD" },
+  { jnl: "RBL", head: "NRBL", line: "NRBD" },
+  { jnl: "BBK", head: "BBK", line: "BBD" },
+  { jnl: "BHP", head: "BHP", line: "BHD" },
+  { jnl: "KOR", head: "KOR", line: "KOD" },
+  { jnl: "KM", head: "KMS", line: "KMD" },
+  { jnl: "KK", head: "KKL", line: "KKD" },
+  { jnl: "BM", head: "BMS", line: "BMD" },
+  { jnl: "BK", head: "BKL", line: "BKD" },
+  { jnl: "JNL", head: "JNL", line: "JND" },
+];
+
+// Legacy ledger / stock journal code -> document types it may belong to.
+const LEDGER_TO_DOC = {
+  498: ["KM", "BM"], 499: ["BM", "KM"], 500: ["KK", "BK"], 501: ["BK", "KK"],
+  JLH: ["JLH"], BLI: ["BLI"], BHP: ["BHP"], JNL: ["JNL"], RJL: ["RJL"], RBL: ["RBL"],
+  BBK: ["BBK"], KOR: ["KOR"], BPB: ["BPB"],
+};
+
+const HEAD_SKIP = new Set(["nomor", "date", "cus", "sup", "tka", "cusname", "supname", "tkaname", "rem", "chuser"]);
+const LINE_SKIP = new Set(["nomor", "acc", "gol", "inv", "invname", "qty", "unit", "price", "val", "dk", "nota", "jnlno", "tka", "rem"]);
+
+// ───────────────────────── import ─────────────────────────
+
+/**
+ * sink.insert(table, rows) must persist rows; sink.call(fn, args?) runs an RPC and
+ * returns its rows.
+ */
+export async function runImport(dir, sink, log = console.log) {
+  const t0 = Date.now();
+  const importLog = [];
+  const note = (tabel, pesan) => importLog.push({ tabel, pesan });
+  const put = async (table, rows) => {
+    for (let i = 0; i < rows.length; i += 1000) await sink.insert(table, rows.slice(i, i + 1000));
+    if (rows.length) log(`  ${table}: +${rows.length}`);
+  };
+  const master = (name) => {
+    const f = path.join(dir, name);
+    return fs.existsSync(f) ? readDbf(f).rows : [];
+  };
+
+  // ── master data ──
+  log("Master data");
+  const accRows = master("ACC.DBF");
+  // ACD also stores roll-up totals for header accounts; only detail balances are real.
+  const headerAcc = new Set(accRows.filter((r) => r.detil === "I").map((r) => r.acc));
+  await put("tka_acc", accRows.map((r) => ({
+    acc: r.acc, name: r.name, accgroup: num(r.accgroup) || 1, accinduk: r.accinduk, detil: r.detil || "D",
+    level: num(r.level) || 1, dk: r.dk || "D", status: r.status, chuser: r.chuser,
+  })).filter(uniqueBy((r) => r.acc)));
+  await put("tka_cusg", master("CUSG.DBF").map((r) => ({ cusg: r.cusg, name: r.name, acc: r.acc, chuser: r.chuser })).filter(uniqueBy((r) => r.cusg)));
+  await put("tka_cus", master("CUS.DBF").map((r) => ({
+    cus: r.cus, cusg: r.cusg, name: r.name, acc: r.acc, address1: r.address1, address2: r.address2, address3: r.address3,
+    address4: r.address4, telp: r.telp, fax: r.fax, city: r.city, npwp: r.npwp, rem1: r.rem1, rem2: r.rem2, chuser: r.chuser,
+  })).filter((r) => r.cus).filter(uniqueBy((r) => r.cus)));
+  await put("tka_sup", master("SUP.DBF").map((r) => ({
+    sup: r.sup, name: r.name, acc: r.acc, address1: r.address1, address2: r.address2, address3: r.address3,
+    address4: r.address4, telp: r.telp, fax: r.fax, city: r.city, npwp: r.npwp, chuser: r.chuser,
+  })).filter((r) => r.sup).filter(uniqueBy((r) => r.sup)));
+  await put("tka_gol", master("GOL.DBF").map((r) => ({ gol: r.gol, name: r.name, id: r.id || "F", chuser: r.chuser })).filter(uniqueBy((r) => r.gol)));
+  const invRows = master("INV.DBF").filter((r) => r.inv).map((r) => ({
+    gol: r.gol, inv: r.inv, name: r.name, nameid: r.nameid, nogudang: r.nogudang, acc: r.acc, sub: r.sub, loc: r.loc || "01",
+    price: r.price, price1: r.price1, price2: r.price2, unit: r.unit, unit1: r.unit1, unit2: r.unit2,
+    konver1: r.konver1, konver2: r.konver2, ongkos: r.ongkos, ongkos1: r.ongkos1, berat: r.berat, dmeter: r.dmeter,
+    golb: r.golb, invb: r.invb, pricebl: r.pricebl, hppmin: r.hppmin, rem: r.rem, rem2: r.rem2, chuser: r.chuser,
+  })).filter(uniqueBy((r) => `${r.gol}|${r.inv}`));
+  await put("tka_inv", invRows);
+  await put("tka_loc", master("LOC.DBF").map((r) => ({ loc: r.loc, name: r.name, chuser: r.chuser })).filter(uniqueBy((r) => r.loc)));
+  await put("tka_bank", master("BANK.DBF").map((r) => ({ bank: r.bank, norek: r.norek, capem: r.capem, chuser: r.chuser })));
+  await put("tka_biaya", master("BIAYA.DBF").map((r) => ({ biaya: r.biaya, chuser: r.chuser })).filter(uniqueBy((r) => r.biaya)));
+  await put("tka_pekerja", master("TKA.DBF").map((r) => ({
+    tka: r.tka, name: r.name, acc: r.acc, accpiut: r.accpiut, acc_biaya: r.acc_2 || "",
+    address1: r.address1, address2: r.address2, address3: r.address3, address4: r.address4, telp: r.telp,
+    tgl_masuk: r.date, bagian: r.bagian, idcard: r.idcard, city: r.city, birtdate: r.birtdate, chuser: r.chuser,
+  })).filter((r) => r.tka).filter(uniqueBy((r) => r.tka)));
+  const tacc = master("TACC.DBF").at(-1);
+  if (tacc) {
+    const { chuser, ...accs } = tacc;
+    await sink.upsertSetting({ id: 1, ...accs, chuser });
+    log("  tka_setting: updated");
+  }
+
+  // ── exact legacy costs, so re-saving an imported document reproduces its postings ──
+  const unitCost = new Map(); // `${jnl}|${tahun}|${nomor}|${gol}|${inv}` -> { q, v }
+  for (const { file, tahun } of yearFiles(dir, "RHPP")) {
+    for (const r of readDbf(file).rows) {
+      if (r.jnl !== "JLH" && r.jnl !== "BHP" && r.jnl !== "RJL" && r.jnl !== "BBK") continue;
+      const k = `${r.jnl}|${tahun}|${r.nomor}|${r.gol}|${r.inv}`;
+      const cur = unitCost.get(k) || { q: 0, v: 0, n: 0 };
+      cur.q += num(r.qin) || num(r.qout);
+      cur.v = round2(cur.v + (num(r.vin) || num(r.vout)));
+      cur.n++;
+      unitCost.set(k, cur);
+    }
+  }
+  // HPP the legacy ledger posted per nota (lines without an item code were costed too).
+  const settingAcc = master("TACC.DBF").at(-1) || {};
+  const hppAccs = new Set([settingAcc.acchppp, settingAcc.acchppe, settingAcc.acchppt].filter(Boolean));
+  const notaHpp = new Map(); // `${tahun}|${nomor}` -> total HPP debit
+  for (const { file, tahun } of yearFiles(dir, "RACC")) {
+    for (const r of readDbf(file).rows) {
+      if (r.jnl !== "JLH" || !hppAccs.has(r.acc)) continue;
+      const k = `${tahun}|${r.nomor}`;
+      notaHpp.set(k, round2((notaHpp.get(k) || 0) + num(r.debet) - num(r.kredit)));
+    }
+  }
+
+  // ── documents ──
+  log("Dokumen");
+  const docIndex = new Map(); // `${jnl}|${tahun}|${nomor}` -> id
+  let docId = 0, lineId = 0;
+  for (const t of DOC_TYPES) {
+    const heads = yearFiles(dir, t.head);
+    const lines = new Map(yearFiles(dir, t.line).map((x) => [x.tahun, x.file]));
+    for (const { file, tahun } of heads) {
+      const docs = [];
+      const byNomor = new Map();
+      let merged = 0;
+      for (const r of readDbf(file).rows) {
+        if (!r.nomor) continue;
+        if (byNomor.has(r.nomor)) { merged++; continue; }
+        let tanggal = r.date;
+        if (!tanggal) { tanggal = `${tahun}-01-01`; note(t.head, `${tahun} ${r.nomor}: tanggal kosong, diisi 1 Jan`); }
+        const doc = {
+          id: ++docId, jnl: t.jnl, tahun, nomor: r.nomor, tanggal,
+          sub: str(r.cus || r.sup || r.tka), subname: str(r.cusname || r.supname || r.tkaname),
+          total: round2(num(r.netto) || num(r.val)), rem: str(r.rem), h: compact(r, HEAD_SKIP),
+          legacy: true, chuser: str(r.chuser),
+        };
+        byNomor.set(r.nomor, doc);
+        docs.push(doc);
+        docIndex.set(`${t.jnl}|${tahun}|${r.nomor}`, doc.id);
+      }
+      if (merged) note(t.head, `${tahun}: ${merged} header dengan nomor ganda digabung`);
+      await put("tka_doc", docs);
+
+      const lf = lines.get(tahun);
+      if (!lf) continue;
+      const rows = [];
+      const urut = new Map();
+      let orphan = 0;
+      for (const r of readDbf(lf).rows) {
+        const doc = byNomor.get(r.nomor);
+        if (!doc) { if (r.nomor) orphan++; continue; }
+        const u = (urut.get(doc.id) || 0) + 1;
+        urut.set(doc.id, u);
+        const d = compact(r, LINE_SKIP);
+        const cost = r.inv ? unitCost.get(`${t.jnl}|${tahun}|${doc.nomor}|${str(r.gol)}|${str(r.inv)}`) : null;
+        if (cost && cost.q) {
+          d.hpp = round2((cost.v / cost.q) * 10000) / 10000;
+          if (cost.n === 1 && cost.q === num(r.qty)) { d.hpp_val = cost.v; d.hpp_qty = cost.q; }
+        }
+        rows.push({
+          id: ++lineId, doc_id: doc.id, urut: u, acc: str(r.acc), gol: str(r.gol), inv: str(r.inv),
+          invname: str(r.invname), qty: num(r.qty), unit: str(r.unit), price: num(r.price),
+          val: round2(num(r.val) || num(r.netto)), dk: str(r.dk), nota: str(r.nota), jnlno: str(r.jnlno),
+          tka: str(r.tka), rem: str(r.rem), d,
+        });
+      }
+      if (t.jnl === "JLH") allocateItemlessHpp(rows, byNomor, tahun, notaHpp);
+      if (orphan) note(t.line, `${tahun}: ${orphan} baris tanpa header dilewati`);
+      await put("tka_doc_line", rows);
+    }
+  }
+  const findDoc = (code, tahun, nomor) => {
+    for (const jnl of LEDGER_TO_DOC[code] || []) {
+      const id = docIndex.get(`${jnl}|${tahun}|${nomor}`);
+      if (id) return id;
+    }
+    return null;
+  };
+
+  // Years whose legacy posting files were lost (2024: RACC__24 holds 46 ledger rows
+  // for 1.629 documents). Their ledger, stock and register are rebuilt from the
+  // documents after the import instead of importing the fragments.
+  const docsPerYear = new Map();
+  for (const k of docIndex.keys()) {
+    const y = Number(k.split("|")[1]);
+    docsPerYear.set(y, (docsPerYear.get(y) || 0) + 1);
+  }
+  const raccFile = new Map(yearFiles(dir, "RACC").map((x) => [x.tahun, x.file]));
+  const rebuildYears = [];
+  for (const [tahun, nDocs] of [...docsPerYear].sort((a, b) => a[0] - b[0])) {
+    if (nDocs < 100) continue;
+    const nRacc = raccFile.has(tahun) ? readDbf(raccFile.get(tahun)).rows.length : 0;
+    if (nRacc >= nDocs / 2) continue;
+    rebuildYears.push(tahun);
+    note("RACC", `${tahun}: posting program lama hilang (${nRacc} baris jurnal untuk ${nDocs} dokumen); buku besar, mutasi stok dan register hutang/piutang disusun ulang dari dokumen`);
+  }
+
+  // ── giro register (RGR), newest year wins per cheque number ──
+  log("Giro");
+  const giros = new Map();
+  for (const { file, tahun } of yearFiles(dir, "RGR")) {
+    for (const r of readDbf(file).rows) {
+      if (!r.bg) continue;
+      giros.set(r.bg, { r, tahun });
+    }
+  }
+  let giroId = 0;
+  const giroIndex = new Map();
+  const giroRows = [];
+  for (const [bg, { r }] of giros) {
+    const docYear = r.date ? Number(r.date.slice(0, 4)) : null;
+    const id = ++giroId;
+    giroIndex.set(bg, id);
+    giroRows.push({
+      id, doc_id: docYear ? findDoc(r.status === "1" ? "501" : "498", docYear, r.nomor) : null,
+      status: str(r.status), nomor: str(r.nomor), tanggal: r.date, sub: str(r.sub), subname: str(r.subname), bg,
+      acc: str(r.acc), acc1: str(r.acc1), bank: str(r.bank), bgdue: r.bgdue, bgval: num(r.bgval), bgrem: str(r.bgrem),
+      cairdate: r.cairdate, cair: str(r.cair),
+    });
+  }
+  await put("tka_giro", giroRows);
+
+  // ── general ledger (RACC) ──
+  log("Jurnal (buku besar)");
+  let jurId = 0;
+  for (const { file, tahun } of yearFiles(dir, "RACC")) {
+    if (rebuildYears.includes(tahun)) continue;
+    const rows = [];
+    let skipped = 0;
+    for (const r of readDbf(file).rows) {
+      if (!r.acc || !r.date || (!num(r.debet) && !num(r.kredit))) { skipped++; continue; }
+      rows.push({
+        id: ++jurId, doc_id: r.jnl === "RGR" ? null : findDoc(r.jnl, tahun, r.nomor),
+        giro_id: r.jnl === "RGR" ? giroIndex.get(r.bg) ?? null : null,
+        tahun, tanggal: r.date, jnl: str(r.jnl), nomor: str(r.nomor), id_cs: str(r.id), sub: str(r.sub),
+        subname: str(r.subname), acc: r.acc, bg: str(r.bg), bgdue: r.bgdue, rem: str(r.rem),
+        debet: round2(num(r.debet)), kredit: round2(num(r.kredit)),
+      });
+    }
+    if (skipped) note("RACC", `${tahun}: ${skipped} baris kosong/tanpa tanggal dilewati`);
+    await put("tka_jurnal", rows);
+  }
+
+  // ── stock movements (RHPP) ──
+  log("Mutasi persediaan");
+  let mutId = 0;
+  for (const { file, tahun } of yearFiles(dir, "RHPP")) {
+    if (rebuildYears.includes(tahun)) continue;
+    const rows = [];
+    for (const r of readDbf(file).rows) {
+      if (!r.inv || !r.date) continue;
+      rows.push({
+        id: ++mutId, doc_id: findDoc(r.jnl, tahun, r.nomor), tahun, tanggal: r.date, jnl: str(r.jnl),
+        nomor: str(r.nomor), jnlno: str(r.jnlno), sub: str(r.sub), subname: str(r.subname), nota: str(r.nota),
+        loc: r.loc || "01", gol: str(r.gol), inv: r.inv, unit: str(r.unit), price: num(r.price),
+        qin: num(r.qin), qout: num(r.qout), vin: round2(num(r.vin)), vout: round2(num(r.vout)),
+      });
+    }
+    await put("tka_mutasi", rows);
+  }
+
+  // ── opening balances: ACD / RIN period 01 of every year ──
+  log("Saldo awal");
+  for (const { file, tahun } of yearFiles(dir, "ACD")) {
+    const yy = String(tahun % 100).padStart(2, "0");
+    const rows = readDbf(file).rows
+      .filter((r) => r.period === `01${yy}` && r.acc && !headerAcc.has(r.acc) && round2(num(r.awal)) !== 0)
+      .map((r) => ({ tahun, acc: r.acc, awal: round2(num(r.awal)) }))
+      .filter(uniqueBy((r) => r.acc));
+    await put("tka_saldo_awal", rows);
+  }
+  for (const { file, tahun } of yearFiles(dir, "RIN")) {
+    const yy = String(tahun % 100).padStart(2, "0");
+    const acc = new Map();
+    for (const r of readDbf(file).rows) {
+      if (r.period !== `01${yy}` || !r.inv) continue;
+      const k = `${r.loc || "01"}|${r.gol}|${r.inv}`;
+      const cur = acc.get(k) || { tahun, loc: r.loc || "01", gol: str(r.gol), inv: r.inv, unit: str(r.unit), qty: 0, val: 0 };
+      cur.qty = round2(cur.qty + num(r.qlast));
+      cur.val = round2(cur.val + num(r.vlast));
+      acc.set(k, cur);
+    }
+    await put("tka_stok_awal", [...acc.values()].filter((r) => r.qty !== 0 || r.val !== 0));
+  }
+
+  // ── invoice register (RHP) + payments derived from the imported vouchers ──
+  log("Hutang / piutang");
+  // One row per (side, number, invoice year): supplier faktur numbers restart every
+  // year. Each year file carries the unpaid invoices of earlier years; the newest copy wins.
+  const yearOf = (d) => (d ? Number(String(d).slice(0, 4)) : 0);
+  const hp = new Map();
+  for (const { file, tahun } of yearFiles(dir, "RHP")) {
+    for (const r of readDbf(file).rows) {
+      if (!r.nomor || (r.id !== "C" && r.id !== "S")) continue;
+      const key = nkey(r.nomor), y = yearOf(r.date);
+      hp.set(`${r.id}|${y}|${key}`, { r, tahun, id_cs: r.id, key, y });
+    }
+  }
+  const hpYears = new Map(); // side|number -> invoice years
+  for (const { id_cs, key, y } of hp.values()) {
+    const k = `${id_cs}|${key}`;
+    if (!hpYears.has(k)) hpYears.set(k, []);
+    hpYears.get(k).push(y);
+  }
+  // Year of the invoice a payment settles: its invoice date (on every legacy payment
+  // line), else the latest invoice with that number not after the payment.
+  const notaYear = (id_cs, key, notadate, tanggal) => {
+    if (notadate) return yearOf(notadate);
+    const py = yearOf(tanggal);
+    const ys = (hpYears.get(`${id_cs}|${key}`) || []).filter((y) => y <= py);
+    return ys.length ? Math.max(...ys) : py;
+  };
+  // payments: KM/BM credit lines and KK/BK debit lines that name a nota; returns from RJL/RBL lines.
+  const bayar = [];
+  const paid = new Map();
+  const docMeta = new Map(); // id -> {jnl, tanggal, nomor}
+  // tka_doc rows were streamed; rebuild the little we need from the index.
+  // (docIndex key = jnl|tahun|nomor)
+  for (const [k, id] of docIndex) {
+    const [jnl, tahun, ...rest] = k.split("|");
+    docMeta.set(id, { jnl, tahun: Number(tahun), nomor: rest.join("|") });
+  }
+  const docDates = sink.docDates; // filled by the sink while inserting tka_doc
+  let bayarId = 0;
+  for (const t of DOC_TYPES.filter((x) => ["KM", "BM", "KK", "BK", "RJL", "RBL"].includes(x.jnl))) {
+    for (const { file, tahun } of yearFiles(dir, t.line)) {
+      for (const r of readDbf(file).rows) {
+        if (!r.nota) continue;
+        const id = docIndex.get(`${t.jnl}|${tahun}|${r.nomor}`);
+        if (!id) continue;
+        const isC = t.jnl === "KM" || t.jnl === "BM" || t.jnl === "RJL";
+        const isPay = t.jnl === "RJL" || t.jnl === "RBL" ? true : isC ? r.dk === "K" : r.dk === "D";
+        const val = round2(num(r.val) || num(r.netto));
+        if (!isPay || !val) continue;
+        const id_cs = isC ? "C" : "S";
+        const kind = t.jnl === "RJL" || t.jnl === "RBL" ? "R" : "P";
+        const nota_tahun = notaYear(id_cs, nkey(r.nota), r.notadate, docDates.get(id));
+        const key = `${id_cs}|${nota_tahun}|${nkey(r.nota)}|${kind}`;
+        paid.set(key, round2((paid.get(key) || 0) + val));
+        bayar.push({
+          id: ++bayarId, doc_id: id, id_cs, kind, nkey: nkey(r.nota), nota: r.nota, nota_tahun,
+          tanggal: docDates.get(id), nomor: docMeta.get(id).nomor, val,
+        });
+      }
+    }
+  }
+  // Outstanding = val - payment_legacy - voucher payments. An invoice counts as
+  // settled by the larger of the register's PAYMENT and what the vouchers pay: the
+  // newest register copy is often a stale snapshot (the 2024 fragment lists paid
+  // faktur as open; the DOS program's own number collisions dropped carried-forward
+  // faktur from later years). When the vouchers pay more than the invoice is worth
+  // they matched the wrong nota (old years), and the register's figure is kept.
+  let hpId = 0;
+  const hpRows = [];
+  for (const { r, id_cs, key, y } of hp.values()) {
+    const val = round2(num(r.val));
+    const bP = paid.get(`${id_cs}|${y}|${key}|P`) || 0;
+    const bR = paid.get(`${id_cs}|${y}|${key}|R`) || 0;
+    const trustVouchers = bP + bR <= val + 1;
+    const legacy = (field, b) => {
+      const v = round2(num(r[field]) - b);
+      return trustVouchers ? Math.max(0, v) : v;
+    };
+    hpRows.push({
+      id: ++hpId, id_cs, nomor: r.nomor, nkey: key, tahun: y, tanggal: r.date, sub: str(r.sub), subname: str(r.subname),
+      nota: str(r.nota), notadate: r.notadate, duedate: r.duedate, val,
+      payment_legacy: legacy("payment", bP),
+      valret_legacy: legacy("valret", bR),
+      rem: str(r.rem), doc_id: y ? docIndex.get(`${id_cs === "C" ? "JLH" : "BLI"}|${y}|${r.nomor}`) ?? null : null,
+    });
+  }
+  await put("tka_hp", hpRows);
+  await put("tka_bayar", bayar);
+
+  if (stats.badNumber) note("DBF", `${stats.badNumber} angka rusak dibaca sebagai 0`);
+  if (stats.badDate) note("DBF", `${stats.badDate} tanggal rusak dibaca sebagai kosong`);
+  await sink.call("tka_fix_sequences");
+
+  // Rebuild the years whose postings were lost: post every document (migration 0010),
+  // then apply that year's legacy giro-clearing list (BMG).
+  for (const tahun of rebuildYears) {
+    log(`Posting ulang ${tahun}`);
+    const gagal = (await sink.call("tka_posting_ulang", { p_tahun: tahun })) || [];
+    for (const g of gagal) note("POSTING", `${tahun} ${g.jnl} ${g.nomor}: ${g.pesan}`);
+    const bmg = yearFiles(dir, "BMG").find((x) => x.tahun === tahun);
+    const cair = bmg
+      ? readDbf(bmg.file).rows.filter((r) => r.bg && r.cairdate).map((r) => ({ bg: r.bg, cair: str(r.cair) || "C", cairdate: r.cairdate, acc1: str(r.acc1) }))
+      : [];
+    const tolak = (await sink.call("tka_cairkan_giro_legacy", { p: cair, p_tahun: tahun })) || [];
+    note("BMG", `${tahun}: ${cair.length} pencairan giro dari daftar program lama` + (tolak.length ? `; tidak diterapkan: ${tolak.map((t) => `${t.bg} (${t.pesan})`).join(", ")}` : ""));
+  }
+
+  // The legacy books don't balance; book the differences to 3.07 (migration 0009).
+  await sink.call("tka_seimbangkan_legacy");
+  await put("tka_import_log", importLog);
+  log(`Selesai dalam ${Math.round((Date.now() - t0) / 1000)} detik.`);
+  for (const l of importLog) log(`  [${l.tabel}] ${l.pesan}`);
+}
+
+// Lines without an item code (custom retail springs) have no stock posting, but the
+// legacy ledger still booked HPP for them: spread that remainder over those lines.
+function allocateItemlessHpp(rows, byNomor, tahun, notaHpp) {
+  const byDoc = new Map();
+  for (const r of rows) {
+    if (!byDoc.has(r.doc_id)) byDoc.set(r.doc_id, []);
+    byDoc.get(r.doc_id).push(r);
+  }
+  const nomorOf = new Map([...byNomor.values()].map((d) => [d.id, d.nomor]));
+  for (const [docId, lines] of byDoc) {
+    const itemless = lines.filter((l) => !l.inv && l.qty);
+    if (!itemless.length) continue;
+    const total = notaHpp.get(`${tahun}|${nomorOf.get(docId)}`) || 0;
+    const known = lines.filter((l) => l.inv).reduce((s, l) => s + (l.d.hpp_val ?? (l.d.hpp ?? 0) * l.qty), 0);
+    let rest = round2(total - known);
+    if (rest <= 0) continue;
+    const base = itemless.reduce((s, l) => s + Math.abs(l.val), 0) || itemless.length;
+    itemless.forEach((l, i) => {
+      const share = i === itemless.length - 1 ? rest : round2((total - known) * ((Math.abs(l.val) || 1) / base));
+      rest = round2(rest - share);
+      l.d.hpp_val = share;
+      l.d.hpp_qty = l.qty;
+      l.d.hpp = round2((share / l.qty) * 10000) / 10000;
+    });
+  }
+}
+
+function uniqueBy(key) {
+  const seen = new Set();
+  return (r) => {
+    const k = key(r);
+    if (seen.has(k)) return false;
+    seen.add(k);
+    return true;
+  };
+}
+
+// ───────────────────────── Supabase sink (CLI) ─────────────────────────
+
+async function main() {
+  const args = process.argv.slice(2);
+  const dir = args.find((a) => !a.startsWith("--"));
+  if (!dir || !fs.existsSync(path.join(dir, "ACC.DBF"))) {
+    console.error("Pakai: node --env-file=.env.local scripts/tka-import.mjs <folder PRG/PEER/DBF> [--reset]");
+    process.exit(1);
+  }
+  const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
+  if (!url || !key) {
+    console.error("NEXT_PUBLIC_SUPABASE_URL dan SUPABASE_SERVICE_ROLE_KEY harus ada di .env.local");
+    process.exit(1);
+  }
+  const { createClient } = await import("@supabase/supabase-js");
+  const db = createClient(url, key, { auth: { persistSession: false } });
+
+  const { count, error: probe } = await db.from("tka_doc").select("id", { count: "exact", head: true });
+  if (probe) {
+    console.error("Tabel TKA belum ada. Jalankan dulu supabase/migrations/0008_tka.sql, 0009_tka_balance_legacy.sql dan 0010_tka_hp_per_tahun.sql di Supabase SQL Editor.\n", probe.message);
+    process.exit(1);
+  }
+  // Checked before --reset wipes anything: the register's year key comes from 0010.
+  const { error: probe10 } = await db.from("tka_hp").select("tahun").limit(1);
+  if (probe10) {
+    console.error("Migration 0010 belum dijalankan. Jalankan supabase/migrations/0010_tka_hp_per_tahun.sql di Supabase SQL Editor dulu.\n", probe10.message);
+    process.exit(1);
+  }
+  if (count && !args.includes("--reset")) {
+    console.error(`Data TKA sudah berisi ${count} dokumen. Tambahkan --reset untuk menghapus dan mengimpor ulang.`);
+    process.exit(1);
+  }
+  if (args.includes("--reset")) {
+    const { error } = await db.rpc("tka_reset");
+    if (error) throw error;
+    console.log("Data TKA lama dihapus.");
+  }
+
+  const docDates = new Map();
+  const sink = {
+    docDates,
+    async insert(table, rows) {
+      if (table === "tka_doc") for (const r of rows) docDates.set(r.id, r.tanggal);
+      for (let attempt = 1; ; attempt++) {
+        const { error } = await db.from(table).insert(rows);
+        if (!error) return;
+        if (attempt >= 4) throw new Error(`${table}: ${error.message}`);
+        await new Promise((r) => setTimeout(r, 1500 * attempt));
+      }
+    },
+    async upsertSetting(row) {
+      const { error } = await db.from("tka_setting").upsert(row);
+      if (error) throw error;
+    },
+    async call(fn, args) {
+      const { data, error } = await db.rpc(fn, args);
+      if (error) throw error;
+      return data;
+    },
+  };
+  await runImport(path.resolve(dir), sink);
+}
+
+if (import.meta.url === pathToFileURL(process.argv[1]).href) {
+  main().catch((e) => {
+    console.error(e);
+    process.exit(1);
+  });
+}

@@ -133,7 +133,7 @@ export default function Process() {
           <div className="relative h-px w-full bg-rule-strong">
             <motion.div
               style={{ width: railWidth }}
-              className="absolute left-0 top-0 h-px bg-navy"
+              className="absolute left-0 top-0 h-px bg-coral"
             />
           </div>
           <div className="mt-4 grid grid-cols-4 gap-4">
@@ -146,7 +146,7 @@ export default function Process() {
               >
                 <span
                   className={`h-1.5 w-1.5 transition-colors duration-300 ${
-                    i <= active ? "bg-navy" : "bg-rule-strong"
+                    i <= active ? "bg-coral" : "bg-rule-strong"
                   }`}
                 />
                 <span className="hidden sm:inline">{s.title}</span>

@@ -3,7 +3,9 @@
 
 import type { Lang } from "./translations";
 
-export const SITE_URL = "https://rusliespring.com";
+// Must be the host the site is actually served from: production redirects the
+// bare domain to www, and a canonical/sitemap URL that redirects is not indexed.
+export const SITE_URL = "https://www.rusliespring.com";
 export const LOCALES = ["en", "id", "zh"] as const;
 export const DEFAULT_LOCALE: Lang = "en";
 

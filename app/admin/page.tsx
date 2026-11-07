@@ -11,7 +11,7 @@ export default async function AdminLoginPage() {
   } = await supabase.auth.getUser();
 
   if (user) {
-    redirect("/admin/dashboard");
+    redirect("/admin/home");
   }
 
   return <AdminLoginClient />;
